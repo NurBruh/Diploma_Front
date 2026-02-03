@@ -1,0 +1,261 @@
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import Header from './components/Header'
+import SearchFilters from './components/SearchFilters'
+import ExportTools from './components/ExportTools'
+import StudentsTable from './components/StudentsTable'
+import './App.css'
+
+function App() {
+  const [students, setStudents] = useState([])
+  const [filteredStudents, setFilteredStudents] = useState([])
+  const [loading, setLoading] = useState(false)
+  const [previousData, setPreviousData] = useState({})
+  const [changeHistory, setChangeHistory] = useState({})
+  const [notification, setNotification] = useState(null)
+  const [filters, setFilters] = useState({
+    fullName: '',
+    iin: '',
+    course: '',
+    studyForm: '',
+    institute: '',
+    department: '',
+    grantType: ''
+  })
+
+  // Автоматическая загрузка и актуализация при монтировании
+  useEffect(() => {
+    const savedHistory = localStorage.getItem('studentChangeHistory')
+    const savedPreviousData = localStorage.getItem('previousStudentData')
+    
+    if (savedHistory) {
+      setChangeHistory(JSON.parse(savedHistory))
+    }
+    if (savedPreviousData) {
+      setPreviousData(JSON.parse(savedPreviousData))
+    }
+    
+    // Автоматическая актуализация при загрузке
+    fetchStudents()
+  }, [])
+
+  const detectChanges = (oldData, newData) => {
+    const changes = []
+    const fieldsToCheck = {
+      first_name: 'Имя',
+      last_name: 'Фамилия',
+      patronymic: 'Отчество',
+      course: 'Курс',
+      study_form: 'Форма обучения',
+      institute: 'Институт',
+      grant_type: 'Тип гранта',
+      has_scholarship: 'Стипендия',
+      scholarship_status: 'Статус стипендии',
+      bank_account: 'Расчетный счёт',
+      deprivation_reasons: 'Причины лишения',
+      curriculum_specialty: 'Специальность'
+    }
+
+    for (const [key, label] of Object.entries(fieldsToCheck)) {
+      if (oldData[key] !== newData[key]) {
+        changes.push({
+          field: label,
+          oldValue: oldData[key] || 'Не указано',
+          newValue: newData[key] || 'Не указано'
+        })
+      }
+    }
+
+    return changes
+  }
+
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type })
+    setTimeout(() => setNotification(null), 3000)
+  }
+
+  const fetchStudents = async () => {
+    setLoading(true)
+    try {
+      // 1. Получаем сохраненные данные из localStorage (предыдущее состояние)
+      const savedData = localStorage.getItem('previousStudentData')
+      let localDataArray = savedData ? JSON.parse(savedData) : []
+      
+      // 2. Получаем актуальные данные из mokky.dev
+      const ssoResponse = await axios.get('https://84ec8b151116fab6.mokky.dev/front')
+      const ssoDataArray = ssoResponse.data
+
+      // Если это первая загрузка, сохраняем данные как базовые
+      if (localDataArray.length === 0) {
+        localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray))
+        setStudents(ssoDataArray)
+        setFilteredStudents(ssoDataArray)
+        showNotification('✅ Первичная загрузка данных', 'info')
+        return
+      }
+
+      // Создаем мапу старых данных для быстрого поиска
+      const localDataMap = {}
+      localDataArray.forEach(st => localDataMap[st.id] = st)
+
+      // Проверяем изменения
+      const updatedHistory = { ...changeHistory }
+      let totalChanges = 0
+      
+      ssoDataArray.forEach(student => {
+        const studentId = student.id
+        
+        // Сравниваем с предыдущим состоянием
+        if (localDataMap[studentId]) {
+          const changes = detectChanges(localDataMap[studentId], student)
+          
+          if (changes.length > 0) {
+            totalChanges++
+            
+            if (!updatedHistory[studentId]) {
+              updatedHistory[studentId] = []
+            }
+            
+            // Добавляем новую запись в историю
+            updatedHistory[studentId].unshift({
+              id: Date.now(),
+              date: new Date().toLocaleString('ru-RU'),
+              editor: 'Система (SSO)',
+              changes: changes
+            })
+            
+            if (updatedHistory[studentId].length > 10) {
+              updatedHistory[studentId] = updatedHistory[studentId].slice(0, 10)
+            }
+          }
+        }
+      })
+      
+      // Сохраняем историю и обновляем базовые данные
+      setChangeHistory(updatedHistory)
+      localStorage.setItem('studentChangeHistory', JSON.stringify(updatedHistory))
+      localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray))
+      
+      // В таблице показываем актуальные данные
+      setStudents(ssoDataArray)
+      setFilteredStudents(ssoDataArray)
+      
+      if (totalChanges > 0) {
+        showNotification(`✅ Данные обновлены! Обнаружено изменений: ${totalChanges}`, 'success')
+      } else {
+        showNotification('✅ Данные актуальны, изменений не обнаружено', 'info')
+      }
+
+    } catch (error) {
+      console.error('Ошибка при загрузке данных:', error)
+      showNotification('❌ Ошибка при загрузке данных из mokky.dev', 'error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleSearch = () => {
+    let filtered = [...students]
+
+    // Фильтрация по ФИО
+    if (filters.fullName) {
+      filtered = filtered.filter(student => {
+        const fullName = `${student.last_name} ${student.first_name} ${student.patronymic}`.toLowerCase()
+        return fullName.includes(filters.fullName.toLowerCase())
+      })
+    }
+
+    // Фильтрация по ИИН
+    if (filters.iin) {
+      filtered = filtered.filter(student => {
+        const iin = student.iin || student.id || ''
+        return iin.toString().includes(filters.iin)
+      })
+    }
+
+    // Фильтрация по курсу
+    if (filters.course) {
+      filtered = filtered.filter(student =>
+        student.course?.toString() === filters.course
+      )
+    }
+
+    // Фильтрация по форме обучения
+    if (filters.studyForm) {
+      filtered = filtered.filter(student =>
+        student.study_form === filters.studyForm
+      )
+    }
+
+    // Фильтрация по институту
+    if (filters.institute) {
+      filtered = filtered.filter(student =>
+        student.institute?.includes(filters.institute)
+      )
+    }
+
+    // Фильтрация по типу гранта
+    if (filters.grantType) {
+      filtered = filtered.filter(student =>
+        student.grant_type === filters.grantType
+      )
+    }
+
+    setFilteredStudents(filtered)
+  }
+
+  const handleRefresh = () => {
+    fetchStudents()
+  }
+
+  const handleClearHistory = () => {
+    if (window.confirm('Очистить всю историю изменений? Это действие нельзя отменить.')) {
+      setChangeHistory({})
+      setPreviousData({})
+      localStorage.removeItem('studentChangeHistory')
+      localStorage.removeItem('previousStudentData')
+      alert('История изменений очищена. Нажмите "Актуализировать" для сохранения текущих данных как базовых.')
+    }
+  }
+
+  // Подсчет общего количества изменений
+  const getTotalChangesCount = () => {
+    let total = 0
+    Object.values(changeHistory).forEach(studentHistory => {
+      total += studentHistory.length
+    })
+    return total
+  }
+
+  return (
+    <div className="app">
+      <Header onRefresh={handleRefresh} onClearHistory={handleClearHistory} />
+      
+      {notification && (
+        <div className={`notification notification-${notification.type}`}>
+          {notification.message}
+        </div>
+      )}
+      
+      <main className="main-content">
+        <div className="container">
+          <SearchFilters 
+            filters={filters} 
+            setFilters={setFilters} 
+            onSearch={handleSearch}
+            changeHistory={changeHistory}
+            students={students}
+            changesCount={getTotalChangesCount()}
+          />
+          <ExportTools />
+          <StudentsTable 
+            students={filteredStudents} 
+            loading={loading}
+          />
+        </div>
+      </main>
+    </div>
+  )
+}
+
+export default App

@@ -1,0 +1,140 @@
+.filters-container {
+  background: var(--surface-white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.5rem;
+}
+
+.filters-title {
+  color: var(--primary-color);
+  font-size: 1.25rem;
+  margin-bottom: 1.25rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--primary-color);
+  display: inline-block;
+  padding-bottom: 0.25rem;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1.25rem;
+  align-items: end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.filter-group label {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.filter-input,
+.filter-select {
+  padding: 0.6rem 0.8rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  background: #fdfdfd;
+  color: var(--text-primary);
+  height: 38px;
+}
+
+.filter-input:focus,
+.filter-select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
+  background: white;
+}
+
+.filter-input::placeholder {
+  color: #adb5bd;
+}
+
+.filter-button-group {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  grid-column: 1 / -1; /* Занимает всю ширину внизу */
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--background-bg);
+}
+
+.search-button {
+  background: var(--primary-color);
+  color: white;
+  border: none;
+  padding: 0 1.5rem;
+  height: 40px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+  text-transform: uppercase;
+}
+
+.search-button:hover {
+  background: var(--primary-light);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.history-button {
+  background: white;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  padding: 0 1.5rem;
+  height: 40px;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+  text-transform: uppercase;
+}
+
+.history-button:hover {
+  background: #f0f5ff;
+}
+
+.changes-badge {
+  background: var(--danger-color);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+@media (min-width: 1200px) {
+  .filter-button-group {
+     grid-column: auto; /* Возвращаем в сетку на больших экранах, если влезает */
+     margin-top: 0;
+     padding-top: 0;
+     border-top: none;
+     justify-content: flex-start;
+  }
+}

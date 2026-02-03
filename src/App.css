@@ -1,0 +1,70 @@
+.app {
+  min-height: 100vh;
+  background-color: var(--background-bg);
+  display: flex;
+  flex-direction: column;
+}
+
+.main-content {
+  flex: 1;
+  padding: 2rem 0;
+  width: 100%;
+}
+
+.container {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.notification {
+  position: fixed;
+  top: 80px;
+  right: 20px;
+  padding: 1rem 1.5rem;
+  border-radius: 4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  font-weight: 500;
+  font-size: 0.95rem;
+  z-index: 9999;
+  animation: slideInRight 0.3s ease-out;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  border-left: 4px solid transparent;
+}
+
+.notification-success {
+  background: white;
+  color: var(--text-primary);
+  border-left-color: var(--success-color);
+}
+
+.notification-info {
+  background: white;
+  color: var(--text-primary);
+  border-left-color: var(--info-color);
+}
+
+.notification-error {
+  background: white;
+  color: var(--text-primary);
+  border-left-color: var(--danger-color);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (max-width: 968px) {
+  .container {
+    padding: 0 1rem;
+  }
+}

@@ -1,0 +1,168 @@
+.table-container {
+  background: var(--surface-white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  margin-top: 1.5rem;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.students-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.students-table thead {
+  background: #f1f3f4;
+  color: var(--text-secondary);
+  border-bottom: 2px solid var(--border-color);
+}
+
+.students-table th {
+  padding: 0.85rem 1rem;
+  text-align: left;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+  letter-spacing: 0.5px;
+}
+
+.students-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background 0.1s;
+}
+
+/* Zebra striping for better readability */
+.students-table tbody tr:nth-child(even) {
+  background-color: #f8f9fa;
+}
+
+.students-table tbody tr:hover {
+  background-color: #e8f0fe; /* Light blue highlight on hover */
+}
+
+.students-table td {
+  padding: 0.75rem 1rem;
+  vertical-align: middle;
+}
+
+.full-name {
+  font-weight: 600;
+  color: var(--primary-color);
+  min-width: 220px;
+}
+
+.iin-cell {
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: var(--text-secondary);
+  font-weight: 500;
+  letter-spacing: 0.5px;
+}
+
+.bank-account {
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.deprivation-reasons {
+  color: var(--danger-color);
+  font-size: 0.85rem;
+  font-style: italic;
+  max-width: 250px;
+}
+
+/* Badges styling */
+.grant-badge,
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px; /* More rectangular like enterprise labels */
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  min-width: 80px;
+  letter-spacing: 0.3px;
+}
+
+.grant-badge.state {
+  background: #e8f0fe;
+  color: #1967d2;
+  border: 1px solid #d2e3fc;
+}
+
+.grant-badge.academic {
+  background: #fef7e0;
+  color: #b06000;
+  border: 1px solid #fce8b2;
+}
+
+.grant-badge.rector {
+  background: #f3e8fd;
+  color: #8430ce;
+  border: 1px solid #e9d2fd;
+}
+
+.grant-badge.lyceum {
+  background: #e6f4ea;
+  color: #137333;
+  border: 1px solid #ceead6;
+}
+
+.status-badge.active {
+  background: #e6f4ea;
+  color: #137333;
+  border: 1px solid #ceead6;
+}
+
+.status-badge.inactive {
+  background: #fce8e6;
+  color: #c5221f;
+  border: 1px solid #fad2cf;
+}
+
+.table-footer {
+  padding: 0.85rem 1.5rem;
+  background: #f8f9fa;
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.table-footer strong {
+  color: var(--text-primary);
+  margin-left: 0.25rem;
+}
+
+.loading-container, .no-data {
+  padding: 3rem;
+  text-align: center;
+  background: var(--surface-white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid var(--primary-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

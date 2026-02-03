@@ -1,0 +1,59 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&display=swap');
+
+:root {
+  /* Corporate Palette for SSO/Education System */
+  --primary-color: #003366; /* Глубокий синий - часто используется в гос. системах */
+  --primary-light: #004a93;
+  --accent-color: #0056b3;
+  --background-bg: #f5f7fa; /* Светлый серо-голубой фон */
+  --surface-white: #ffffff;
+  
+  --text-primary: #1a1a1a;
+  --text-secondary: #5f6368;
+  --border-color: #dadce0;
+  
+  --success-color: #1e8e3e;
+  --warning-color: #f9ab00;
+  --danger-color: #d93025;
+  --info-color: #1a73e8;
+
+  --shadow-sm: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  
+  --font-main: 'Roboto Condensed', sans-serif;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: var(--text-primary);
+  background: var(--background-bg);
+  font-family: var(--font-main);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+#root {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+button {
+  font-family: var(--font-main);
+  cursor: pointer;
+  letter-spacing: 0.5px;
+}
+
+input,
+select,
+textarea {
+  font-family: var(--font-main);
+}
