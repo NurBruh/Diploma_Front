@@ -1,7 +1,7 @@
 import React from 'react';
 import './Header.css';
 
-const Header = ({ onRefresh, onClearHistory }) => {
+const Header = ({ onRefresh, onClearHistory, onLogout, currentUser }) => {
   return (
     <header className="header">
       <div className="header-content">
@@ -47,13 +47,32 @@ const Header = ({ onRefresh, onClearHistory }) => {
           </div>
           
           <div className="profile">
-            <span className="profile-name">Менеджер ОР</span>
-            <button className="profile-btn">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <circle cx="12" cy="8" r="4" fill="currentColor"/>
-                <path d="M4 20c0-4 3.5-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2"/>
-              </svg>
-            </button>
+            <span className="profile-name">{currentUser?.username || 'Менеджер ОР'}</span>
+            <div className="profile-dropdown">
+              <button className="profile-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                  <circle cx="12" cy="8" r="4" fill="currentColor"/>
+                  <path d="M4 20c0-4 3.5-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="2"/>
+                </svg>
+              </button>
+              <div className="dropdown-menu">
+                <div className="dropdown-header">
+                  <div className="dropdown-user-info">
+                    <div className="dropdown-username">{currentUser?.username}</div>
+                    <div className="dropdown-email">{currentUser?.email}</div>
+                  </div>
+                </div>
+                <div className="dropdown-divider"></div>
+                <button className="dropdown-item logout-btn" onClick={onLogout}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                  Выйти
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

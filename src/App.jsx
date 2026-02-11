@@ -4,6 +4,9 @@ import Header from './components/Header'
 import SearchFilters from './components/SearchFilters'
 import ExportTools from './components/ExportTools'
 import StudentsTable from './components/StudentsTable'
+import Login from './components/Login'
+import Register from './components/Register'
+import AuthService from './services/AuthService'
 import './App.css'
 
 function App() {
@@ -13,6 +16,9 @@ function App() {
   const [previousData, setPreviousData] = useState({})
   const [changeHistory, setChangeHistory] = useState({})
   const [notification, setNotification] = useState(null)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [currentUser, setCurrentUser] = useState(null)
+  const [showRegister, setShowRegister] = useState(false)
   const [filters, setFilters] = useState({
     fullName: '',
     iin: '',
@@ -23,20 +29,28 @@ function App() {
     grantType: ''
   })
 
-  // Автоматическая загрузка и актуализация при монтировании
+  // Проверка авторизации при монтировании
   useEffect(() => {
-    const savedHistory = localStorage.getItem('studentChangeHistory')
-    const savedPreviousData = localStorage.getItem('previousStudentData')
+    const authenticated = AuthService.isAuthenticated()
+    setIsAuthenticated(authenticated)
     
-    if (savedHistory) {
-      setChangeHistory(JSON.parse(savedHistory))
+    if (authenticated) {
+      const user = AuthService.getCurrentUser()
+      setCurrentUser(user)
+      
+      // Загрузка данных только для авторизованных пользователей
+      const savedHistory = localStorage.getItem('studentChangeHistory')
+      const savedPreviousData = localStorage.getItem('previousStudentData')
+      
+      if (savedHistory) {
+        setChangeHistory(JSON.parse(savedHistory))
+      }
+      if (savedPreviousData) {
+        setPreviousData(JSON.parse(savedPreviousData))
+      }
+      
+      fetchStudents()
     }
-    if (savedPreviousData) {
-      setPreviousData(JSON.parse(savedPreviousData))
-    }
-    
-    // Автоматическая актуализация при загрузке
-    fetchStudents()
   }, [])
 
   const detectChanges = (oldData, newData) => {
@@ -218,7 +232,6 @@ function App() {
     }
   }
 
-  // Подсчет общего количества изменений
   const getTotalChangesCount = () => {
     let total = 0
     Object.values(changeHistory).forEach(studentHistory => {
@@ -227,9 +240,79 @@ function App() {
     return total
   }
 
+  // Обработчик успешной авторизации
+  const handleLogin = (userData) => {
+    setIsAuthenticated(true)
+    setCurrentUser(userData)
+    setShowRegister(false)
+    showNotification(`✅ Добро пожаловать, ${userData.username}!`, 'success')
+    
+    // Загружаем данные после авторизации
+    const savedHistory = localStorage.getItem('studentChangeHistory')
+    const savedPreviousData = localStorage.getItem('previousStudentData')
+    
+    if (savedHistory) {
+      setChangeHistory(JSON.parse(savedHistory))
+    }
+    if (savedPreviousData) {
+      setPreviousData(JSON.parse(savedPreviousData))
+    }
+    
+    fetchStudents()
+  }
+
+  // Обработчик успешной регистрации
+  const handleRegister = (userData) => {
+    setIsAuthenticated(true)
+    setCurrentUser(userData)
+    setShowRegister(false)
+    showNotification(`✅ Регистрация успешна! Добро пожаловать, ${userData.username}!`, 'success')
+    
+    fetchStudents()
+  }
+
+  // Обработчик выхода
+  const handleLogout = () => {
+    AuthService.logout()
+    setIsAuthenticated(false)
+    setCurrentUser(null)
+    setStudents([])
+    setFilteredStudents([])
+    showNotification('✅ Вы вышли из системы', 'info')
+  }
+
+  // Если пользователь не авторизован, показываем форму авторизации/регистрации
+  if (!isAuthenticated) {
+    return (
+      <>
+        {notification && (
+          <div className={`notification notification-${notification.type}`}>
+            {notification.message}
+          </div>
+        )}
+        {showRegister ? (
+          <Register 
+            onRegister={handleRegister} 
+            onSwitchToLogin={() => setShowRegister(false)}
+          />
+        ) : (
+          <Login 
+            onLogin={handleLogin} 
+            onSwitchToRegister={() => setShowRegister(true)}
+          />
+        )}
+      </>
+    )
+  }
+
   return (
     <div className="app">
-      <Header onRefresh={handleRefresh} onClearHistory={handleClearHistory} />
+      <Header 
+        onRefresh={handleRefresh} 
+        onClearHistory={handleClearHistory}
+        onLogout={handleLogout}
+        currentUser={currentUser}
+      />
       
       {notification && (
         <div className={`notification notification-${notification.type}`}>
