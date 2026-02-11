@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import axios from 'axios'
+import { API_BASE_URL } from './services/api'
 import Header from './components/Header'
 import SearchFilters from './components/SearchFilters'
 import ExportTools from './components/ExportTools'
@@ -8,6 +8,24 @@ import Login from './components/Login'
 import Register from './components/Register'
 import AuthService from './services/AuthService'
 import './App.css'
+
+// Маппинг данных из бэкенда (camelCase) в формат фронтенда (snake_case)
+const mapStudentFromBackend = (student) => ({
+  id: student.id,
+  first_name: student.firstName || '',
+  last_name: student.lastName || '',
+  patronymic: student.middleName || '',
+  iin: student.iin || '',
+  course: student.course,
+  study_form: student.educationForm || '',
+  institute: student.faculty || '',
+  grant_type: student.grants && student.grants.length > 0 ? student.grants[0].name : '',
+  has_scholarship: student.scholarships && student.scholarships.length > 0 ? 'Да' : 'Нет',
+  scholarship_status: student.scholarships && student.scholarships.some(s => s.isActive) ? 'Активна' : 'Неактивна',
+  bank_account: '',
+  deprivation_reasons: '',
+  curriculum_specialty: student.speciality || ''
+})
 
 function App() {
   const [students, setStudents] = useState([])
@@ -33,22 +51,22 @@ function App() {
   useEffect(() => {
     const authenticated = AuthService.isAuthenticated()
     setIsAuthenticated(authenticated)
-    
+
     if (authenticated) {
       const user = AuthService.getCurrentUser()
       setCurrentUser(user)
-      
+
       // Загрузка данных только для авторизованных пользователей
       const savedHistory = localStorage.getItem('studentChangeHistory')
       const savedPreviousData = localStorage.getItem('previousStudentData')
-      
+
       if (savedHistory) {
         setChangeHistory(JSON.parse(savedHistory))
       }
       if (savedPreviousData) {
         setPreviousData(JSON.parse(savedPreviousData))
       }
-      
+
       fetchStudents()
     }
   }, [])
@@ -71,7 +89,7 @@ function App() {
     }
 
     for (const [key, label] of Object.entries(fieldsToCheck)) {
-      if (oldData[key] !== newData[key]) {
+      if (String(oldData[key] || '') !== String(newData[key] || '')) {
         changes.push({
           field: label,
           oldValue: oldData[key] || 'Не указано',
@@ -94,10 +112,42 @@ function App() {
       // 1. Получаем сохраненные данные из localStorage (предыдущее состояние)
       const savedData = localStorage.getItem('previousStudentData')
       let localDataArray = savedData ? JSON.parse(savedData) : []
-      
-      // 2. Получаем актуальные данные из mokky.dev
-      const ssoResponse = await axios.get('https://84ec8b151116fab6.mokky.dev/front')
-      const ssoDataArray = ssoResponse.data
+
+      // 2. Получаем актуальные данные из бэкенда
+      const token = AuthService.getToken()
+      const response = await fetch(`${API_BASE_URL}/Students`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.status === 401) {
+        // Токен истёк — разлогиниваем
+        AuthService.logout()
+        setIsAuthenticated(false)
+        setCurrentUser(null)
+        showNotification('❌ Сессия истекла, войдите заново', 'error')
+        return
+      }
+
+      if (!response.ok) {
+        throw new Error(`Ошибка сервера: ${response.status}`)
+      }
+
+      const backendData = await response.json()
+
+      // Маппим данные из формата бэкенда в формат фронтенда
+      const ssoDataArray = backendData.map(mapStudentFromBackend)
+
+      // ============================================================
+      // ЗАКОММЕНТИРОВАННЫЙ КОД: получение данных из mokky.dev (мок-API)
+      // В дальнейшем может понадобиться — оставляем как справку
+      // ============================================================
+      // const ssoResponse = await axios.get('https://84ec8b151116fab6.mokky.dev/front')
+      // const ssoDataArray = ssoResponse.data
+      // ============================================================
 
       // Если это первая загрузка, сохраняем данные как базовые
       if (localDataArray.length === 0) {
@@ -115,21 +165,21 @@ function App() {
       // Проверяем изменения
       const updatedHistory = { ...changeHistory }
       let totalChanges = 0
-      
+
       ssoDataArray.forEach(student => {
         const studentId = student.id
-        
+
         // Сравниваем с предыдущим состоянием
         if (localDataMap[studentId]) {
           const changes = detectChanges(localDataMap[studentId], student)
-          
+
           if (changes.length > 0) {
             totalChanges++
-            
+
             if (!updatedHistory[studentId]) {
               updatedHistory[studentId] = []
             }
-            
+
             // Добавляем новую запись в историю
             updatedHistory[studentId].unshift({
               id: Date.now(),
@@ -137,23 +187,23 @@ function App() {
               editor: 'Система (SSO)',
               changes: changes
             })
-            
+
             if (updatedHistory[studentId].length > 10) {
               updatedHistory[studentId] = updatedHistory[studentId].slice(0, 10)
             }
           }
         }
       })
-      
+
       // Сохраняем историю и обновляем базовые данные
       setChangeHistory(updatedHistory)
       localStorage.setItem('studentChangeHistory', JSON.stringify(updatedHistory))
       localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray))
-      
+
       // В таблице показываем актуальные данные
       setStudents(ssoDataArray)
       setFilteredStudents(ssoDataArray)
-      
+
       if (totalChanges > 0) {
         showNotification(`✅ Данные обновлены! Обнаружено изменений: ${totalChanges}`, 'success')
       } else {
@@ -162,7 +212,7 @@ function App() {
 
     } catch (error) {
       console.error('Ошибка при загрузке данных:', error)
-      showNotification('❌ Ошибка при загрузке данных из mokky.dev', 'error')
+      showNotification('❌ Ошибка при загрузке данных с сервера', 'error')
     } finally {
       setLoading(false)
     }
@@ -246,18 +296,18 @@ function App() {
     setCurrentUser(userData)
     setShowRegister(false)
     showNotification(`✅ Добро пожаловать, ${userData.username}!`, 'success')
-    
+
     // Загружаем данные после авторизации
     const savedHistory = localStorage.getItem('studentChangeHistory')
     const savedPreviousData = localStorage.getItem('previousStudentData')
-    
+
     if (savedHistory) {
       setChangeHistory(JSON.parse(savedHistory))
     }
     if (savedPreviousData) {
       setPreviousData(JSON.parse(savedPreviousData))
     }
-    
+
     fetchStudents()
   }
 
@@ -267,7 +317,7 @@ function App() {
     setCurrentUser(userData)
     setShowRegister(false)
     showNotification(`✅ Регистрация успешна! Добро пожаловать, ${userData.username}!`, 'success')
-    
+
     fetchStudents()
   }
 
@@ -291,13 +341,13 @@ function App() {
           </div>
         )}
         {showRegister ? (
-          <Register 
-            onRegister={handleRegister} 
+          <Register
+            onRegister={handleRegister}
             onSwitchToLogin={() => setShowRegister(false)}
           />
         ) : (
-          <Login 
-            onLogin={handleLogin} 
+          <Login
+            onLogin={handleLogin}
             onSwitchToRegister={() => setShowRegister(true)}
           />
         )}
@@ -307,32 +357,32 @@ function App() {
 
   return (
     <div className="app">
-      <Header 
-        onRefresh={handleRefresh} 
+      <Header
+        onRefresh={handleRefresh}
         onClearHistory={handleClearHistory}
         onLogout={handleLogout}
         currentUser={currentUser}
       />
-      
+
       {notification && (
         <div className={`notification notification-${notification.type}`}>
           {notification.message}
         </div>
       )}
-      
+
       <main className="main-content">
         <div className="container">
-          <SearchFilters 
-            filters={filters} 
-            setFilters={setFilters} 
+          <SearchFilters
+            filters={filters}
+            setFilters={setFilters}
             onSearch={handleSearch}
             changeHistory={changeHistory}
             students={students}
             changesCount={getTotalChangesCount()}
           />
           <ExportTools />
-          <StudentsTable 
-            students={filteredStudents} 
+          <StudentsTable
+            students={filteredStudents}
             loading={loading}
           />
         </div>

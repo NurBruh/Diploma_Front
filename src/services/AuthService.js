@@ -1,11 +1,13 @@
-// API endpoint - укажите ваш URL и порт backend
-const API_URL = 'http://localhost:5170/api/Auth';
+import { API_BASE_URL } from './api';
+
+// API endpoint авторизации
+const AUTH_URL = `${API_BASE_URL}/Auth`;
 
 const AuthService = {
   // Регистрация нового пользователя
   register: async (username, email, password) => {
     try {
-      const response = await fetch(`${API_URL}/register`, {
+      const response = await fetch(`${AUTH_URL}/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -22,7 +24,7 @@ const AuthService = {
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('username', data.username);
-        localStorage.setItem('email', data.email);
+        localStorage.setItem('role', data.role);
         console.log('Registration successful:', data);
       }
 
@@ -36,7 +38,7 @@ const AuthService = {
   // Авторизация пользователя
   login: async (username, password) => {
     try {
-      const response = await fetch(`${API_URL}/login`, {
+      const response = await fetch(`${AUTH_URL}/login`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -52,7 +54,7 @@ const AuthService = {
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('username', data.username);
-        localStorage.setItem('email', data.email);
+        localStorage.setItem('role', data.role);
         console.log('Login successful:', data);
       }
 
@@ -67,7 +69,7 @@ const AuthService = {
   logout: () => {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
-    localStorage.removeItem('email');
+    localStorage.removeItem('role');
     console.log('Logout successful');
   },
 
@@ -75,10 +77,10 @@ const AuthService = {
   getCurrentUser: () => {
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
-    const email = localStorage.getItem('email');
+    const role = localStorage.getItem('role');
 
     if (token && username) {
-      return { token, username, email };
+      return { token, username, role };
     }
 
     return null;
@@ -103,7 +105,7 @@ const AuthService = {
     }
 
     try {
-      const response = await fetch(`http://localhost:5170${endpoint}`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

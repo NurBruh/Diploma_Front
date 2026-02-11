@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { API_BASE_URL } from '../services/api';
 import './Auth.css';
 
 const Register = ({ onRegister, onSwitchToLogin }) => {
@@ -37,7 +38,7 @@ const Register = ({ onRegister, onSwitchToLogin }) => {
     setLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5170/api/Auth/register', {
+      const response = await fetch(`${API_BASE_URL}/Auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,7 +55,7 @@ const Register = ({ onRegister, onSwitchToLogin }) => {
       if (response.ok) {
         localStorage.setItem('token', data.token);
         localStorage.setItem('username', data.username);
-        localStorage.setItem('email', data.email);
+        localStorage.setItem('role', data.role);
         console.log('Registered:', data);
         onRegister(data);
       } else {
@@ -81,7 +82,7 @@ const Register = ({ onRegister, onSwitchToLogin }) => {
           {error && (
             <div className="auth-error">
               <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z"/>
+                <path d="M10 0C4.48 0 0 4.48 0 10s4.48 10 10 10 10-4.48 10-10S15.52 0 10 0zm1 15H9v-2h2v2zm0-4H9V5h2v6z" />
               </svg>
               {error}
             </div>
@@ -142,8 +143,8 @@ const Register = ({ onRegister, onSwitchToLogin }) => {
             />
           </div>
 
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className="auth-btn primary"
             disabled={loading}
           >
