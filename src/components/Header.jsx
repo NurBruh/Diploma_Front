@@ -1,7 +1,7 @@
 import React from 'react';
 import './Header.css';
 
-const Header = ({ onRefresh, onClearHistory, onLogout, currentUser }) => {
+const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading, currentUser }) => {
   return (
     <header className="header">
       <div className="header-content">
@@ -23,6 +23,21 @@ const Header = ({ onRefresh, onClearHistory, onLogout, currentUser }) => {
               <path d="M4 10a6 6 0 1 1 6 6v-2a4 4 0 1 0-4-4H4zm0 0l2 2m-2-2l-2 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
             </svg>
             Актуализировать
+          </button>
+
+          <button
+            className={`icon-btn sync-epvo-btn${syncLoading ? ' syncing' : ''}`}
+            title="Синхронизировать данные в ЕПВО"
+            onClick={onSyncToEpvo}
+            disabled={syncLoading}
+          >
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" className={syncLoading ? 'spin' : ''}>
+              <path d="M3 10a7 7 0 0 1 12.45-4.36" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M17 10a7 7 0 0 1-12.45 4.36" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+              <path d="M14 2l1.45 3.64L12 7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              <path d="M6 18l-1.45-3.64L8 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+            {syncLoading ? 'Синхронизация...' : 'Синхр. в ЕПВО'}
           </button>
 
           <button className="icon-btn clear-history-btn" title="Очистить историю" onClick={onClearHistory}>

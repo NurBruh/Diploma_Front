@@ -37,6 +37,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
   const [showRegister, setShowRegister] = useState(false)
+  const [syncLoading, setSyncLoading] = useState(false)
   const [filters, setFilters] = useState({
     fullName: '',
     iin: '',
@@ -272,6 +273,41 @@ function App() {
     fetchStudents()
   }
 
+  // Синхронизация данных SSO → ЕПВО
+  const handleSyncToEpvo = async () => {
+    setSyncLoading(true)
+    try {
+      const token = AuthService.getToken()
+      const response = await fetch(`${API_BASE_URL}/Epvo/sync-to-epvo`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.status === 401) {
+        AuthService.logout()
+        setIsAuthenticated(false)
+        setCurrentUser(null)
+        showNotification('❌ Сессия истекла, войдите заново', 'error')
+        return
+      }
+
+      if (!response.ok) {
+        throw new Error(`Ошибка сервера: ${response.status}`)
+      }
+
+      const data = await response.json()
+      showNotification(`✅ ${data.message}`, 'success')
+    } catch (error) {
+      console.error('Ошибка синхронизации в ЕПВО:', error)
+      showNotification('❌ Ошибка при синхронизации данных в ЕПВО', 'error')
+    } finally {
+      setSyncLoading(false)
+    }
+  }
+
   const handleClearHistory = () => {
     if (window.confirm('Очистить всю историю изменений? Это действие нельзя отменить.')) {
       setChangeHistory({})
@@ -361,6 +397,8 @@ function App() {
         onRefresh={handleRefresh}
         onClearHistory={handleClearHistory}
         onLogout={handleLogout}
+        onSyncToEpvo={handleSyncToEpvo}
+        syncLoading={syncLoading}
         currentUser={currentUser}
       />
 

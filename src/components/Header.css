@@ -104,6 +104,34 @@
   background: #d93025;
 }
 
+.sync-epvo-btn {
+  background: rgba(25, 118, 210, 0.9);
+  border-color: rgba(25, 118, 210, 0.9);
+}
+
+.sync-epvo-btn:hover {
+  background: #1565c0;
+  border-color: #1565c0;
+}
+
+.sync-epvo-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.sync-epvo-btn.syncing {
+  background: rgba(25, 118, 210, 0.6);
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}
+
 .lang-selector {
   display: flex;
   background: rgba(0, 0, 0, 0.2);
