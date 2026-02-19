@@ -19,10 +19,27 @@ const FIELD_LABELS = {
   isActive: 'Активен',
 };
 
+const TABLE_COLUMNS = [
+  { key: 'lastName', label: 'Фамилия' },
+  { key: 'firstName', label: 'Имя' },
+  { key: 'middleName', label: 'Отчество' },
+  { key: 'iin', label: 'ИИН', accessor: 'iin' },
+  { key: 'faculty', label: 'Институт' },
+  { key: 'speciality', label: 'Специальность' },
+  { key: 'course', label: 'Курс' },
+  { key: 'grantName', label: 'Тип гранта' },
+  { key: 'grantAmount', label: 'Сумма гранта' },
+  { key: 'scholarshipName', label: 'Стипендия' },
+  { key: 'scholarshipAmount', label: 'Сумма стипендии' },
+  { key: 'iban', label: 'IBAN', accessor: 'iban' },
+  { key: 'isActive', label: 'Активен' },
+];
+
 const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [filter, setFilter] = useState('all'); // 'all' | 'diff' | 'sso-only' | 'epvo-only'
+  const [filter, setFilter] = useState('all');
+  const [syncingIIN, setSyncingIIN] = useState(null);
 
   const fetchComparison = async () => {
     setLoading(true);
@@ -44,6 +61,28 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
     }
   };
 
+  const syncStudent = async (iin) => {
+    setSyncingIIN(iin);
+    try {
+      const token = AuthService.getToken();
+      const response = await fetch(`${API_BASE_URL}/Epvo/sync-student/${iin}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
+      const result = await response.json();
+      showNotification && showNotification(`${result.message}`, 'success');
+      await fetchComparison();
+    } catch (e) {
+      showNotification && showNotification(' Ошибка при синхронизации студента', 'error');
+    } finally {
+      setSyncingIIN(null);
+    }
+  };
+
   useEffect(() => {
     fetchComparison();
   }, []);
@@ -58,17 +97,17 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
     }
   };
 
-  const getFullName = (obj) => {
-    if (!obj) return '—';
-    return [obj.lastName, obj.firstName, obj.middleName].filter(Boolean).join(' ');
-  };
-
   const isDiffField = (item, field) =>
     item.differences && item.differences.some(d => d.field === field);
 
-  const renderCell = (value, hasDiff) => (
-    <td className={hasDiff ? 'diff-cell' : ''}>{value ?? '—'}</td>
-  );
+  const getCellValue = (dataObj, col) => {
+    if (!dataObj) return '—';
+    const key = col.accessor || col.key;
+    const val = dataObj[key];
+    if (val === null || val === undefined) return '—';
+    if (typeof val === 'boolean') return val ? 'Да' : 'Нет';
+    return String(val);
+  };
 
   const items = getFilteredItems();
 
@@ -88,7 +127,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
               disabled={syncLoading}
             >
               <MdSync size={18} className={syncLoading ? 'spin' : ''} />
-              {syncLoading ? 'Синхронизация...' : 'Синхр. в ЕПВО'}
+              {syncLoading ? 'Синхронизация...' : 'Синхр. всех в ЕПВО'}
             </button>
           </div>
         </div>
@@ -104,7 +143,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
               <span className="cstat-num">{data.items.filter(i => i.hasDifferences).length}</span>
               <span className="cstat-label">С различиями</span>
             </div>
-            <div className="cstat cstat-sso">
+            {/* <div className="cstat cstat-sso">
               <MdError size={16} />
               <span className="cstat-num">{data.onlyInSso}</span>
               <span className="cstat-label">Только в ССО</span>
@@ -113,7 +152,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
               <MdError size={16} />
               <span className="cstat-num">{data.onlyInEpvo}</span>
               <span className="cstat-label">Только в ЕПВО</span>
-            </div>
+            </div> */}
             <div className="cstat cstat-ok">
               <MdCheckCircle size={16} />
               <span className="cstat-num">
@@ -128,8 +167,8 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
           {[
             { key: 'all', label: 'Все' },
             { key: 'diff', label: 'С различиями' },
-            { key: 'sso-only', label: 'Только в ССО' },
-            { key: 'epvo-only', label: 'Только в ЕПВО' },
+            // { key: 'sso-only', label: 'Только в ССО' },
+            // { key: 'epvo-only', label: 'Только в ЕПВО' },
           ].map(f => (
             <button
               key={f.key}
@@ -144,93 +183,141 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
 
       {loading ? (
         <div className="comparison-loading">Загрузка данных...</div>
+      ) : items.length === 0 ? (
+        <div className="comparison-empty">
+          <MdCheckCircle size={48} color="var(--success-color)" />
+          <p>Нет записей для отображения</p>
+        </div>
       ) : (
-        <div className="comparison-tables-wrapper">
-          {items.length === 0 ? (
-            <div className="comparison-empty">
-              <MdCheckCircle size={48} color="var(--success-color)" />
-              <p>Нет записей для отображения</p>
+        <div className="comparison-dual-tables">
+          {/* Таблица ССО (Посредник) */}
+          <div className="comparison-table-block">
+            <div className="table-block-header sso-header">
+              <h3>ССО (Посредник)</h3>
+              <span className="table-count">{items.filter(i => i.ssoData).length} записей</span>
             </div>
-          ) : (
-            items.map((item) => {
-              const rowClass = item.onlyInSso
-                ? 'comparison-row only-sso'
-                : item.onlyInEpvo
-                ? 'comparison-row only-epvo'
-                : item.hasDifferences
-                ? 'comparison-row has-diff'
-                : 'comparison-row';
+            <div className="table-scroll-wrapper">
+              <table className="comparison-data-table">
+                <thead>
+                  <tr>
+                    <th className="col-action">Действие</th>
+                    <th className="col-status">Статус</th>
+                    {TABLE_COLUMNS.map(col => (
+                      <th key={col.key}>{col.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item) => {
+                    const hasDiff = item.hasDifferences;
+                    const onlyInSso = item.onlyInSso;
+                    const onlyInEpvo = item.onlyInEpvo;
+                    const rowClass = onlyInSso
+                      ? 'row-only-sso'
+                      : onlyInEpvo
+                      ? 'row-only-epvo'
+                      : hasDiff
+                      ? 'row-has-diff'
+                      : '';
 
-              return (
-                <div key={item.iin} className={rowClass}>
-                  <div className="comparison-row-header">
-                    <span className="comparison-iin">ИИН: {item.iin}</span>
-                    <span className="comparison-fullname">
-                      {getFullName(item.ssoData || item.epvoData)}
-                    </span>
-                    {item.onlyInSso && <span className="badge badge-sso">Только в ССО</span>}
-                    {item.onlyInEpvo && <span className="badge badge-epvo">Только в ЕПВО</span>}
-                    {item.hasDifferences && (
-                      <span className="badge badge-diff">
-                        {item.differences.length} различий
-                      </span>
-                    )}
-                    {!item.onlyInSso && !item.onlyInEpvo && !item.hasDifferences && (
-                      <span className="badge badge-ok">Совпадает</span>
-                    )}
-                  </div>
+                    return (
+                      <tr key={item.iin} className={rowClass}>
+                        <td className="col-action">
+                          {(hasDiff || onlyInSso) && (
+                            <button
+                              className="sync-student-btn"
+                              onClick={() => syncStudent(item.iin)}
+                              disabled={syncingIIN === item.iin}
+                              title="Синхронизировать в ЕПВО"
+                            >
+                              <MdSync size={14} className={syncingIIN === item.iin ? 'spin' : ''} />
+                            </button>
+                          )}
+                        </td>
+                        <td className="col-status">
+                          {onlyInSso && <span className="status-badge badge-sso">Новый</span>}
+                          {onlyInEpvo && <span className="status-badge badge-epvo">Нет в ССО</span>}
+                          {hasDiff && <span className="status-badge badge-diff">{item.differences.length} разл.</span>}
+                          {!onlyInSso && !onlyInEpvo && !hasDiff && (
+                            <span className="status-badge badge-ok">OK</span>
+                          )}
+                        </td>
+                        {TABLE_COLUMNS.map(col => {
+                          const diff = isDiffField(item, col.key);
+                          return (
+                            <td
+                              key={col.key}
+                              className={diff ? 'cell-diff-sso' : onlyInSso ? 'cell-new' : ''}
+                            >
+                              {item.ssoData ? getCellValue(item.ssoData, col) : '—'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
 
-                  {(item.hasDifferences || item.onlyInSso || item.onlyInEpvo) && (
-                    <div className="comparison-tables">
-                      <div className="comparison-side">
-                        <div className="side-label sso-label">ССО</div>
-                        <table className="side-table">
-                          <tbody>
-                            {Object.entries(FIELD_LABELS).map(([field, label]) => {
-                              const val = item.ssoData ? item.ssoData[field] : null;
-                              const diff = isDiffField(item, field);
-                              return (
-                                <tr key={field} className={diff ? 'diff-row' : ''}>
-                                  <td className="field-label-cell">{label}</td>
-                                  <td className={`field-value-cell${diff ? ' diff-value' : ''}`}>
-                                    {val !== null && val !== undefined ? String(val) : '—'}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+          {/* Таблица ЕПВО */}
+          <div className="comparison-table-block">
+            <div className="table-block-header epvo-header-block">
+              <h3>ЕПВО</h3>
+              <span className="table-count">{items.filter(i => i.epvoData).length} записей</span>
+            </div>
+            <div className="table-scroll-wrapper">
+              <table className="comparison-data-table">
+                <thead>
+                  <tr>
+                    <th className="col-status">Статус</th>
+                    {TABLE_COLUMNS.map(col => (
+                      <th key={col.key}>{col.label}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {items.map((item) => {
+                    const hasDiff = item.hasDifferences;
+                    const onlyInSso = item.onlyInSso;
+                    const onlyInEpvo = item.onlyInEpvo;
+                    const rowClass = onlyInSso
+                      ? 'row-only-sso'
+                      : onlyInEpvo
+                      ? 'row-only-epvo'
+                      : hasDiff
+                      ? 'row-has-diff'
+                      : '';
 
-                      <div className="comparison-divider">
-                        {item.hasDifferences && <span className="diff-arrow">≠</span>}
-                      </div>
-
-                      <div className="comparison-side">
-                        <div className="side-label epvo-label">ЕПВО</div>
-                        <table className="side-table">
-                          <tbody>
-                            {Object.entries(FIELD_LABELS).map(([field, label]) => {
-                              const val = item.epvoData ? item.epvoData[field] : null;
-                              const diff = isDiffField(item, field);
-                              return (
-                                <tr key={field} className={diff ? 'diff-row' : ''}>
-                                  <td className="field-label-cell">{label}</td>
-                                  <td className={`field-value-cell${diff ? ' diff-value epvo-diff' : ''}`}>
-                                    {val !== null && val !== undefined ? String(val) : '—'}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })
-          )}
+                    return (
+                      <tr key={item.iin} className={rowClass}>
+                        <td className="col-status">
+                          {onlyInSso && <span className="status-badge badge-sso">Нет в ЕПВО</span>}
+                          {onlyInEpvo && <span className="status-badge badge-epvo">Только тут</span>}
+                          {hasDiff && <span className="status-badge badge-diff">Устарело</span>}
+                          {!onlyInSso && !onlyInEpvo && !hasDiff && (
+                            <span className="status-badge badge-ok">OK</span>
+                          )}
+                        </td>
+                        {TABLE_COLUMNS.map(col => {
+                          const diff = isDiffField(item, col.key);
+                          return (
+                            <td
+                              key={col.key}
+                              className={diff ? 'cell-diff-epvo' : onlyInEpvo ? 'cell-epvo-only' : ''}
+                            >
+                              {item.epvoData ? getCellValue(item.epvoData, col) : '—'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       )}
     </div>

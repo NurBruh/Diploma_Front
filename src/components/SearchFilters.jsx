@@ -116,7 +116,8 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
             ОТОБРАЗИТЬ
           </button>
           
-          <button onClick={() => setShowHistory(true)} className="history-button">
+          {/* Временно скрыто — функционал сохранён */}
+          <button onClick={() => setShowHistory(true)} className="history-button" style={{ display: 'none' }}>
             <MdHistory size={16} />
             ИСТОРИЯ ИЗМЕНЕНИЙ
             {changesCount > 0 && (

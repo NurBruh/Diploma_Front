@@ -4,6 +4,7 @@ import Header from './components/Header'
 import SearchFilters from './components/SearchFilters'
 import ExportTools from './components/ExportTools'
 import StudentsTable from './components/StudentsTable'
+import SsoEpvoComparison from './components/SsoEpvoComparison'
 import Login from './components/Login'
 import Register from './components/Register'
 import AuthService from './services/AuthService'
@@ -38,6 +39,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null)
   const [showRegister, setShowRegister] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState('main')
   const [filters, setFilters] = useState({
     fullName: '',
     iin: '',
@@ -400,6 +402,8 @@ function App() {
         onSyncToEpvo={handleSyncToEpvo}
         syncLoading={syncLoading}
         currentUser={currentUser}
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
       />
 
       {notification && (
@@ -410,19 +414,29 @@ function App() {
 
       <main className="main-content">
         <div className="container">
-          <SearchFilters
-            filters={filters}
-            setFilters={setFilters}
-            onSearch={handleSearch}
-            changeHistory={changeHistory}
-            students={students}
-            changesCount={getTotalChangesCount()}
-          />
-          <ExportTools />
-          <StudentsTable
-            students={filteredStudents}
-            loading={loading}
-          />
+          {currentPage === 'comparison' ? (
+            <SsoEpvoComparison
+              onSyncToEpvo={handleSyncToEpvo}
+              syncLoading={syncLoading}
+              showNotification={showNotification}
+            />
+          ) : (
+            <>
+              <SearchFilters
+                filters={filters}
+                setFilters={setFilters}
+                onSearch={handleSearch}
+                changeHistory={changeHistory}
+                students={students}
+                changesCount={getTotalChangesCount()}
+              />
+              <ExportTools />
+              <StudentsTable
+                students={filteredStudents}
+                loading={loading}
+              />
+            </>
+          )}
         </div>
       </main>
     </div>
