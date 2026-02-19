@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { MdSearch, MdHistory } from 'react-icons/md';
 import ChangeHistory from './ChangeHistory';
 import './SearchFilters.css';
 
@@ -59,7 +60,7 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
           >
             <option value="">Все</option>
             <option value="Очная">Очная</option>
-            <option value="Заочная">Заочная</option>
+            <option value="Онлайн">Онлайн</option>
           </select>
         </div>
 
@@ -108,16 +109,12 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
 
         <div className="filter-group filter-button-group">
           <button onClick={onSearch} className="search-button">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M7 12A5 5 0 1 0 7 2a5 5 0 0 0 0 10zM14 14l-3-3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
+            <MdSearch size={16} />
             ОТОБРАЗИТЬ
           </button>
           
           <button onClick={() => setShowHistory(true)} className="history-button">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2a6 6 0 1 0 0 12A6 6 0 0 0 8 2zm0 1a5 5 0 1 1 0 10A5 5 0 0 1 8 3zm-.5 2v3.5l3 1.5.5-1-2.5-1.25V5h-1z" fill="currentColor"/>
-            </svg>
+            <MdHistory size={16} />
             ИСТОРИЯ ИЗМЕНЕНИЙ
             {changesCount > 0 && (
               <span className="changes-badge">{changesCount}</span>

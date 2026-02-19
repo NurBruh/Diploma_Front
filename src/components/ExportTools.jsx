@@ -1,4 +1,5 @@
 import React from 'react';
+import { MdFileDownload, MdFileUpload } from 'react-icons/md';
 import './ExportTools.css';
 
 const ExportTools = () => {
@@ -13,9 +14,7 @@ const ExportTools = () => {
   return (
     <div className="export-tools">
       <button className="import-btn" onClick={handleImport}>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path d="M8 2v8m0 0l3-3m-3 3L5 7m9 7H2" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
+        <MdFileDownload size={16} />
         Импорт из Excel
       </button>
 
@@ -29,9 +28,7 @@ const ExportTools = () => {
             <option>CSV</option>
           </select>
           <button className="export-btn" onClick={() => handleExport('выбранном')}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 14V6m0 0L5 9m3-3l3 3M2 2h12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
+            <MdFileUpload size={16} />
             Экспорт
           </button>
         </div>
