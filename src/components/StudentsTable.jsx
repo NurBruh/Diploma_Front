@@ -18,10 +18,9 @@ const StudentsTable = ({ students, loading }) => {
       </div>
     );
   }
-
+   // Извлекаем кафедру из строки curriculum_specialty
   const extractDepartment = (curriculum) => {
     if (!curriculum) return 'Не указано';
-    // Извлекаем кафедру из строки curriculum_specialty
     if (curriculum.includes('Компьютер')) return 'Кафедра "Компьютерные"';
     if (curriculum.includes('Инженер')) return 'Программная инженерия (*)';
     if (curriculum.includes('Архитектур')) return 'Архитектура';
@@ -46,7 +45,12 @@ const StudentsTable = ({ students, loading }) => {
               <th>Расчетный счёт</th>
               <th>Причины лишения</th>
               {/* Нужно придумать что то для того чтобы разделить этот колонку для чекбокса */}
-              <th>Выбрать все</th>
+              {/* <th>Выбрать все</th> */}
+              <th>
+                <input type="checkbox" name="selectAll" />
+              </th>
+              
+             
             </tr>
           </thead>
           <tbody>
@@ -71,10 +75,11 @@ const StudentsTable = ({ students, loading }) => {
                     {student.has_scholarship === 'Да' ? 'Назначено' : student.has_scholarship === 'Нет' ? 'Не назначено' : 'Не указано'}
                   </span>
                 </td>
-                <td className="bank-account">{student.iban || 'Не указан'}</td>
+                <td className="bank-account">{student.bank_account || 'Не указан'}</td>
                 <td className="deprivation-reasons">
                   {student.deprivation_reasons || 'Нет'}
                 </td>
+                <td><input type="checkbox" name="selectAll" /></td>
               </tr>
             ))}
           </tbody>

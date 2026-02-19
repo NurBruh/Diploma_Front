@@ -38,7 +38,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
       const json = await response.json();
       setData(json);
     } catch (e) {
-      showNotification && showNotification('❌ Ошибка при загрузке данных сравнения', 'error');
+      showNotification && showNotification('Ошибка при загрузке данных сравнения', 'error');
     } finally {
       setLoading(false);
     }

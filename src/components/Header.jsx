@@ -17,13 +17,13 @@ const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading
           >
             Стипендии ЕПВО
           </button>
-          <span className="separator">›</span>
-          <button
+        
+          {/* <button
             className={`nav-btn${currentPage === 'comparison' ? ' active' : ''}`}
             onClick={() => onNavigate && onNavigate('comparison')}
           >
             ССО vs ЕПВО
-          </button>
+          </button> */}
         </nav>
 
         <div className="header-actions">

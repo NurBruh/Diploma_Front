@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { MdSearch, MdHistory } from 'react-icons/md';
+import { BsFillPencilFill } from "react-icons/bs";
 import ChangeHistory from './ChangeHistory';
 import './SearchFilters.css';
 
@@ -115,13 +116,13 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
             ОТОБРАЗИТЬ
           </button>
           
-          {/* <button onClick={() => setShowHistory(true)} className="history-button">
+          <button onClick={() => setShowHistory(true)} className="history-button">
             <MdHistory size={16} />
             ИСТОРИЯ ИЗМЕНЕНИЙ
             {changesCount > 0 && (
               <span className="changes-badge">{changesCount}</span>
             )}
-          </button> */}
+          </button>
         </div>
       </div>
 
