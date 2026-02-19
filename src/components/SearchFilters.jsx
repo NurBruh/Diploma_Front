@@ -3,7 +3,7 @@ import { MdSearch, MdHistory } from 'react-icons/md';
 import ChangeHistory from './ChangeHistory';
 import './SearchFilters.css';
 
-const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students, changesCount }) => {
+const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students, changesCount, onApplySsoChange, onRejectSsoChange }) => {
   const [showHistory, setShowHistory] = useState(false);
   const handleInputChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
@@ -72,8 +72,12 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
             className="filter-select"
           >
             <option value="">Все</option>
-            <option value="ИИиС">ИИиС</option>
+            <option value="Школа транспортной инженерии и логистики имени М. Тынышпаева">Школа транспортной инженерии и логистики имени М. Тынышпаева</option>
+            <option value="Горно-металлургический институт имени О.А. Байконурова">Горно-металлургический институт имени О.А. Байконурова</option>
+            <option value="Институт геологии и нефтегазового дела имени К.Т. Турысова">Институт геологии и нефтегазового дела имени К.Т. Турысова</option>
             <option value="ИАиИТ">ИАиИТ</option>
+            <option value="Институт управления проектами имени Е. Туркебаева">Институт управления проектами имени Е. Туркебаева</option>
+            <option value="Институт архитектуры и строительства имени Т.К. Басенова">Институт архитектуры и строительства имени Т.К. Басенова</option>
           </select>
         </div>
 
@@ -85,9 +89,9 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
             className="filter-select"
           >
             <option value="">Все</option>
-            <option value="Программная инженерия">Программная инженерия (*)
+            <option value="Программная инженерия">Программная инженерия
             </option>
-            <option value="Компьютерные системы">Компьютерные системы и информационные технологии (*)</option>
+            <option value="Компьютерные системы">Компьютерные системы и информационные технологии</option>
             <option value="Архитектура">Архитектура</option>
           </select>
         </div>
@@ -101,9 +105,7 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
           >
             <option value="">Все</option>
             <option value="Государственный">Государственный</option>
-            <option value="Академический">Академический</option>
             <option value="Ректорский">Ректорский</option>
-            <option value="Лицей">Лицей</option>
           </select>
         </div>
 
@@ -113,13 +115,13 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
             ОТОБРАЗИТЬ
           </button>
           
-          <button onClick={() => setShowHistory(true)} className="history-button">
+          {/* <button onClick={() => setShowHistory(true)} className="history-button">
             <MdHistory size={16} />
             ИСТОРИЯ ИЗМЕНЕНИЙ
             {changesCount > 0 && (
               <span className="changes-badge">{changesCount}</span>
             )}
-          </button>
+          </button> */}
         </div>
       </div>
 
@@ -127,7 +129,9 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
         <ChangeHistory 
           changeHistory={changeHistory}
           students={students}
-          onClose={() => setShowHistory(false)} 
+          onClose={() => setShowHistory(false)}
+          onApplySsoChange={onApplySsoChange}
+          onRejectSsoChange={onRejectSsoChange}
         />
       )}
     </div>

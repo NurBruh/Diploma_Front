@@ -1,8 +1,8 @@
 import React from 'react';
 import './ChangeHistory.css';
 
-const ChangeHistory = ({ changeHistory, students, onClose }) => {
-  // Создаем массив всех изменений со студентами
+const ChangeHistory = ({ changeHistory, students, onClose, onApplySsoChange, onRejectSsoChange }) => {
+
   const allChanges = []
   
   Object.entries(changeHistory).forEach(([studentId, history]) => {
@@ -11,18 +11,22 @@ const ChangeHistory = ({ changeHistory, students, onClose }) => {
       history.forEach(record => {
         allChanges.push({
           ...record,
+          studentId,
           student: student
         })
       })
     }
   })
   
-  // Сортируем по дате (новые сверху)
+
   allChanges.sort((a, b) => {
     const dateA = new Date(a.date.split(', ').reverse().join(' '))
     const dateB = new Date(b.date.split(', ').reverse().join(' '))
     return dateB - dateA
   })
+
+  const isSsoRecord = (record) => record.editor === 'Система (SSO)'
+  const isPending = (record) => !record.status || record.status === 'pending'
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -41,16 +45,30 @@ const ChangeHistory = ({ changeHistory, students, onClose }) => {
             <span className="stat-label">Студентов затронуто:</span>
             <span className="stat-value">{Object.keys(changeHistory).length}</span>
           </div>
+          <div className="stat-item">
+            <span className="stat-label">Ожидают решения:</span>
+            <span className="stat-value sso-pending-count">
+              {allChanges.filter(r => isSsoRecord(r) && isPending(r)).length}
+            </span>
+          </div>
         </div>
 
         <div className="history-list">
           {allChanges.map((record, index) => (
-            <div key={`${record.id}-${index}`} className="history-item">
+            <div
+              key={`${record.id}-${index}`}
+              className={`history-item${isSsoRecord(record) ? ' sso-change' : ''}${record.status === 'applied' ? ' applied' : ''}${record.status === 'deferred' ? ' deferred' : ''}`}
+            >
               <div className="student-header">
                 <h3 className="student-name">
                   {record.student.last_name} {record.student.first_name} {record.student.patronymic}
                 </h3>
-                <span className="student-course">Курс {record.student.course}</span>
+                <div className="student-header-right">
+                  <span className="student-course">Курс {record.student.course}</span>
+                  {isSsoRecord(record) && (
+                    <span className="sso-badge">ССО</span>
+                  )}
+                </div>
               </div>
               
               <div className="history-header">
@@ -78,6 +96,34 @@ const ChangeHistory = ({ changeHistory, students, onClose }) => {
                   </div>
                 ))}
               </div>
+
+              {isSsoRecord(record) && (
+                <div className="sso-actions">
+                  {isPending(record) ? (
+                    <>
+                      <span className="sso-action-label">Изменения из ССО — применить в ЕПВО?</span>
+                      <div className="sso-action-buttons">
+                        <button
+                          className="btn-apply"
+                          onClick={() => onApplySsoChange && onApplySsoChange(record.studentId, record.id)}
+                        >
+                          ✓ Применить изменения
+                        </button>
+                        <button
+                          className="btn-defer"
+                          onClick={() => onRejectSsoChange && onRejectSsoChange(record.studentId, record.id)}
+                        >
+                          ✗ Нет, позже
+                        </button>
+                      </div>
+                    </>
+                  ) : record.status === 'applied' ? (
+                    <span className="status-applied">✓ Применено в ЕПВО</span>
+                  ) : (
+                    <span className="status-deferred">Отложено — применить вручную через «Синхр. в ЕПВО»</span>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>

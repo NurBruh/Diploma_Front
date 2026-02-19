@@ -6,6 +6,7 @@ import ExportTools from './components/ExportTools'
 import StudentsTable from './components/StudentsTable'
 import Login from './components/Login'
 import Register from './components/Register'
+import SsoEpvoComparison from './components/SsoEpvoComparison'
 import AuthService from './services/AuthService'
 import './App.css'
 
@@ -17,12 +18,13 @@ const mapStudentFromBackend = (student) => ({
   patronymic: student.middleName || '',
   iin: student.iin || '',
   course: student.course,
-  study_form: student.educationForm || '',
+  study_form: student.educationForm || '',        // будет пустым из EPVO
   institute: student.faculty || '',
-  grant_type: student.grants && student.grants.length > 0 ? student.grants[0].name : '',
-  has_scholarship: student.scholarships && student.scholarships.length > 0 ? 'Да' : 'Нет',
-  scholarship_status: student.scholarships && student.scholarships.some(s => s.isActive) ? 'Активна' : 'Неактивна',
+  grant_type: student.grantName || '',            // раньше было grants[0].name
+  has_scholarship: student.hasScholarship ? 'Да' : 'Нет',
+  scholarship_status: student.hasScholarship ? 'Активна' : 'Неактивна',
   bank_account: '',
+  iban: student.iban || '',
   deprivation_reasons: '',
   curriculum_specialty: student.speciality || ''
 })
@@ -38,6 +40,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState(null)
   const [showRegister, setShowRegister] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
+  const [currentPage, setCurrentPage] = useState('main') // 'main' | 'comparison'
   const [filters, setFilters] = useState({
     fullName: '',
     iin: '',
@@ -85,6 +88,7 @@ function App() {
       has_scholarship: 'Стипендия',
       scholarship_status: 'Статус стипендии',
       bank_account: 'Расчетный счёт',
+      iban: 'IBAN',
       deprivation_reasons: 'Причины лишения',
       curriculum_specialty: 'Специальность'
     }
@@ -116,7 +120,7 @@ function App() {
 
       // 2. Получаем актуальные данные из бэкенда
       const token = AuthService.getToken()
-      const response = await fetch(`${API_BASE_URL}/Students`, {
+      const response = await fetch(`${API_BASE_URL}/Epvo/students`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -186,6 +190,7 @@ function App() {
               id: Date.now(),
               date: new Date().toLocaleString('ru-RU'),
               editor: 'Система (SSO)',
+              status: 'pending',
               changes: changes
             })
 
@@ -216,6 +221,31 @@ function App() {
       showNotification('❌ Ошибка при загрузке данных с сервера', 'error')
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Применить SSO изменения → синхронизировать в ЕПВО и отметить запись
+  const handleApplySsoChange = async (studentId, recordId) => {
+    await handleSyncToEpvo()
+    const updated = { ...changeHistory }
+    if (updated[studentId]) {
+      updated[studentId] = updated[studentId].map(r =>
+        r.id === recordId ? { ...r, status: 'applied' } : r
+      )
+      setChangeHistory(updated)
+      localStorage.setItem('studentChangeHistory', JSON.stringify(updated))
+    }
+  }
+
+  // Отложить SSO изменения — сохранить в истории для ручной синхронизации
+  const handleRejectSsoChange = (studentId, recordId) => {
+    const updated = { ...changeHistory }
+    if (updated[studentId]) {
+      updated[studentId] = updated[studentId].map(r =>
+        r.id === recordId ? { ...r, status: 'deferred' } : r
+      )
+      setChangeHistory(updated)
+      localStorage.setItem('studentChangeHistory', JSON.stringify(updated))
     }
   }
 
@@ -400,6 +430,8 @@ function App() {
         onSyncToEpvo={handleSyncToEpvo}
         syncLoading={syncLoading}
         currentUser={currentUser}
+        currentPage={currentPage}
+        onNavigate={setCurrentPage}
       />
 
       {notification && (
@@ -410,19 +442,31 @@ function App() {
 
       <main className="main-content">
         <div className="container">
-          <SearchFilters
-            filters={filters}
-            setFilters={setFilters}
-            onSearch={handleSearch}
-            changeHistory={changeHistory}
-            students={students}
-            changesCount={getTotalChangesCount()}
-          />
-          <ExportTools />
-          <StudentsTable
-            students={filteredStudents}
-            loading={loading}
-          />
+          {currentPage === 'comparison' ? (
+            <SsoEpvoComparison
+              onSyncToEpvo={handleSyncToEpvo}
+              syncLoading={syncLoading}
+              showNotification={showNotification}
+            />
+          ) : (
+            <>
+              <SearchFilters
+                filters={filters}
+                setFilters={setFilters}
+                onSearch={handleSearch}
+                changeHistory={changeHistory}
+                students={students}
+                changesCount={getTotalChangesCount()}
+                onApplySsoChange={handleApplySsoChange}
+                onRejectSsoChange={handleRejectSsoChange}
+              />
+              <ExportTools />
+              <StudentsTable
+                students={filteredStudents}
+                loading={loading}
+              />
+            </>
+          )}
         </div>
       </main>
     </div>

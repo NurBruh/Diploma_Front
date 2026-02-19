@@ -132,6 +132,24 @@
   animation: spin 1s linear infinite;
 }
 
+.compare-btn {
+  background: rgba(249, 171, 0, 0.15);
+  border-color: rgba(249, 171, 0, 0.6);
+  color: #fde68a;
+}
+
+.compare-btn:hover {
+  background: rgba(249, 171, 0, 0.3);
+  border-color: #f9ab00;
+  color: white;
+}
+
+.compare-btn.active-page {
+  background: #f9ab00;
+  border-color: #f9ab00;
+  color: #1a1a1a;
+}
+
 .lang-selector {
   display: flex;
   background: rgba(0, 0, 0, 0.2);

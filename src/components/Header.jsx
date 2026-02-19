@@ -1,26 +1,38 @@
 import React from 'react';
-import { MdHome, MdRefresh, MdSync, MdVisibility, MdPerson, MdExitToApp } from 'react-icons/md';
+import { MdHome, MdRefresh, MdSync, MdVisibility, MdPerson, MdExitToApp, MdCompareArrows } from 'react-icons/md';
 import './Header.css';
 
-const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading, currentUser }) => {
+const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading, currentUser, currentPage, onNavigate }) => {
   return (
     <header className="header">
       <div className="header-content">
         <nav className="breadcrumb">
-          <button className="nav-btn home-btn">
+          <button className="nav-btn home-btn" onClick={() => onNavigate && onNavigate('main')}>
             <MdHome size={20} />
           </button>
           <span className="separator">›</span>
-          <button className="nav-btn">Cтипендии ЕПВО</button>
-          {/* <span className="separator">›</span>
-          <button className="nav-btn active">Студенты</button> */}
+          <button
+            className={`nav-btn${currentPage !== 'comparison' ? ' active' : ''}`}
+            onClick={() => onNavigate && onNavigate('main')}
+          >
+            Стипендии ЕПВО
+          </button>
+          <span className="separator">›</span>
+          <button
+            className={`nav-btn${currentPage === 'comparison' ? ' active' : ''}`}
+            onClick={() => onNavigate && onNavigate('comparison')}
+          >
+            ССО vs ЕПВО
+          </button>
         </nav>
 
         <div className="header-actions">
-          <button className="icon-btn refresh-btn" title="Обновить данные" onClick={onRefresh}>
-            <MdRefresh size={20} />
-            Актуализировать
-          </button>
+          {currentPage !== 'comparison' && (
+            <button className="icon-btn refresh-btn" title="Обновить данные" onClick={onRefresh}>
+              <MdRefresh size={20} />
+              Актуализировать
+            </button>
+          )}
 
           <button
             className={`icon-btn sync-epvo-btn${syncLoading ? ' syncing' : ''}`}
@@ -32,10 +44,14 @@ const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading
             {syncLoading ? 'Синхронизация...' : 'Синхр. в ЕПВО'}
           </button>
 
-          {/* <button className="icon-btn clear-history-btn" title="Очистить историю" onClick={onClearHistory}>
-            <MdDeleteSweep size={20} />
-            Очистить историю
-          </button> */}
+          <button
+            className={`icon-btn compare-btn${currentPage === 'comparison' ? ' active-page' : ''}`}
+            title="Сравнение ССО и ЕПВО"
+            onClick={() => onNavigate && onNavigate(currentPage === 'comparison' ? 'main' : 'comparison')}
+          >
+            <MdCompareArrows size={20} />
+            ССО vs ЕПВО
+          </button>
 
           <button className="icon-btn" title="Версия для слабовидящих">
             <MdVisibility size={20} />

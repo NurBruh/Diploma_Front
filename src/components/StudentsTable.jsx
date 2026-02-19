@@ -45,6 +45,8 @@ const StudentsTable = ({ students, loading }) => {
               <th>Статус стипендии</th>
               <th>Расчетный счёт</th>
               <th>Причины лишения</th>
+              {/* Нужно придумать что то для того чтобы разделить этот колонку для чекбокса */}
+              <th>Выбрать все</th>
             </tr>
           </thead>
           <tbody>
@@ -60,16 +62,16 @@ const StudentsTable = ({ students, loading }) => {
                 <td>{student.institute}</td>
                 <td>{extractDepartment(student.curriculum_specialty)}</td>
                 <td>
-                  <span className={`grant-badge ${student.grant_type === 'Государственный' ? 'state' : student.grant_type === 'Академический' ? 'academic' : student.grant_type === 'Ректорский' ? 'rector' : 'lyceum'}`}>
+                  <span className={`grant-badge ${student.grant_type === 'Государственный' ? 'state' : student.grant_type === 'Ректорский' ? 'rector' : 'lyceum'}`}>
                     {student.grant_type}
                   </span>
                 </td>
                 <td>
                   <span className={`status-badge ${student.scholarship_status === 'Активна' ? 'active' : 'inactive'}`}>
-                    {student.has_scholarship === 'Да' ? 'Назначено' : 'Не назначено'}
+                    {student.has_scholarship === 'Да' ? 'Назначено' : student.has_scholarship === 'Нет' ? 'Не назначено' : 'Не указано'}
                   </span>
                 </td>
-                <td className="bank-account">{student.bank_account || 'Не указан'}</td>
+                <td className="bank-account">{student.iban || 'Не указан'}</td>
                 <td className="deprivation-reasons">
                   {student.deprivation_reasons || 'Нет'}
                 </td>
