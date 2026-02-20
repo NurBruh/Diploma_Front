@@ -153,11 +153,14 @@
 /* === Dual table layout === */
 .comparison-dual-tables {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 1.5rem;
+  align-items: flex-start;
 }
 
 .comparison-table-block {
+  flex: 1;
+  min-width: 0;
   background: var(--surface-white);
   border-radius: 8px;
   box-shadow: var(--shadow-sm);

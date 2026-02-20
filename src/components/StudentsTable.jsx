@@ -18,6 +18,13 @@ const StudentsTable = ({ students, loading }) => {
       </div>
     );
   }
+
+  const sortedStudents = [...students].sort((a, b) => {
+    const nameA = (a.last_name || '').trim();
+    const nameB = (b.last_name || '').trim();
+    return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
+  });
+
    // Извлекаем кафедру из строки curriculum_specialty
   const extractDepartment = (curriculum) => {
     if (!curriculum) return 'Не указано';
@@ -54,7 +61,7 @@ const StudentsTable = ({ students, loading }) => {
             </tr>
           </thead>
           <tbody>
-            {students.map((student, index) => (
+            {sortedStudents.map((student, index) => (
               <tr key={student.id}>
                 <td>{index + 1}</td>
                 <td className="full-name">

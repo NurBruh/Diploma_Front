@@ -87,13 +87,20 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
     fetchComparison();
   }, []);
 
+  const sortByLastName = (arr) =>
+    [...arr].sort((a, b) => {
+      const nameA = (a.ssoData?.lastName || a.epvoData?.lastName || '').trim();
+      const nameB = (b.ssoData?.lastName || b.epvoData?.lastName || '').trim();
+      return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
+    });
+
   const getFilteredItems = () => {
     if (!data) return [];
     switch (filter) {
-      case 'diff': return data.items.filter(i => i.hasDifferences);
-      case 'sso-only': return data.items.filter(i => i.onlyInSso);
-      case 'epvo-only': return data.items.filter(i => i.onlyInEpvo);
-      default: return data.items;
+      case 'diff': return sortByLastName(data.items.filter(i => i.hasDifferences));
+      case 'sso-only': return sortByLastName(data.items.filter(i => i.onlyInSso));
+      case 'epvo-only': return sortByLastName(data.items.filter(i => i.onlyInEpvo));
+      default: return sortByLastName(data.items);
     }
   };
 
