@@ -369,6 +369,40 @@ function App() {
     showNotification('✅ Вы вышли из системы', 'info')
   }
 
+  // Обновление расчётного счёта (IBAN) студента в ЕПВО
+  const handleUpdateIban = async (iin, newIban) => {
+    const token = AuthService.getToken()
+    const response = await fetch(`${API_BASE_URL}/Epvo/students/${iin}/iban`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ newIban })
+    })
+
+    if (response.status === 401) {
+      AuthService.logout()
+      setIsAuthenticated(false)
+      setCurrentUser(null)
+      showNotification('❌ Сессия истекла, войдите заново', 'error')
+      throw new Error('Сессия истекла')
+    }
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}))
+      throw new Error(errData.message || `Ошибка сервера: ${response.status}`)
+    }
+
+    // Обновляем локальные данные
+    const updateList = (list) =>
+      list.map(s => s.iin === iin ? { ...s, bank_account: newIban } : s)
+
+    setStudents(prev => updateList(prev))
+    setFilteredStudents(prev => updateList(prev))
+    showNotification('✅ Расчётный счёт успешно обновлён', 'success')
+  }
+
   // Если пользователь не авторизован, показываем форму авторизации/регистрации
   if (!isAuthenticated) {
     return (
@@ -434,6 +468,7 @@ function App() {
               <StudentsTable
                 students={filteredStudents}
                 loading={loading}
+                onUpdateIban={handleUpdateIban}
               />
             </>
           )}

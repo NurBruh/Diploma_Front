@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { BsFillPencilFill } from 'react-icons/bs';
+import EditBankAccountModal from './EditBankAccountModal';
 import './StudentsTable.css';
 
-const StudentsTable = ({ students, loading }) => {
+const StudentsTable = ({ students, loading, onUpdateIban }) => {
+  const [editingStudent, setEditingStudent] = useState(null);
   if (loading) {
     return (
       <div className="loading-container">
@@ -82,7 +85,18 @@ const StudentsTable = ({ students, loading }) => {
                     {student.has_scholarship === 'Да' ? 'Назначено' : student.has_scholarship === 'Нет' ? 'Не назначено' : 'Не указано'}
                   </span>
                 </td>
-                <td className="bank-account">{student.bank_account || 'Не указан'}</td>
+                <td className="bank-account">
+                  <div className="bank-account-cell">
+                    <span className="bank-account-text">{student.bank_account || 'Не указан'}</span>
+                    <button
+                      className="edit-iban-btn"
+                      title="Редактировать расчётный счёт"
+                      onClick={() => setEditingStudent(student)}
+                    >
+                      <BsFillPencilFill size={14} />
+                    </button>
+                  </div>
+                </td>
                 <td className="deprivation-reasons">
                   {student.deprivation_reasons || 'Нет'}
                 </td>
@@ -96,6 +110,17 @@ const StudentsTable = ({ students, loading }) => {
       <div className="table-footer">
         <p>Всего студентов: <strong>{students.length}</strong></p>
       </div>
+
+      {editingStudent && (
+        <EditBankAccountModal
+          student={editingStudent}
+          onClose={() => setEditingStudent(null)}
+          onSave={async (iin, newIban) => {
+            await onUpdateIban(iin, newIban);
+            setEditingStudent(null);
+          }}
+        />
+      )}
     </div>
   );
 };
