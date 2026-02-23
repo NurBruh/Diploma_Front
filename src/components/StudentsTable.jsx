@@ -1,10 +1,31 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { BsFillPencilFill } from 'react-icons/bs';
 import EditBankAccountModal from './EditBankAccountModal';
 import './StudentsTable.css';
 
 const StudentsTable = ({ students, loading, onUpdateIban }) => {
   const [editingStudent, setEditingStudent] = useState(null);
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const selectAllRef = useRef(null);
+
+  const sortedStudents = (!loading && students && students.length > 0)
+    ? [...students].sort((a, b) => {
+        const nameA = (a.last_name || '').trim();
+        const nameB = (b.last_name || '').trim();
+        return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
+      })
+    : [];
+
+  const allIds = sortedStudents.map((s) => s.id);
+  const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
+  const someSelected = allIds.some((id) => selectedIds.has(id)) && !allSelected;
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someSelected;
+    }
+  }, [someSelected]);
+
   if (loading) {
     return (
       <div className="loading-container">
@@ -22,13 +43,24 @@ const StudentsTable = ({ students, loading, onUpdateIban }) => {
     );
   }
 
-  const sortedStudents = [...students].sort((a, b) => {
-    const nameA = (a.last_name || '').trim();
-    const nameB = (b.last_name || '').trim();
-    return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
-  });
+  const handleSelectAll = (e) => {
+    if (e.target.checked) {
+      setSelectedIds(new Set(allIds));
+    } else {
+      setSelectedIds(new Set());
+    }
+  };
 
-   // Извлекаем кафедру из строки curriculum_specialty
+  const handleSelectRow = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  // Извлекаем кафедру из строки curriculum_specialty
   const extractDepartment = (curriculum) => {
     if (!curriculum) return 'Не указано';
     if (curriculum.includes('Компьютер')) return 'Кафедра "Компьютерные"';
@@ -54,18 +86,25 @@ const StudentsTable = ({ students, loading, onUpdateIban }) => {
               <th>Статус стипендии</th>
               <th>Расчетный счёт</th>
               <th>Причины лишения</th>
-              {/* Нужно придумать что то для того чтобы разделить этот колонку для чекбокса */}
-              {/* <th>Выбрать все</th> */}
-              <th>
-                <input type="checkbox" name="selectAll" />
+              <th className="th-select">
+                <label className="checkbox-label">
+                  <span>Выбрать все</span>
+                  
+                  <input
+                    ref={selectAllRef}
+                    type="checkbox"
+                    className="custom-checkbox"
+                    checked={allSelected}
+                    onChange={handleSelectAll}
+                  />
+                  
+                </label>
               </th>
-              
-             
             </tr>
           </thead>
           <tbody>
             {sortedStudents.map((student, index) => (
-              <tr key={student.id}>
+              <tr key={student.id} className={selectedIds.has(student.id) ? 'row-selected' : ''}>
                 <td>{index + 1}</td>
                 <td className="full-name">
                   {student.last_name} {student.first_name} {student.patronymic}
@@ -100,7 +139,14 @@ const StudentsTable = ({ students, loading, onUpdateIban }) => {
                 <td className="deprivation-reasons">
                   {student.deprivation_reasons || 'Нет'}
                 </td>
-                <td><input type="checkbox" name="selectAll" /></td>
+                <td className="td-select">
+                  <input
+                    type="checkbox"
+                    className="custom-checkbox"
+                    checked={selectedIds.has(student.id)}
+                    onChange={() => handleSelectRow(student.id)}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
@@ -108,6 +154,9 @@ const StudentsTable = ({ students, loading, onUpdateIban }) => {
       </div>
       
       <div className="table-footer">
+        {selectedIds.size > 0 && (
+          <span className="selected-count">Выбрано: <strong>{selectedIds.size}</strong></span>
+        )}
         <p>Всего студентов: <strong>{students.length}</strong></p>
       </div>
 

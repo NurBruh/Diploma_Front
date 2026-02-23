@@ -163,6 +163,13 @@
   margin: 0 auto 1rem;
 }
 
+.checkbox-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px; 
+}
+
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
