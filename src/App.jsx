@@ -401,6 +401,8 @@ function App() {
 
       const data = await response.json()
       showNotification(`${data.message || `Отправлено ${data.syncedCount} студентов в ЕПВО`}`, 'success')
+      // Перезагружаем таблицу чтобы увидеть обновлённые данные
+      await fetchStudents()
     } catch (error) {
       console.error('Ошибка отправки в ЕПВО:', error)
       showNotification('Ошибка при отправке выбранных студентов в ЕПВО', 'error')
@@ -440,7 +442,7 @@ function App() {
 
     setStudents(prev => updateList(prev))
     setFilteredStudents(prev => updateList(prev))
-    showNotification('✅ Расчётный счёт успешно обновлён', 'success')
+    showNotification('✅ Расчётный счёт обновлён в ССО. Актуализируйте данные в «ССО vs ЕПВО»', 'info')
   }
 
   // Если пользователь не авторизован, показываем форму авторизации/регистрации
