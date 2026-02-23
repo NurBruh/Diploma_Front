@@ -1,20 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { BsFillPencilFill } from 'react-icons/bs';
+import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
 import './StudentsTable.css';
 
-const StudentsTable = ({ students, loading, onUpdateIban }) => {
+const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading }) => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const selectAllRef = useRef(null);
 
-  const sortedStudents = (!loading && students && students.length > 0)
-    ? [...students].sort((a, b) => {
-        const nameA = (a.last_name || '').trim();
-        const nameB = (b.last_name || '').trim();
-        return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
-      })
-    : [];
+  const sortedStudents = (!students || students.length === 0) ? [] : [...students].sort((a, b) => {
+    const nameA = (a.last_name || '').trim();
+    const nameB = (b.last_name || '').trim();
+    return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
+  });
 
   const allIds = sortedStudents.map((s) => s.id);
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
@@ -25,23 +24,6 @@ const StudentsTable = ({ students, loading, onUpdateIban }) => {
       selectAllRef.current.indeterminate = someSelected;
     }
   }, [someSelected]);
-
-  if (loading) {
-    return (
-      <div className="loading-container">
-        <div className="spinner"></div>
-        <p>Загрузка данных...</p>
-      </div>
-    );
-  }
-
-  if (!students || students.length === 0) {
-    return (
-      <div className="no-data">
-        <p>Нет данных для отображения. Используйте фильтры для поиска студентов.</p>
-      </div>
-    );
-  }
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -69,6 +51,23 @@ const StudentsTable = ({ students, loading, onUpdateIban }) => {
     return 'Не указано';
   };
 
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="spinner"></div>
+        <p>Загрузка данных...</p>
+      </div>
+    );
+  }
+
+  if (!students || students.length === 0) {
+    return (
+      <div className="no-data">
+        <p>Нет данных для отображения. Используйте фильтры для поиска студентов.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="table-container">
       <div className="table-wrapper">
@@ -88,8 +87,6 @@ const StudentsTable = ({ students, loading, onUpdateIban }) => {
               <th>Причины лишения</th>
               <th className="th-select">
                 <label className="checkbox-label">
-                  <span>Выбрать все</span>
-                  
                   <input
                     ref={selectAllRef}
                     type="checkbox"
@@ -97,7 +94,7 @@ const StudentsTable = ({ students, loading, onUpdateIban }) => {
                     checked={allSelected}
                     onChange={handleSelectAll}
                   />
-                  
+                  <span>Выбрать все</span>
                 </label>
               </th>
             </tr>
@@ -155,7 +152,25 @@ const StudentsTable = ({ students, loading, onUpdateIban }) => {
       
       <div className="table-footer">
         {selectedIds.size > 0 && (
-          <span className="selected-count">Выбрано: <strong>{selectedIds.size}</strong></span>
+          <div className="selected-actions">
+            <span className="selected-count">Выбрано: <strong>{selectedIds.size}</strong></span>
+            <button
+              className="send-selected-btn"
+              disabled={syncLoading}
+              onClick={() => {
+                const selectedStudents = sortedStudents.filter(s => selectedIds.has(s.id));
+                const iins = selectedStudents.map(s => s.iin).filter(Boolean);
+                if (iins.length === 0) {
+                  alert('У выбранных студентов нет ИИН');
+                  return;
+                }
+                onSendSelectedToEpvo(iins);
+              }}
+            >
+              <MdSend size={16} />
+              {syncLoading ? 'Отправка...' : `Актуализировать выбранных (${selectedIds.size})`}
+            </button>
+          </div>
         )}
         <p>Всего студентов: <strong>{students.length}</strong></p>
       </div>

@@ -131,7 +131,7 @@ function App() {
         AuthService.logout()
         setIsAuthenticated(false)
         setCurrentUser(null)
-        showNotification('❌ Сессия истекла, войдите заново', 'error')
+        showNotification('Сессия истекла, войдите заново', 'error')
         return
       }
 
@@ -157,7 +157,7 @@ function App() {
         localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray))
         setStudents(ssoDataArray)
         setFilteredStudents(ssoDataArray)
-        showNotification('✅ Первичная загрузка данных', 'info')
+        showNotification('Первичная загрузка данных', 'info')
         return
       }
 
@@ -208,14 +208,14 @@ function App() {
       setFilteredStudents(ssoDataArray)
 
       if (totalChanges > 0) {
-        showNotification(`✅ Данные обновлены! Обнаружено изменений: ${totalChanges}`, 'success')
+        showNotification(`Данные обновлены! Обнаружено изменений: ${totalChanges}`, 'success')
       } else {
-        showNotification('✅ Данные актуальны, изменений не обнаружено', 'info')
+        showNotification('Данные актуальны, изменений не обнаружено', 'info')
       }
 
     } catch (error) {
       console.error('Ошибка при загрузке данных:', error)
-      showNotification('❌ Ошибка при загрузке данных с сервера', 'error')
+      showNotification('Ошибка при загрузке данных с сервера', 'error')
     } finally {
       setLoading(false)
     }
@@ -292,7 +292,7 @@ function App() {
         AuthService.logout()
         setIsAuthenticated(false)
         setCurrentUser(null)
-        showNotification('❌ Сессия истекла, войдите заново', 'error')
+        showNotification(' Сессия истекла, войдите заново', 'error')
         return
       }
 
@@ -301,10 +301,10 @@ function App() {
       }
 
       const data = await response.json()
-      showNotification(`✅ ${data.message}`, 'success')
+      showNotification(`${data.message}`, 'success')
     } catch (error) {
       console.error('Ошибка синхронизации в ЕПВО:', error)
-      showNotification('❌ Ошибка при синхронизации данных в ЕПВО', 'error')
+      showNotification('Ошибка при синхронизации данных в ЕПВО', 'error')
     } finally {
       setSyncLoading(false)
     }
@@ -333,7 +333,7 @@ function App() {
     setIsAuthenticated(true)
     setCurrentUser(userData)
     setShowRegister(false)
-    showNotification(`✅ Добро пожаловать, ${userData.username}!`, 'success')
+    showNotification(`Добро пожаловать, ${userData.username}!`, 'success')
 
     // Загружаем данные после авторизации
     const savedHistory = localStorage.getItem('studentChangeHistory')
@@ -354,7 +354,7 @@ function App() {
     setIsAuthenticated(true)
     setCurrentUser(userData)
     setShowRegister(false)
-    showNotification(`✅ Регистрация успешна! Добро пожаловать, ${userData.username}!`, 'success')
+    showNotification(`Регистрация успешна! Добро пожаловать, ${userData.username}!`, 'success')
 
     fetchStudents()
   }
@@ -366,7 +366,47 @@ function App() {
     setCurrentUser(null)
     setStudents([])
     setFilteredStudents([])
-    showNotification('✅ Вы вышли из системы', 'info')
+    showNotification('Вы вышли из системы', 'info')
+  }
+
+  // Отправка выбранных студентов (чекбокс) в ЕПВО как массив
+  const handleSendSelectedToEpvo = async (selectedIINs) => {
+    if (!selectedIINs || selectedIINs.length === 0) {
+      showNotification(' Выберите хотя бы одного студента', 'error')
+      return
+    }
+    setSyncLoading(true)
+    try {
+      const token = AuthService.getToken()
+      const response = await fetch(`${API_BASE_URL}/Epvo/sync-batch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ iinS: selectedIINs })
+      })
+
+      if (response.status === 401) {
+        AuthService.logout()
+        setIsAuthenticated(false)
+        setCurrentUser(null)
+        showNotification('Сессия истекла, войдите заново', 'error')
+        return
+      }
+
+      if (!response.ok) {
+        throw new Error(`Ошибка сервера: ${response.status}`)
+      }
+
+      const data = await response.json()
+      showNotification(`${data.message || `Отправлено ${data.syncedCount} студентов в ЕПВО`}`, 'success')
+    } catch (error) {
+      console.error('Ошибка отправки в ЕПВО:', error)
+      showNotification('Ошибка при отправке выбранных студентов в ЕПВО', 'error')
+    } finally {
+      setSyncLoading(false)
+    }
   }
 
   // Обновление расчётного счёта (IBAN) студента в ЕПВО
@@ -385,7 +425,7 @@ function App() {
       AuthService.logout()
       setIsAuthenticated(false)
       setCurrentUser(null)
-      showNotification('❌ Сессия истекла, войдите заново', 'error')
+      showNotification('Сессия истекла, войдите заново', 'error')
       throw new Error('Сессия истекла')
     }
 
@@ -469,6 +509,8 @@ function App() {
                 students={filteredStudents}
                 loading={loading}
                 onUpdateIban={handleUpdateIban}
+                onSendSelectedToEpvo={handleSendSelectedToEpvo}
+                syncLoading={syncLoading}
               />
             </>
           )}
