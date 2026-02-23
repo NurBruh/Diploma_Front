@@ -4,10 +4,15 @@ import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
 import './StudentsTable.css';
 
-const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading }) => {
+const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey }) => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const selectAllRef = useRef(null);
+
+  // Сбрасываем чекбоксы при фильтрации
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [selectionKey]);
 
   const sortedStudents = (!students || students.length === 0) ? [] : [...students].sort((a, b) => {
     const nameA = (a.last_name || '').trim();
@@ -86,6 +91,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
               <th>Расчетный счёт</th>
               <th>Причины лишения</th>
               <th className="th-select">
+                Все
                 <label className="checkbox-label">
                   <input
                     ref={selectAllRef}
@@ -94,7 +100,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                     checked={allSelected}
                     onChange={handleSelectAll}
                   />
-                  <span>Выбрать все</span>
+                  
                 </label>
               </th>
             </tr>

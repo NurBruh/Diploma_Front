@@ -27,12 +27,12 @@ const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading
         </nav>
 
         <div className="header-actions">
-          {currentPage !== 'comparison' && (
+          {/* {currentPage !== 'comparison' && (
             <button className="icon-btn refresh-btn" title="Обновить данные" onClick={onRefresh}>
               <MdRefresh size={20} />
               Актуализировать
             </button>
-          )}
+          )} */}
 
           <button
             className={`icon-btn sync-epvo-btn${syncLoading ? ' syncing' : ''}`}

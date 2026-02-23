@@ -200,9 +200,13 @@
 
 .checkbox-label {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  gap: 2px; 
+  gap: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 500;
+  font-size: 0.85rem;
 }
 
 @keyframes spin {

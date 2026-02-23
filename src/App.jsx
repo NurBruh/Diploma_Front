@@ -40,6 +40,7 @@ function App() {
   const [showRegister, setShowRegister] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState('main')
+  const [selectionKey, setSelectionKey] = useState(0)
   const [filters, setFilters] = useState({
     fullName: '',
     iin: '',
@@ -269,6 +270,7 @@ function App() {
     }
 
     setFilteredStudents(filtered)
+    setSelectionKey(prev => prev + 1)  // сбрасываем чекбоксы
   }
 
   const handleRefresh = () => {
@@ -513,6 +515,7 @@ function App() {
                 onUpdateIban={handleUpdateIban}
                 onSendSelectedToEpvo={handleSendSelectedToEpvo}
                 syncLoading={syncLoading}
+                selectionKey={selectionKey}
               />
             </>
           )}
