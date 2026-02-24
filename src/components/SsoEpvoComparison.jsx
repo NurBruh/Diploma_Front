@@ -61,6 +61,11 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
     }
   };
 
+  const handleSyncAll = async () => {
+    await onSyncToEpvo();
+    await fetchComparison();
+  };
+
   const syncStudent = async (iin) => {
     setSyncingIIN(iin);
     try {
@@ -130,7 +135,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
             </button>
             <button
               className={`icon-btn-sm sync-btn${syncLoading ? ' syncing' : ''}`}
-              onClick={onSyncToEpvo}
+              onClick={handleSyncAll}
               disabled={syncLoading}
             >
               <MdSync size={18} className={syncLoading ? 'spin' : ''} />
@@ -222,10 +227,10 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
                     const rowClass = onlyInSso
                       ? 'row-only-sso'
                       : onlyInEpvo
-                      ? 'row-only-epvo'
-                      : hasDiff
-                      ? 'row-has-diff'
-                      : '';
+                        ? 'row-only-epvo'
+                        : hasDiff
+                          ? 'row-has-diff'
+                          : '';
 
                     return (
                       <tr key={item.iin} className={rowClass}>
@@ -292,10 +297,10 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
                     const rowClass = onlyInSso
                       ? 'row-only-sso'
                       : onlyInEpvo
-                      ? 'row-only-epvo'
-                      : hasDiff
-                      ? 'row-has-diff'
-                      : '';
+                        ? 'row-only-epvo'
+                        : hasDiff
+                          ? 'row-has-diff'
+                          : '';
 
                     return (
                       <tr key={item.iin} className={rowClass}>
