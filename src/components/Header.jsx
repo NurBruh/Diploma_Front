@@ -1,5 +1,5 @@
 import React from 'react';
-import { MdHome, MdRefresh, MdSync, MdVisibility, MdPerson, MdExitToApp, MdCompareArrows } from 'react-icons/md';
+import { MdHome, MdRefresh, MdSync, MdPerson, MdExitToApp, MdCompareArrows } from 'react-icons/md';
 import './Header.css';
 
 const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading, currentUser, currentPage, onNavigate }) => {
@@ -17,7 +17,7 @@ const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading
           >
             Стипендии ЕПВО
           </button>
-        
+
           {/* <button
             className={`nav-btn${currentPage === 'comparison' ? ' active' : ''}`}
             onClick={() => onNavigate && onNavigate('comparison')}
@@ -53,16 +53,7 @@ const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading
             ССО vs ЕПВО
           </button>
 
-          <button className="icon-btn" title="Версия для слабовидящих">
-            <MdVisibility size={20} />
-            Версия для слабовидящих
-          </button>
-{/* 
-          <div className="lang-selector">
-            <button className="lang-btn active">Қаз</button>
-            <button className="lang-btn">Рус</button>
-            <button className="lang-btn">Eng</button>
-          </div> */}
+          {/* Виджет «Версия для слабовидящих» подключён через библиотеку accessibility (см. App.jsx) */}
 
           <div className="profile">
             <div className="profile-info">
