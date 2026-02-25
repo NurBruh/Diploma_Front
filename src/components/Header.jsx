@@ -57,12 +57,12 @@ const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading
             <MdVisibility size={20} />
             Версия для слабовидящих
           </button>
-
+{/* 
           <div className="lang-selector">
             <button className="lang-btn active">Қаз</button>
             <button className="lang-btn">Рус</button>
             <button className="lang-btn">Eng</button>
-          </div>
+          </div> */}
 
           <div className="profile">
             <div className="profile-info">
