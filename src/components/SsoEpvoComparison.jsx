@@ -40,37 +40,9 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
   const [syncingIIN, setSyncingIIN] = useState(null);
-  const ssoTbodyRef = useRef(null);
-  const epvoTbodyRef = useRef(null);
   const ssoScrollRef = useRef(null);
   const epvoScrollRef = useRef(null);
   const scrollingRef = useRef(null);
-
-  // Синхронизация высоты строк между двумя таблицами
-  const syncRowHeights = useCallback(() => {
-    const ssoTbody = ssoTbodyRef.current;
-    const epvoTbody = epvoTbodyRef.current;
-    if (!ssoTbody || !epvoTbody) return;
-
-    const ssoRows = ssoTbody.querySelectorAll('tr');
-    const epvoRows = epvoTbody.querySelectorAll('tr');
-    const count = Math.min(ssoRows.length, epvoRows.length);
-
-    // Сбрасываем высоту
-    for (let i = 0; i < count; i++) {
-      ssoRows[i].style.height = 'auto';
-      epvoRows[i].style.height = 'auto';
-    }
-
-    // Устанавливаем одинаковую (максимальную) высоту для каждой пары строк
-    requestAnimationFrame(() => {
-      for (let i = 0; i < count; i++) {
-        const maxH = Math.max(ssoRows[i].offsetHeight, epvoRows[i].offsetHeight);
-        ssoRows[i].style.height = maxH + 'px';
-        epvoRows[i].style.height = maxH + 'px';
-      }
-    });
-  }, []);
 
   // Синхронизация горизонтального скролла
   const handleSsoScroll = useCallback(() => {
@@ -141,14 +113,6 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
   useEffect(() => {
     fetchComparison();
   }, []);
-
-  // Синхронизация высоты строк после каждого обновления данных/фильтра
-  useEffect(() => {
-    if (data) {
-      const t = setTimeout(syncRowHeights, 50);
-      return () => clearTimeout(t);
-    }
-  }, [data, filter, syncRowHeights]);
 
   const sortByLastName = (arr) =>
     [...arr].sort((a, b) => {
@@ -277,7 +241,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
                     ))}
                   </tr>
                 </thead>
-                <tbody ref={ssoTbodyRef}>
+                <tbody>
                   {items.map((item) => {
                     const hasDiff = item.hasDifferences;
                     const onlyInSso = item.onlyInSso;
@@ -347,7 +311,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
                     ))}
                   </tr>
                 </thead>
-                <tbody ref={epvoTbodyRef}>
+                <tbody>
                   {items.map((item) => {
                     const hasDiff = item.hasDifferences;
                     const onlyInSso = item.onlyInSso;
