@@ -177,14 +177,14 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
               <span className="cstat-num">{data.items.filter(i => i.hasDifferences).length}</span>
               <span className="cstat-label">С различиями</span>
             </div>
-            {/* <div className="cstat cstat-sso">
+            <div className="cstat cstat-sso">
               <MdError size={16} />
-              <span className="cstat-num">{data.onlyInSso}</span>
-              <span className="cstat-label">Только в ССО</span>
+              <span className="cstat-num">{data.items.filter(i => i.onlyInSso).length}</span>
+              <span className="cstat-label">Новые записи в SSO</span>
             </div>
-            <div className="cstat cstat-epvo">
+            {/* <div className="cstat cstat-epvo">
               <MdError size={16} />
-              <span className="cstat-num">{data.onlyInEpvo}</span>
+              <span className="cstat-num">{data.items.filter(i => i.onlyInEpvo).length}</span>
               <span className="cstat-label">Только в ЕПВО</span>
             </div> */}
             <div className="cstat cstat-ok">
@@ -201,8 +201,8 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
           {[
             { key: 'all', label: 'Все' },
             { key: 'diff', label: 'С различиями' },
-            // { key: 'sso-only', label: 'Только в ССО' },
-            // { key: 'epvo-only', label: 'Только в ЕПВО' },
+            { key: 'sso-only', label: 'Новые записи' },
+            
           ].map(f => (
             <button
               key={f.key}
