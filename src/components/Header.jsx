@@ -1,5 +1,5 @@
 import React from 'react';
-import { MdHome, MdRefresh, MdSync, MdPerson, MdExitToApp, MdCompareArrows } from 'react-icons/md';
+import { MdHome, MdRefresh, MdSync, MdVisibility, MdPerson, MdExitToApp, MdCompareArrows } from 'react-icons/md';
 import './Header.css';
 
 const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading, currentUser, currentPage, onNavigate }) => {
@@ -53,7 +53,24 @@ const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading
             ССО vs ЕПВО
           </button>
 
-          {/* Виджет «Версия для слабовидящих» подключён через библиотеку accessibility (см. App.jsx) */}
+          <button
+            className="icon-btn"
+            title="Версия для слабовидящих"
+            onClick={() => {
+              // Программно открываем/закрываем меню accessibility-виджета
+              const icon = document.querySelector('._access-icon');
+              if (icon) icon.click();
+            }}
+          >
+            <MdVisibility size={20} />
+            Версия для слабовидящих
+          </button>
+          {/* 
+          <div className="lang-selector">
+            <button className="lang-btn active">Қаз</button>
+            <button className="lang-btn">Рус</button>
+            <button className="lang-btn">Eng</button>
+          </div> */}
 
           <div className="profile">
             <div className="profile-info">

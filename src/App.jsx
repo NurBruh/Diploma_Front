@@ -1,5 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
-import { Accessibility } from 'accessibility'
+import { useState, useEffect } from 'react'
 import { API_BASE_URL } from './services/api'
 import Header from './components/Header'
 import SearchFilters from './components/SearchFilters'
@@ -51,37 +50,6 @@ function App() {
     department: '',
     grantType: ''
   })
-
-  // Инициализация виджета доступности ("Версия для слабовидящих")
-  const accessibilityInitialized = useRef(false)
-  useEffect(() => {
-    if (!accessibilityInitialized.current) {
-      accessibilityInitialized.current = true
-      new Accessibility({
-        labels: {
-          menuTitle: 'Меню доступности',
-          increaseText: 'Увеличить текст',
-          decreaseText: 'Уменьшить текст',
-          increaseTextSpacing: 'Увеличить интервал',
-          decreaseTextSpacing: 'Уменьшить интервал',
-          increaseLineHeight: 'Увеличить межстрочный',
-          decreaseLineHeight: 'Уменьшить межстрочный',
-          invertColors: 'Инвертировать цвета',
-          grayHues: 'Оттенки серого',
-          underlineLinks: 'Подчеркнуть ссылки',
-          bigCursor: 'Большой курсор',
-          readingGuide: 'Направляющая чтения',
-          textToSpeech: 'Озвучить текст',
-          speechToText: 'Голосовой ввод',
-          disableAnimations: 'Отключить анимации',
-          resetTitle: 'Сбросить',
-          closeTitle: 'Закрыть'
-        },
-        textPixelMode: true,
-        session: { persistent: true }
-      })
-    }
-  }, [])
 
   // Проверка авторизации при монтировании
   useEffect(() => {
