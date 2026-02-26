@@ -75,6 +75,12 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
 
   return (
     <div className="table-container">
+      <div className="table-header-section">
+        <h2 className="table-title">Список студентов</h2>
+        <div className="student-count-badge">
+          Всего: <strong>{students.length}</strong>
+        </div>
+      </div>
       <div className="table-wrapper">
         <table className="students-table">
           <thead>
@@ -100,7 +106,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                     checked={allSelected}
                     onChange={handleSelectAll}
                   />
-                  
+
                 </label>
               </th>
             </tr>
@@ -155,7 +161,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
           </tbody>
         </table>
       </div>
-      
+
       <div className="table-footer">
         {selectedIds.size > 0 && (
           <div className="selected-actions">
@@ -178,7 +184,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
             </button>
           </div>
         )}
-        <p>Всего студентов: <strong>{students.length}</strong></p>
+        
       </div>
 
       {editingStudent && (
