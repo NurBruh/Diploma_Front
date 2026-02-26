@@ -50,7 +50,7 @@ const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading
             onClick={() => onNavigate && onNavigate(currentPage === 'comparison' ? 'main' : 'comparison')}
           >
             <MdCompareArrows size={20} />
-            ССО vs ЕПВО
+            SSO vs ЕПВО
           </button>
 
           <button

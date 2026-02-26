@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MdSync, MdRefresh, MdCheckCircle, MdWarning, MdError } from 'react-icons/md';
 import { API_BASE_URL } from '../services/api';
 import AuthService from '../services/AuthService';
@@ -40,6 +40,56 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
   const [syncingIIN, setSyncingIIN] = useState(null);
+  const ssoTbodyRef = useRef(null);
+  const epvoTbodyRef = useRef(null);
+  const ssoScrollRef = useRef(null);
+  const epvoScrollRef = useRef(null);
+  const scrollingRef = useRef(null);
+
+  // Синхронизация высоты строк между двумя таблицами
+  const syncRowHeights = useCallback(() => {
+    const ssoTbody = ssoTbodyRef.current;
+    const epvoTbody = epvoTbodyRef.current;
+    if (!ssoTbody || !epvoTbody) return;
+
+    const ssoRows = ssoTbody.querySelectorAll('tr');
+    const epvoRows = epvoTbody.querySelectorAll('tr');
+    const count = Math.min(ssoRows.length, epvoRows.length);
+
+    // Сбрасываем высоту
+    for (let i = 0; i < count; i++) {
+      ssoRows[i].style.height = 'auto';
+      epvoRows[i].style.height = 'auto';
+    }
+
+    // Устанавливаем одинаковую (максимальную) высоту для каждой пары строк
+    requestAnimationFrame(() => {
+      for (let i = 0; i < count; i++) {
+        const maxH = Math.max(ssoRows[i].offsetHeight, epvoRows[i].offsetHeight);
+        ssoRows[i].style.height = maxH + 'px';
+        epvoRows[i].style.height = maxH + 'px';
+      }
+    });
+  }, []);
+
+  // Синхронизация горизонтального скролла
+  const handleSsoScroll = useCallback(() => {
+    if (scrollingRef.current === 'epvo') return;
+    scrollingRef.current = 'sso';
+    if (epvoScrollRef.current && ssoScrollRef.current) {
+      epvoScrollRef.current.scrollLeft = ssoScrollRef.current.scrollLeft;
+    }
+    requestAnimationFrame(() => { scrollingRef.current = null; });
+  }, []);
+
+  const handleEpvoScroll = useCallback(() => {
+    if (scrollingRef.current === 'sso') return;
+    scrollingRef.current = 'epvo';
+    if (ssoScrollRef.current && epvoScrollRef.current) {
+      ssoScrollRef.current.scrollLeft = epvoScrollRef.current.scrollLeft;
+    }
+    requestAnimationFrame(() => { scrollingRef.current = null; });
+  }, []);
 
   const fetchComparison = async () => {
     setLoading(true);
@@ -91,6 +141,14 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
   useEffect(() => {
     fetchComparison();
   }, []);
+
+  // Синхронизация высоты строк после каждого обновления данных/фильтра
+  useEffect(() => {
+    if (data) {
+      const t = setTimeout(syncRowHeights, 50);
+      return () => clearTimeout(t);
+    }
+  }, [data, filter, syncRowHeights]);
 
   const sortByLastName = (arr) =>
     [...arr].sort((a, b) => {
@@ -208,7 +266,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
               <h3>ССО (Посредник)</h3>
               <span className="table-count">{items.filter(i => i.ssoData).length} записей</span>
             </div>
-            <div className="table-scroll-wrapper">
+            <div className="table-scroll-wrapper" ref={ssoScrollRef} onScroll={handleSsoScroll}>
               <table className="comparison-data-table">
                 <thead>
                   <tr>
@@ -219,7 +277,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody ref={ssoTbodyRef}>
                   {items.map((item) => {
                     const hasDiff = item.hasDifferences;
                     const onlyInSso = item.onlyInSso;
@@ -279,7 +337,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
               <h3>ЕПВО</h3>
               <span className="table-count">{items.filter(i => i.epvoData).length} записей</span>
             </div>
-            <div className="table-scroll-wrapper">
+            <div className="table-scroll-wrapper" ref={epvoScrollRef} onScroll={handleEpvoScroll}>
               <table className="comparison-data-table">
                 <thead>
                   <tr>
@@ -289,7 +347,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
                     ))}
                   </tr>
                 </thead>
-                <tbody>
+                <tbody ref={epvoTbodyRef}>
                   {items.map((item) => {
                     const hasDiff = item.hasDifferences;
                     const onlyInSso = item.onlyInSso;
