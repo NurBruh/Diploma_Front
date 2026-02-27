@@ -5,6 +5,8 @@ import SearchFilters from './components/SearchFilters'
 import ExportTools from './components/ExportTools'
 import StudentsTable from './components/StudentsTable'
 import SsoEpvoComparison from './components/SsoEpvoComparison'
+import LostScholarshipsV1 from './components/LostScholarshipsV1'
+import LostScholarshipsV2 from './components/LostScholarshipsV2'
 import Login from './components/Login'
 import Register from './components/Register'
 import AuthService from './services/AuthService'
@@ -24,7 +26,7 @@ const mapStudentFromBackend = (student) => ({
   has_scholarship: student.hasScholarship ? 'Да' : 'Нет',
   scholarship_status: student.hasScholarship ? 'Активна' : 'Неактивна',
   bank_account: student.iban || '',
-  deprivation_reasons: '',
+  notes: student.scholarshipNotes || '',
   curriculum_specialty: student.speciality || ''
 })
 
@@ -88,7 +90,7 @@ function App() {
       has_scholarship: 'Стипендия',
       scholarship_status: 'Статус стипендии',
       bank_account: 'Расчетный счёт',
-      deprivation_reasons: 'Причины лишения',
+      notes: 'Примечания',
       curriculum_specialty: 'Специальность'
     }
 
@@ -498,6 +500,10 @@ function App() {
               syncLoading={syncLoading}
               showNotification={showNotification}
             />
+          ) : currentPage === 'lost-v1' ? (
+            <LostScholarshipsV1 showNotification={showNotification} />
+          ) : currentPage === 'lost-v2' ? (
+            <LostScholarshipsV2 showNotification={showNotification} />
           ) : (
             <>
               <SearchFilters
@@ -509,6 +515,36 @@ function App() {
                 changesCount={getTotalChangesCount()}
               />
               <ExportTools />
+              <div style={{
+                display: 'flex', gap: '10px', margin: '0 0 12px 0'
+              }}>
+                <button
+                  onClick={() => setCurrentPage(currentPage === 'lost-v1' ? 'main' : 'lost-v1')}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 18px', borderRadius: '8px', border: '1px solid #d1d5db',
+                    background: currentPage === 'lost-v1' ? '#dc2626' : '#fff',
+                    color: currentPage === 'lost-v1' ? '#fff' : '#374151',
+                    fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Лишённые (В1)
+                </button>
+                <button
+                  onClick={() => setCurrentPage(currentPage === 'lost-v2' ? 'main' : 'lost-v2')}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 18px', borderRadius: '8px', border: '1px solid #d1d5db',
+                    background: currentPage === 'lost-v2' ? '#dc2626' : '#fff',
+                    color: currentPage === 'lost-v2' ? '#fff' : '#374151',
+                    fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Лишённые (В2)
+                </button>
+              </div>
               <StudentsTable
                 students={filteredStudents}
                 loading={loading}

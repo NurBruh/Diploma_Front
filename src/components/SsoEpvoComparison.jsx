@@ -15,6 +15,7 @@ const FIELD_LABELS = {
   grantAmount: 'Сумма гранта',
   scholarshipName: 'Стипендия',
   scholarshipAmount: 'Сумма стипендии',
+  scholarshipNotes: 'Примечания',
   iban: 'IBAN',
   isActive: 'Активен',
 };
@@ -31,6 +32,7 @@ const TABLE_COLUMNS = [
   { key: 'grantAmount', label: 'Сумма гранта' },
   { key: 'scholarshipName', label: 'Стипендия' },
   { key: 'scholarshipAmount', label: 'Сумма стипендии' },
+  { key: 'scholarshipNotes', label: 'Примечания' },
   { key: 'iban', label: 'IBAN', accessor: 'iban' },
   { key: 'isActive', label: 'Активен' },
 ];
@@ -202,7 +204,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
             { key: 'all', label: 'Все' },
             { key: 'diff', label: 'С различиями' },
             { key: 'sso-only', label: 'Новые записи' },
-            
+
           ].map(f => (
             <button
               key={f.key}

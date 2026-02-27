@@ -95,7 +95,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
               <th>Тип гранта</th>
               <th>Статус стипендии</th>
               <th>Расчетный счёт</th>
-              <th>Причины лишения</th>
+              <th>Примечания</th>
               <th className="th-select">
                 Все
                 <label className="checkbox-label">
@@ -146,7 +146,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                   </div>
                 </td>
                 <td className="deprivation-reasons">
-                  {student.deprivation_reasons || 'Нет'}
+                  {student.notes || 'Нет'}
                 </td>
                 <td className="td-select">
                   <input
@@ -184,7 +184,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
             </button>
           </div>
         )}
-        
+
       </div>
 
       {editingStudent && (

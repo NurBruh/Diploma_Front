@@ -157,6 +157,13 @@
   color: #1a1a1a;
 }
 
+.icon-btn.active-page {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: white;
+  color: white;
+  font-weight: 700;
+}
+
 .lang-selector {
   display: flex;
   background: rgba(0, 0, 0, 0.2);
