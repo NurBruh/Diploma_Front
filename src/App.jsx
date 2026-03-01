@@ -5,6 +5,8 @@ import SearchFilters from './components/SearchFilters'
 import ExportTools from './components/ExportTools'
 import StudentsTable from './components/StudentsTable'
 import SsoEpvoComparison from './components/SsoEpvoComparison'
+import LostScholarshipsV1 from './components/LostScholarshipsV1'
+import LostScholarshipsV2 from './components/LostScholarshipsV2'
 import Login from './components/Login'
 import Register from './components/Register'
 import AuthService from './services/AuthService'
@@ -24,7 +26,7 @@ const mapStudentFromBackend = (student) => ({
   has_scholarship: student.hasScholarship ? 'Да' : 'Нет',
   scholarship_status: student.hasScholarship ? 'Активна' : 'Неактивна',
   bank_account: student.iban || '',
-  deprivation_reasons: '',
+  notes: student.scholarshipNotes || '',
   curriculum_specialty: student.speciality || ''
 })
 
@@ -32,8 +34,6 @@ function App() {
   const [students, setStudents] = useState([])
   const [filteredStudents, setFilteredStudents] = useState([])
   const [loading, setLoading] = useState(false)
-  const [previousData, setPreviousData] = useState({})
-  const [changeHistory, setChangeHistory] = useState({})
   const [notification, setNotification] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
@@ -41,6 +41,7 @@ function App() {
   const [syncLoading, setSyncLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState('main')
   const [selectionKey, setSelectionKey] = useState(0)
+  const [referenceData, setReferenceData] = useState(null)
   const [filters, setFilters] = useState({
     fullName: '',
     iin: '',
@@ -60,49 +61,27 @@ function App() {
       const user = AuthService.getCurrentUser()
       setCurrentUser(user)
 
-      // Загрузка данных только для авторизованных пользователей
-      const savedHistory = localStorage.getItem('studentChangeHistory')
-      const savedPreviousData = localStorage.getItem('previousStudentData')
-
-      if (savedHistory) {
-        setChangeHistory(JSON.parse(savedHistory))
-      }
-      if (savedPreviousData) {
-        setPreviousData(JSON.parse(savedPreviousData))
-      }
-
       fetchStudents()
+      fetchReferenceData()
     }
   }, [])
 
-  const detectChanges = (oldData, newData) => {
-    const changes = []
-    const fieldsToCheck = {
-      first_name: 'Имя',
-      last_name: 'Фамилия',
-      patronymic: 'Отчество',
-      course: 'Курс',
-      study_form: 'Форма обучения',
-      institute: 'Институт',
-      grant_type: 'Тип гранта',
-      has_scholarship: 'Стипендия',
-      scholarship_status: 'Статус стипендии',
-      bank_account: 'Расчетный счёт',
-      deprivation_reasons: 'Причины лишения',
-      curriculum_specialty: 'Специальность'
-    }
-
-    for (const [key, label] of Object.entries(fieldsToCheck)) {
-      if (String(oldData[key] || '') !== String(newData[key] || '')) {
-        changes.push({
-          field: label,
-          oldValue: oldData[key] || 'Не указано',
-          newValue: newData[key] || 'Не указано'
-        })
+  const fetchReferenceData = async () => {
+    try {
+      const token = AuthService.getToken()
+      const response = await fetch(`${API_BASE_URL}/ReferenceData`, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+      if (response.ok) {
+        const data = await response.json()
+        setReferenceData(data)
       }
+    } catch (error) {
+      console.error('Ошибка загрузки справочных данных:', error)
     }
-
-    return changes
   }
 
   const showNotification = (message, type = 'success') => {
@@ -113,11 +92,6 @@ function App() {
   const fetchStudents = async () => {
     setLoading(true)
     try {
-      // 1. Получаем сохраненные данные из localStorage (предыдущее состояние)
-      const savedData = localStorage.getItem('previousStudentData')
-      let localDataArray = savedData ? JSON.parse(savedData) : []
-
-      // 2. Получаем актуальные данные из бэкенда
       const token = AuthService.getToken()
       const response = await fetch(`${API_BASE_URL}/Epvo/students`, {
         method: 'GET',
@@ -128,7 +102,6 @@ function App() {
       })
 
       if (response.status === 401) {
-        // Токен истёк — разлогиниваем
         AuthService.logout()
         setIsAuthenticated(false)
         setCurrentUser(null)
@@ -141,78 +114,11 @@ function App() {
       }
 
       const backendData = await response.json()
-
-      // Маппим данные из формата бэкенда в формат фронтенда
       const ssoDataArray = backendData.map(mapStudentFromBackend)
 
-      // ============================================================
-      // ЗАКОММЕНТИРОВАННЫЙ КОД: получение данных из mokky.dev (мок-API)
-      // В дальнейшем может понадобиться — оставляем как справку
-      // ============================================================
-      // const ssoResponse = await axios.get('https://84ec8b151116fab6.mokky.dev/front')
-      // const ssoDataArray = ssoResponse.data
-      // ============================================================
-
-      // Если это первая загрузка, сохраняем данные как базовые
-      if (localDataArray.length === 0) {
-        localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray))
-        setStudents(ssoDataArray)
-        setFilteredStudents(ssoDataArray)
-        showNotification('Первичная загрузка данных', 'info')
-        return
-      }
-
-      // Создаем мапу старых данных для быстрого поиска
-      const localDataMap = {}
-      localDataArray.forEach(st => localDataMap[st.id] = st)
-
-      // Проверяем изменения
-      const updatedHistory = { ...changeHistory }
-      let totalChanges = 0
-
-      ssoDataArray.forEach(student => {
-        const studentId = student.id
-
-        // Сравниваем с предыдущим состоянием
-        if (localDataMap[studentId]) {
-          const changes = detectChanges(localDataMap[studentId], student)
-
-          if (changes.length > 0) {
-            totalChanges++
-
-            if (!updatedHistory[studentId]) {
-              updatedHistory[studentId] = []
-            }
-
-            // Добавляем новую запись в историю
-            updatedHistory[studentId].unshift({
-              id: Date.now(),
-              date: new Date().toLocaleString('ru-RU'),
-              editor: 'Система (SSO)',
-              changes: changes
-            })
-
-            if (updatedHistory[studentId].length > 10) {
-              updatedHistory[studentId] = updatedHistory[studentId].slice(0, 10)
-            }
-          }
-        }
-      })
-
-      // Сохраняем историю и обновляем базовые данные
-      setChangeHistory(updatedHistory)
-      localStorage.setItem('studentChangeHistory', JSON.stringify(updatedHistory))
-      localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray))
-
-      // В таблице показываем актуальные данные
       setStudents(ssoDataArray)
       setFilteredStudents(ssoDataArray)
-
-      if (totalChanges > 0) {
-        showNotification(`Данные обновлены! Обнаружено изменений: ${totalChanges}`, 'success')
-      } else {
-        showNotification('Данные актуальны, изменений не обнаружено', 'info')
-      }
+      showNotification('Данные загружены', 'info')
 
     } catch (error) {
       console.error('Ошибка при загрузке данных:', error)
@@ -260,6 +166,17 @@ function App() {
       filtered = filtered.filter(student =>
         student.institute?.includes(filters.institute)
       )
+    }
+
+    // Фильтрация по кафедре (через справочник специальностей)
+    if (filters.department && referenceData?.specialities) {
+      const specsInDept = referenceData.specialities
+        .filter(s => s.departmentName === filters.department)
+        .map(s => s.specialityName.toLowerCase())
+      filtered = filtered.filter(student => {
+        const spec = (student.curriculum_specialty || '').toLowerCase()
+        return specsInDept.some(s => spec.includes(s) || s.includes(spec))
+      })
     }
 
     // Фильтрация по типу гранта
@@ -312,43 +229,14 @@ function App() {
     }
   }
 
-  const handleClearHistory = () => {
-    if (window.confirm('Очистить всю историю изменений? Это действие нельзя отменить.')) {
-      setChangeHistory({})
-      setPreviousData({})
-      localStorage.removeItem('studentChangeHistory')
-      localStorage.removeItem('previousStudentData')
-      alert('История изменений очищена. Нажмите "Актуализировать" для сохранения текущих данных как базовых.')
-    }
-  }
-
-  const getTotalChangesCount = () => {
-    let total = 0
-    Object.values(changeHistory).forEach(studentHistory => {
-      total += studentHistory.length
-    })
-    return total
-  }
-
-  // Обработчик успешной авторизации
   const handleLogin = (userData) => {
     setIsAuthenticated(true)
     setCurrentUser(userData)
     setShowRegister(false)
     showNotification(`Добро пожаловать, ${userData.username}!`, 'success')
 
-    // Загружаем данные после авторизации
-    const savedHistory = localStorage.getItem('studentChangeHistory')
-    const savedPreviousData = localStorage.getItem('previousStudentData')
-
-    if (savedHistory) {
-      setChangeHistory(JSON.parse(savedHistory))
-    }
-    if (savedPreviousData) {
-      setPreviousData(JSON.parse(savedPreviousData))
-    }
-
     fetchStudents()
+    fetchReferenceData()
   }
 
   // Обработчик успешной регистрации
@@ -359,6 +247,7 @@ function App() {
     showNotification(`Регистрация успешна! Добро пожаловать, ${userData.username}!`, 'success')
 
     fetchStudents()
+    fetchReferenceData()
   }
 
   // Обработчик выхода
@@ -475,7 +364,6 @@ function App() {
     <div className="app">
       <Header
         onRefresh={handleRefresh}
-        onClearHistory={handleClearHistory}
         onLogout={handleLogout}
         onSyncToEpvo={handleSyncToEpvo}
         syncLoading={syncLoading}
@@ -498,17 +386,50 @@ function App() {
               syncLoading={syncLoading}
               showNotification={showNotification}
             />
+          ) : currentPage === 'lost-v1' ? (
+            <LostScholarshipsV1 showNotification={showNotification} />
+          ) : currentPage === 'lost-v2' ? (
+            <LostScholarshipsV2 showNotification={showNotification} />
           ) : (
             <>
               <SearchFilters
                 filters={filters}
                 setFilters={setFilters}
                 onSearch={handleSearch}
-                changeHistory={changeHistory}
                 students={students}
-                changesCount={getTotalChangesCount()}
+                referenceData={referenceData}
               />
-              <ExportTools />
+              {/* <ExportTools /> */}
+              <div style={{
+                display: 'flex', gap: '10px', margin: '0 0 12px 0'
+              }}>
+                <button
+                  onClick={() => setCurrentPage(currentPage === 'lost-v1' ? 'main' : 'lost-v1')}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 18px', borderRadius: '8px', border: '1px solid #d1d5db',
+                    background: currentPage === 'lost-v1' ? '#dc2626' : '#fff',
+                    color: currentPage === 'lost-v1' ? '#fff' : '#374151',
+                    fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Лишённые стипендии 
+                </button>
+                {/* <button
+                  onClick={() => setCurrentPage(currentPage === 'lost-v2' ? 'main' : 'lost-v2')}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                    padding: '8px 18px', borderRadius: '8px', border: '1px solid #d1d5db',
+                    background: currentPage === 'lost-v2' ? '#dc2626' : '#fff',
+                    color: currentPage === 'lost-v2' ? '#fff' : '#374151',
+                    fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Лишённые (В2)
+                </button> */}
+              </div>
               <StudentsTable
                 students={filteredStudents}
                 loading={loading}
@@ -516,6 +437,7 @@ function App() {
                 onSendSelectedToEpvo={handleSendSelectedToEpvo}
                 syncLoading={syncLoading}
                 selectionKey={selectionKey}
+                referenceData={referenceData}
               />
             </>
           )}

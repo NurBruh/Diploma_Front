@@ -11,6 +11,38 @@
   overflow-x: auto;
 }
 
+.table-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: #f8f9fa;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.table-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.student-count-badge {
+  background: #e8f0fe;
+  color: #1967d2;
+  padding: 0.35rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: 1px solid #d2e3fc;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.student-count-badge strong {
+  font-weight: 800;
+  margin-left: 0.2rem;
+}
+
 .students-table {
   width: 100%;
   border-collapse: collapse;
@@ -44,7 +76,8 @@
 }
 
 .students-table tbody tr:hover {
-  background-color: #e8f0fe; /* Light blue highlight on hover */
+  background-color: #e8f0fe;
+  /* Light blue highlight on hover */
 }
 
 .students-table td {
@@ -85,7 +118,8 @@
   align-items: center;
   justify-content: center;
   padding: 0.25rem 0.6rem;
-  border-radius: 4px; /* More rectangular like enterprise labels */
+  border-radius: 4px;
+  /* More rectangular like enterprise labels */
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -180,7 +214,8 @@
   margin-left: 0.25rem;
 }
 
-.loading-container, .no-data {
+.loading-container,
+.no-data {
   padding: 3rem;
   text-align: center;
   background: var(--surface-white);
@@ -210,5 +245,7 @@
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }

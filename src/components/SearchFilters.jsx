@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
-import { MdSearch, MdHistory } from 'react-icons/md';
-import { BsFillPencilFill } from "react-icons/bs";
-import ChangeHistory from './ChangeHistory';
+import React from 'react';
+import { MdSearch } from 'react-icons/md';
 import './SearchFilters.css';
 
-const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students, changesCount, onApplySsoChange, onRejectSsoChange }) => {
-  const [showHistory, setShowHistory] = useState(false);
+const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData }) => {
   const handleInputChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
   };
+
+  // Кафедры показываем ТОЛЬКО если выбран институт
+  const filteredDepartments = filters.institute
+    ? (referenceData?.departments?.filter(d => d.instituteName === filters.institute) || [])
+    : [];
 
   return (
     <div className="filters-container">
@@ -60,8 +62,9 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
             className="filter-select"
           >
             <option value="">Все</option>
-            <option value="Очная">Очная</option>
-            <option value="Онлайн">Онлайн</option>
+            {referenceData?.studyForms?.map(sf => (
+              <option key={sf.id} value={sf.studyFormName}>{sf.studyFormName}</option>
+            ))}
           </select>
         </div>
 
@@ -69,16 +72,16 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
           <label>Институт</label>
           <select
             value={filters.institute}
-            onChange={(e) => handleInputChange('institute', e.target.value)}
+            onChange={(e) => {
+              handleInputChange('institute', e.target.value);
+              handleInputChange('department', '');
+            }}
             className="filter-select"
           >
             <option value="">Все</option>
-            <option value="Школа транспортной инженерии и логистики имени М. Тынышпаева">Школа транспортной инженерии и логистики имени М. Тынышпаева</option>
-            <option value="Горно-металлургический институт имени О.А. Байконурова">Горно-металлургический институт имени О.А. Байконурова</option>
-            <option value="Институт геологии и нефтегазового дела имени К.Т. Турысова">Институт геологии и нефтегазового дела имени К.Т. Турысова</option>
-            <option value="ИАиИТ">ИАиИТ</option>
-            <option value="Институт управления проектами имени Е. Туркебаева">Институт управления проектами имени Е. Туркебаева</option>
-            <option value="Институт архитектуры и строительства имени Т.К. Басенова">Институт архитектуры и строительства имени Т.К. Басенова</option>
+            {referenceData?.institutes?.map(inst => (
+              <option key={inst.id} value={inst.instituteName}>{inst.instituteName}</option>
+            ))}
           </select>
         </div>
 
@@ -88,12 +91,12 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
             value={filters.department}
             onChange={(e) => handleInputChange('department', e.target.value)}
             className="filter-select"
+            disabled={!filters.institute}
           >
-            <option value="">Все</option>
-            <option value="Программная инженерия">Программная инженерия
-            </option>
-            <option value="Компьютерные системы">Компьютерные системы и информационные технологии</option>
-            <option value="Архитектура">Архитектура</option>
+            <option value="">{filters.institute ? 'Все кафедры' : 'Сначала выберите институт'}</option>
+            {filteredDepartments.map(d => (
+              <option key={d.id} value={d.departmentName}>{d.departmentName}</option>
+            ))}
           </select>
         </div>
 
@@ -105,8 +108,9 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
             className="filter-select"
           >
             <option value="">Все</option>
-            <option value="Государственный">Государственный</option>
-            <option value="Ректорский">Ректорский</option>
+            <option value="Государственный образовательный грант">Государственный</option>
+            <option value="Грант акимата">Грант акимата</option>
+            <option value="Целевой грант">Целевой грант</option>
           </select>
         </div>
 
@@ -115,27 +119,8 @@ const SearchFilters = ({ filters, setFilters, onSearch, changeHistory, students,
             <MdSearch size={16} />
             ОТОБРАЗИТЬ
           </button>
-          
-          {/* Временно скрыто — функционал сохранён */}
-          <button onClick={() => setShowHistory(true)} className="history-button" style={{ display: 'none' }}>
-            <MdHistory size={16} />
-            ИСТОРИЯ ИЗМЕНЕНИЙ
-            {changesCount > 0 && (
-              <span className="changes-badge">{changesCount}</span>
-            )}
-          </button>
         </div>
       </div>
-
-      {showHistory && (
-        <ChangeHistory 
-          changeHistory={changeHistory}
-          students={students}
-          onClose={() => setShowHistory(false)}
-          onApplySsoChange={onApplySsoChange}
-          onRejectSsoChange={onRejectSsoChange}
-        />
-      )}
     </div>
   );
 };

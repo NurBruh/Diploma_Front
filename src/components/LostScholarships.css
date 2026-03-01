@@ -1,0 +1,267 @@
+.lost-scholarships-page {
+    padding: 0;
+}
+
+.lost-scholarships-page .icon-btn-sm {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border: 1px solid var(--border-color, #d1d5db);
+    border-radius: 8px;
+    background: var(--bg-card, #ffffff);
+    color: var(--text-primary, #1e293b);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.lost-scholarships-page .icon-btn-sm:hover {
+    background: var(--hover-bg, #f1f5f9);
+    border-color: #93c5fd;
+}
+
+.lost-scholarships-header {
+    margin-bottom: 20px;
+}
+
+.lost-scholarships-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: var(--text-primary, #1a1a2e);
+    margin: 0 0 6px 0;
+}
+
+.lost-scholarships-subtitle {
+    font-size: 0.85rem;
+    color: var(--text-secondary, #6b7280);
+    margin: 0 0 16px 0;
+}
+
+.lost-scholarships-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.lost-table-wrapper {
+    overflow-x: auto;
+    border-radius: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    background: var(--bg-card, #ffffff);
+}
+
+.lost-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.lost-table thead {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: #fff;
+}
+
+.lost-table th {
+    padding: 12px 14px;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.lost-table tbody tr {
+    border-bottom: 1px solid var(--border-color, #e5e7eb);
+    transition: background 0.15s;
+}
+
+.lost-table tbody tr:hover {
+    background: var(--hover-bg, #f8fafc);
+}
+
+.lost-table td {
+    padding: 10px 14px;
+    white-space: nowrap;
+}
+
+.lost-table td.notes-cell {
+    white-space: normal;
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.lost-table td.reason-cell {
+    white-space: normal;
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.lost-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+
+.lost-badge.danger {
+    background: #fef2f2;
+    color: #dc2626;
+    border: 1px solid #fecaca;
+}
+
+.lost-badge.info {
+    background: #eff6ff;
+    color: #2563eb;
+    border: 1px solid #bfdbfe;
+}
+
+.lost-empty {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-secondary, #6b7280);
+}
+
+.lost-empty svg {
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.lost-empty p {
+    font-size: 1rem;
+}
+
+.lost-loading {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-secondary, #6b7280);
+    font-size: 1rem;
+}
+
+.lost-count-badge {
+    background: var(--bg-muted, #f1f5f9);
+    border: 1px solid var(--border-color, #e2e8f0);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    color: var(--text-secondary, #475569);
+}
+
+.lost-count-badge strong {
+    color: var(--text-primary, #1e293b);
+}
+
+/* Add record form */
+.add-record-section {
+    margin-bottom: 20px;
+    padding: 18px 20px;
+    background: var(--bg-card, #ffffff);
+    border-radius: 10px;
+    box-shadow: 0 1px 6px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--border-color, #e5e7eb);
+}
+
+.add-record-toggle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #2563eb, #3b82f6);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.add-record-toggle:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(37, 99, 235, 0.3);
+}
+
+.add-record-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+}
+
+.add-record-form .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.add-record-form label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary, #6b7280);
+}
+
+.add-record-form input,
+.add-record-form textarea {
+    padding: 8px 10px;
+    border: 1px solid var(--border-color, #d1d5db);
+    border-radius: 6px;
+    font-size: 0.85rem;
+    transition: border-color 0.15s;
+}
+
+.add-record-form input:focus,
+.add-record-form textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.add-record-form textarea {
+    resize: vertical;
+    min-height: 60px;
+}
+
+.form-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.btn-save {
+    background: linear-gradient(135deg, #16a34a, #22c55e);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: transform 0.15s;
+}
+
+.btn-save:hover {
+    transform: translateY(-1px);
+}
+
+.btn-save:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.btn-cancel {
+    background: var(--bg-muted, #f1f5f9);
+    color: var(--text-secondary, #6b7280);
+    border: 1px solid var(--border-color, #d1d5db);
+    border-radius: 8px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.btn-cancel:hover {
+    background: #e2e8f0;
+}

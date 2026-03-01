@@ -2,7 +2,7 @@ import React from 'react';
 import { MdHome, MdRefresh, MdSync, MdVisibility, MdPerson, MdExitToApp, MdCompareArrows } from 'react-icons/md';
 import './Header.css';
 
-const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading, currentUser, currentPage, onNavigate }) => {
+const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, currentPage, onNavigate }) => {
   return (
     <header className="header">
       <div className="header-content">
@@ -17,7 +17,7 @@ const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading
           >
             Стипендии ЕПВО
           </button>
-        
+
           {/* <button
             className={`nav-btn${currentPage === 'comparison' ? ' active' : ''}`}
             onClick={() => onNavigate && onNavigate('comparison')}
@@ -50,14 +50,22 @@ const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading
             onClick={() => onNavigate && onNavigate(currentPage === 'comparison' ? 'main' : 'comparison')}
           >
             <MdCompareArrows size={20} />
-            ССО vs ЕПВО
+            SSO vs ЕПВО
           </button>
 
-          <button className="icon-btn" title="Версия для слабовидящих">
+          <button
+            className="icon-btn"
+            title="Версия для слабовидящих"
+            onClick={() => {
+              // Программно открываем/закрываем меню accessibility-виджета
+              const icon = document.querySelector('._access-icon');
+              if (icon) icon.click();
+            }}
+          >
             <MdVisibility size={20} />
             Версия для слабовидящих
           </button>
-{/* 
+          {/* 
           <div className="lang-selector">
             <button className="lang-btn active">Қаз</button>
             <button className="lang-btn">Рус</button>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MdSync, MdRefresh, MdCheckCircle, MdWarning, MdError } from 'react-icons/md';
 import { API_BASE_URL } from '../services/api';
 import AuthService from '../services/AuthService';
@@ -15,6 +15,7 @@ const FIELD_LABELS = {
   grantAmount: 'Сумма гранта',
   scholarshipName: 'Стипендия',
   scholarshipAmount: 'Сумма стипендии',
+  scholarshipNotes: 'Примечания',
   iban: 'IBAN',
   isActive: 'Активен',
 };
@@ -31,6 +32,7 @@ const TABLE_COLUMNS = [
   { key: 'grantAmount', label: 'Сумма гранта' },
   { key: 'scholarshipName', label: 'Стипендия' },
   { key: 'scholarshipAmount', label: 'Сумма стипендии' },
+  { key: 'scholarshipNotes', label: 'Примечания' },
   { key: 'iban', label: 'IBAN', accessor: 'iban' },
   { key: 'isActive', label: 'Активен' },
 ];
@@ -40,6 +42,28 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
   const [syncingIIN, setSyncingIIN] = useState(null);
+  const ssoScrollRef = useRef(null);
+  const epvoScrollRef = useRef(null);
+  const scrollingRef = useRef(null);
+
+  // Синхронизация горизонтального скролла
+  const handleSsoScroll = useCallback(() => {
+    if (scrollingRef.current === 'epvo') return;
+    scrollingRef.current = 'sso';
+    if (epvoScrollRef.current && ssoScrollRef.current) {
+      epvoScrollRef.current.scrollLeft = ssoScrollRef.current.scrollLeft;
+    }
+    requestAnimationFrame(() => { scrollingRef.current = null; });
+  }, []);
+
+  const handleEpvoScroll = useCallback(() => {
+    if (scrollingRef.current === 'sso') return;
+    scrollingRef.current = 'epvo';
+    if (ssoScrollRef.current && epvoScrollRef.current) {
+      ssoScrollRef.current.scrollLeft = epvoScrollRef.current.scrollLeft;
+    }
+    requestAnimationFrame(() => { scrollingRef.current = null; });
+  }, []);
 
   const fetchComparison = async () => {
     setLoading(true);
@@ -155,14 +179,14 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
               <span className="cstat-num">{data.items.filter(i => i.hasDifferences).length}</span>
               <span className="cstat-label">С различиями</span>
             </div>
-            {/* <div className="cstat cstat-sso">
+            <div className="cstat cstat-sso">
               <MdError size={16} />
-              <span className="cstat-num">{data.onlyInSso}</span>
-              <span className="cstat-label">Только в ССО</span>
+              <span className="cstat-num">{data.items.filter(i => i.onlyInSso).length}</span>
+              <span className="cstat-label">Новые записи в SSO</span>
             </div>
-            <div className="cstat cstat-epvo">
+            {/* <div className="cstat cstat-epvo">
               <MdError size={16} />
-              <span className="cstat-num">{data.onlyInEpvo}</span>
+              <span className="cstat-num">{data.items.filter(i => i.onlyInEpvo).length}</span>
               <span className="cstat-label">Только в ЕПВО</span>
             </div> */}
             <div className="cstat cstat-ok">
@@ -179,8 +203,8 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
           {[
             { key: 'all', label: 'Все' },
             { key: 'diff', label: 'С различиями' },
-            // { key: 'sso-only', label: 'Только в ССО' },
-            // { key: 'epvo-only', label: 'Только в ЕПВО' },
+            { key: 'sso-only', label: 'Новые записи' },
+
           ].map(f => (
             <button
               key={f.key}
@@ -208,7 +232,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
               <h3>ССО (Посредник)</h3>
               <span className="table-count">{items.filter(i => i.ssoData).length} записей</span>
             </div>
-            <div className="table-scroll-wrapper">
+            <div className="table-scroll-wrapper" ref={ssoScrollRef} onScroll={handleSsoScroll}>
               <table className="comparison-data-table">
                 <thead>
                   <tr>
@@ -279,7 +303,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
               <h3>ЕПВО</h3>
               <span className="table-count">{items.filter(i => i.epvoData).length} записей</span>
             </div>
-            <div className="table-scroll-wrapper">
+            <div className="table-scroll-wrapper" ref={epvoScrollRef} onScroll={handleEpvoScroll}>
               <table className="comparison-data-table">
                 <thead>
                   <tr>

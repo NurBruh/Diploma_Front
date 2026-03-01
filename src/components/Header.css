@@ -14,7 +14,8 @@
   max-width: 1440px;
   margin: 0 auto;
   padding: 0 1.5rem;
-  height: 64px; /* Стандартная высота для header */
+  height: 64px;
+  /* Стандартная высота для header */
 }
 
 .breadcrumb {
@@ -86,7 +87,8 @@
 }
 
 .refresh-btn {
-  background: #1e8e3e; /* Зеленый Google style */
+  background: #1e8e3e;
+  /* Зеленый Google style */
   border-color: #1e8e3e;
 }
 
@@ -124,8 +126,13 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .spin {
@@ -148,6 +155,13 @@
   background: #f9ab00;
   border-color: #f9ab00;
   color: #1a1a1a;
+}
+
+.icon-btn.active-page {
+  background: rgba(255, 255, 255, 0.25);
+  border-color: white;
+  color: white;
+  font-weight: 700;
 }
 
 .lang-selector {
@@ -219,12 +233,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
   transition: all 0.2s;
 }
 
 .profile-btn:hover {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   transform: scale(1.05);
 }
 
@@ -313,7 +327,7 @@
     flex-wrap: wrap;
     gap: 1rem;
   }
-  
+
   .profile {
     border-left: none;
     padding-left: 0;

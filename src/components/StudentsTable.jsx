@@ -4,7 +4,7 @@ import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
 import './StudentsTable.css';
 
-const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey }) => {
+const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey, referenceData }) => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const selectAllRef = useRef(null);
@@ -47,13 +47,17 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
     });
   };
 
-  // Извлекаем кафедру из строки curriculum_specialty
+  // Определяем кафедру по названию специальности через справочные данные
   const extractDepartment = (curriculum) => {
     if (!curriculum) return 'Не указано';
-    if (curriculum.includes('Компьютер')) return 'Кафедра "Компьютерные"';
-    if (curriculum.includes('Инженер')) return 'Программная инженерия (*)';
-    if (curriculum.includes('Архитектур')) return 'Архитектура';
-    return 'Не указано';
+    if (referenceData?.specialities) {
+      const spec = referenceData.specialities.find(s =>
+        curriculum.toLowerCase().includes(s.specialityName.toLowerCase()) ||
+        s.specialityName.toLowerCase().includes(curriculum.toLowerCase())
+      );
+      if (spec) return spec.departmentName;
+    }
+    return curriculum;
   };
 
   if (loading) {
@@ -75,6 +79,12 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
 
   return (
     <div className="table-container">
+      <div className="table-header-section">
+        <h2 className="table-title">Список студентов</h2>
+        <div className="student-count-badge">
+          Всего: <strong>{students.length}</strong>
+        </div>
+      </div>
       <div className="table-wrapper">
         <table className="students-table">
           <thead>
@@ -89,7 +99,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
               <th>Тип гранта</th>
               <th>Статус стипендии</th>
               <th>Расчетный счёт</th>
-              <th>Причины лишения</th>
+              <th>Примечания</th>
               <th className="th-select">
                 Все
                 <label className="checkbox-label">
@@ -100,7 +110,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                     checked={allSelected}
                     onChange={handleSelectAll}
                   />
-                  
+
                 </label>
               </th>
             </tr>
@@ -140,7 +150,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                   </div>
                 </td>
                 <td className="deprivation-reasons">
-                  {student.deprivation_reasons || 'Нет'}
+                  {student.notes || 'Нет'}
                 </td>
                 <td className="td-select">
                   <input
@@ -155,7 +165,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
           </tbody>
         </table>
       </div>
-      
+
       <div className="table-footer">
         {selectedIds.size > 0 && (
           <div className="selected-actions">
@@ -178,7 +188,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
             </button>
           </div>
         )}
-        <p>Всего студентов: <strong>{students.length}</strong></p>
+
       </div>
 
       {editingStudent && (

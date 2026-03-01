@@ -65,8 +65,13 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .spin {
@@ -97,10 +102,21 @@
   color: var(--text-secondary);
 }
 
-.cstat-diff { color: #f9ab00; }
-.cstat-sso { color: #d93025; }
-.cstat-epvo { color: #1a73e8; }
-.cstat-ok { color: var(--success-color); }
+.cstat-diff {
+  color: #f9ab00;
+}
+
+.cstat-sso {
+  color: #d93025;
+}
+
+.cstat-epvo {
+  color: #1a73e8;
+}
+
+.cstat-ok {
+  color: var(--success-color);
+}
 
 /* Filter tabs */
 .comparison-filters {
@@ -225,12 +241,30 @@
   letter-spacing: 0.3px;
   color: var(--text-secondary);
   border-bottom: 1px solid var(--border-color);
+  height: 40px;
+  /* Фиксированная высота шапки */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .comparison-data-table td {
   padding: 0.5rem 0.6rem;
   border-bottom: 1px solid #f0f0f0;
   color: var(--text-primary);
+  vertical-align: middle;
+  box-sizing: border-box;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 250px;
+  /* Чтобы слишком длинный текст не растягивал до бесконечности, но короткий помещался целиком */
+}
+
+.comparison-data-table tbody tr {
+  box-sizing: border-box;
+  height: 52px;
+  /* Фиксированная высота строк, замена тяжелому JS! */
 }
 
 .comparison-data-table tbody tr:hover {
@@ -261,10 +295,25 @@
   white-space: nowrap;
 }
 
-.badge-diff { background: #fff3cd; color: #856404; }
-.badge-sso { background: #fde8e8; color: #9b1c1c; }
-.badge-epvo { background: #dbeafe; color: #1e40af; }
-.badge-ok { background: #d1fae5; color: #065f46; }
+.badge-diff {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.badge-sso {
+  background: #fde8e8;
+  color: #9b1c1c;
+}
+
+.badge-epvo {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.badge-ok {
+  background: #d1fae5;
+  color: #065f46;
+}
 
 /* Cell highlighting */
 .cell-diff-sso {
