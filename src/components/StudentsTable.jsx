@@ -4,7 +4,7 @@ import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
 import './StudentsTable.css';
 
-const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey }) => {
+const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey, referenceData }) => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const selectAllRef = useRef(null);
@@ -47,13 +47,17 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
     });
   };
 
-  // Извлекаем кафедру из строки curriculum_specialty
+  // Определяем кафедру по названию специальности через справочные данные
   const extractDepartment = (curriculum) => {
     if (!curriculum) return 'Не указано';
-    if (curriculum.includes('Компьютер')) return 'Кафедра "Компьютерные"';
-    if (curriculum.includes('Инженер')) return 'Программная инженерия (*)';
-    if (curriculum.includes('Архитектур')) return 'Архитектура';
-    return 'Не указано';
+    if (referenceData?.specialities) {
+      const spec = referenceData.specialities.find(s =>
+        curriculum.toLowerCase().includes(s.specialityName.toLowerCase()) ||
+        s.specialityName.toLowerCase().includes(curriculum.toLowerCase())
+      );
+      if (spec) return spec.departmentName;
+    }
+    return curriculum;
   };
 
   if (loading) {

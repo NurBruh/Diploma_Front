@@ -2,7 +2,7 @@ import React from 'react';
 import { MdHome, MdRefresh, MdSync, MdVisibility, MdPerson, MdExitToApp, MdCompareArrows } from 'react-icons/md';
 import './Header.css';
 
-const Header = ({ onRefresh, onClearHistory, onLogout, onSyncToEpvo, syncLoading, currentUser, currentPage, onNavigate }) => {
+const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, currentPage, onNavigate }) => {
   return (
     <header className="header">
       <div className="header-content">
