@@ -399,7 +399,7 @@ function App() {
                 students={students}
                 referenceData={referenceData}
               />
-              <ExportTools />
+              {/* <ExportTools /> */}
               <div style={{
                 display: 'flex', gap: '10px', margin: '0 0 12px 0'
               }}>
@@ -414,9 +414,9 @@ function App() {
                     transition: 'all 0.2s'
                   }}
                 >
-                  Лишённые (В1)
+                  Лишённые стипендии 
                 </button>
-                <button
+                {/* <button
                   onClick={() => setCurrentPage(currentPage === 'lost-v2' ? 'main' : 'lost-v2')}
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -428,7 +428,7 @@ function App() {
                   }}
                 >
                   Лишённые (В2)
-                </button>
+                </button> */}
               </div>
               <StudentsTable
                 students={filteredStudents}
