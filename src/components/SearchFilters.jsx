@@ -2,7 +2,11 @@ import React from 'react';
 import { MdSearch } from 'react-icons/md';
 import './SearchFilters.css';
 
-const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData }) => {
+const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData, currentUser }) => {
+  const role = currentUser?.role;
+  const isDepartmentHead = role === 'department_head';
+  const isInstituteDirector = role === 'institute_director';
+
   const handleInputChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
   };
@@ -12,9 +16,18 @@ const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData 
     ? (referenceData?.departments?.filter(d => d.instituteName === filters.institute) || [])
     : [];
 
+  // Заголовок в зависимости от роли
+  const getTitle = () => {
+    if (isDepartmentHead && currentUser?.scopeName)
+      return `Обучающиеся на гранте — ${currentUser.scopeName}`;
+    if (isInstituteDirector && currentUser?.scopeName)
+      return `Обучающиеся на гранте — ${currentUser.scopeName}`;
+    return 'Обучающиеся на гранте';
+  };
+
   return (
     <div className="filters-container">
-      <h2 className="filters-title">Обучающиеся на гранте</h2>
+      <h2 className="filters-title">{getTitle()}</h2>
       
       <div className="filters-grid">
         <div className="filter-group">
@@ -68,37 +81,44 @@ const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData 
           </select>
         </div>
 
-        <div className="filter-group">
-          <label>Институт</label>
-          <select
-            value={filters.institute}
-            onChange={(e) => {
-              handleInputChange('institute', e.target.value);
-              handleInputChange('department', '');
-            }}
-            className="filter-select"
-          >
-            <option value="">Все</option>
-            {referenceData?.institutes?.map(inst => (
-              <option key={inst.id} value={inst.instituteName}>{inst.instituteName}</option>
-            ))}
-          </select>
-        </div>
+        {/* Институт: скрыт для зав.кафедры, зафиксирован для директора, свободен для менеджера */}
+        {!isDepartmentHead && (
+          <div className="filter-group">
+            <label>Институт</label>
+            <select
+              value={filters.institute}
+              onChange={(e) => {
+                handleInputChange('institute', e.target.value);
+                handleInputChange('department', '');
+              }}
+              className="filter-select"
+              disabled={isInstituteDirector}
+            >
+              <option value="">Все</option>
+              {referenceData?.institutes?.map(inst => (
+                <option key={inst.id} value={inst.instituteName}>{inst.instituteName}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
-        <div className="filter-group">
-          <label>Кафедра</label>
-          <select
-            value={filters.department}
-            onChange={(e) => handleInputChange('department', e.target.value)}
-            className="filter-select"
-            disabled={!filters.institute}
-          >
-            <option value="">{filters.institute ? 'Все кафедры' : 'Сначала выберите институт'}</option>
-            {filteredDepartments.map(d => (
-              <option key={d.id} value={d.departmentName}>{d.departmentName}</option>
-            ))}
-          </select>
-        </div>
+        {/* Кафедра: скрыта для зав.кафедры, показана для директора и менеджера */}
+        {!isDepartmentHead && (
+          <div className="filter-group">
+            <label>Кафедра</label>
+            <select
+              value={filters.department}
+              onChange={(e) => handleInputChange('department', e.target.value)}
+              className="filter-select"
+              disabled={!filters.institute}
+            >
+              <option value="">{filters.institute ? 'Все кафедры' : 'Сначала выберите институт'}</option>
+              {filteredDepartments.map(d => (
+                <option key={d.id} value={d.departmentName}>{d.departmentName}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <div className="filter-group">
           <label>Тип гранта</label>

@@ -231,7 +231,12 @@ function App() {
 
   const handleLogin = (userData) => {
     setIsAuthenticated(true)
-    setCurrentUser(userData)
+    setCurrentUser({
+      ...userData,
+      scopeType: userData.scopeType || null,
+      scopeId: userData.scopeId || null,
+      scopeName: userData.scopeName || null
+    })
     setShowRegister(false)
     showNotification(`Добро пожаловать, ${userData.username}!`, 'success')
 
@@ -242,7 +247,12 @@ function App() {
   // Обработчик успешной регистрации
   const handleRegister = (userData) => {
     setIsAuthenticated(true)
-    setCurrentUser(userData)
+    setCurrentUser({
+      ...userData,
+      scopeType: userData.scopeType || null,
+      scopeId: userData.scopeId || null,
+      scopeName: userData.scopeName || null
+    })
     setShowRegister(false)
     showNotification(`Регистрация успешна! Добро пожаловать, ${userData.username}!`, 'success')
 
@@ -380,7 +390,7 @@ function App() {
 
       <main className="main-content">
         <div className="container">
-          {currentPage === 'comparison' ? (
+          {currentPage === 'comparison' && currentUser?.role === 'manager_or' ? (
             <SsoEpvoComparison
               onSyncToEpvo={handleSyncToEpvo}
               syncLoading={syncLoading}
@@ -398,6 +408,7 @@ function App() {
                 onSearch={handleSearch}
                 students={students}
                 referenceData={referenceData}
+                currentUser={currentUser}
               />
               {/* <ExportTools /> */}
               <div style={{
@@ -438,6 +449,7 @@ function App() {
                 syncLoading={syncLoading}
                 selectionKey={selectionKey}
                 referenceData={referenceData}
+                currentUser={currentUser}
               />
             </>
           )}
