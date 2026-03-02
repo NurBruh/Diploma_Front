@@ -42,9 +42,12 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
         localStorage.setItem('token', data.token);
         localStorage.setItem('username', data.username);
         localStorage.setItem('role', data.role);
+        if (data.scopeType) localStorage.setItem('scopeType', data.scopeType);
+        if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
+        if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
         console.log('Logged in:', data);
         onLogin(data);
-      } else {
+      }else {
         setError(data.message || 'Ошибка авторизации');
         console.error('Login error:', data.message);
       }
@@ -111,14 +114,14 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
             <span>или</span>
           </div>
 
-          <button
+          {/* <button
             type="button"
             className="auth-btn secondary"
             onClick={onSwitchToRegister}
             disabled={loading}
           >
             Зарегистрироваться
-          </button>
+          </button> */}
         </form>
       </div>
     </div>

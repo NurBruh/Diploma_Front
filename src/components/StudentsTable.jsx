@@ -4,10 +4,11 @@ import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
 import './StudentsTable.css';
 
-const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey, referenceData }) => {
+const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey, referenceData, currentUser }) => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const selectAllRef = useRef(null);
+  const isManager = currentUser?.role === 'manager_or';
 
   // Сбрасываем чекбоксы при фильтрации
   useEffect(() => {
@@ -100,19 +101,21 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
               <th>Статус стипендии</th>
               <th>Расчетный счёт</th>
               <th>Примечания</th>
-              <th className="th-select">
-                Все
-                <label className="checkbox-label">
-                  <input
-                    ref={selectAllRef}
-                    type="checkbox"
-                    className="custom-checkbox"
-                    checked={allSelected}
-                    onChange={handleSelectAll}
-                  />
+              {isManager && (
+                <th className="th-select">
+                  Все
+                  <label className="checkbox-label">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      className="custom-checkbox"
+                      checked={allSelected}
+                      onChange={handleSelectAll}
+                    />
 
-                </label>
-              </th>
+                  </label>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
@@ -140,26 +143,30 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                 <td className="bank-account">
                   <div className="bank-account-cell">
                     <span className="bank-account-text">{student.bank_account || 'Не указан'}</span>
-                    <button
-                      className="edit-iban-btn"
-                      title="Редактировать расчётный счёт"
-                      onClick={() => setEditingStudent(student)}
-                    >
-                      <BsFillPencilFill size={14} />
-                    </button>
+                    {isManager && (
+                      <button
+                        className="edit-iban-btn"
+                        title="Редактировать расчётный счёт"
+                        onClick={() => setEditingStudent(student)}
+                      >
+                        <BsFillPencilFill size={14} />
+                      </button>
+                    )}
                   </div>
                 </td>
                 <td className="deprivation-reasons">
                   {student.notes || 'Нет'}
                 </td>
-                <td className="td-select">
-                  <input
-                    type="checkbox"
-                    className="custom-checkbox"
-                    checked={selectedIds.has(student.id)}
-                    onChange={() => handleSelectRow(student.id)}
-                  />
-                </td>
+                {isManager && (
+                  <td className="td-select">
+                    <input
+                      type="checkbox"
+                      className="custom-checkbox"
+                      checked={selectedIds.has(student.id)}
+                      onChange={() => handleSelectRow(student.id)}
+                    />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -167,7 +174,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
       </div>
 
       <div className="table-footer">
-        {selectedIds.size > 0 && (
+        {isManager && selectedIds.size > 0 && (
           <div className="selected-actions">
             <span className="selected-count">Выбрано: <strong>{selectedIds.size}</strong></span>
             <button

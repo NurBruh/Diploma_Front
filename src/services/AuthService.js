@@ -25,6 +25,9 @@ const AuthService = {
         localStorage.setItem('token', data.token);
         localStorage.setItem('username', data.username);
         localStorage.setItem('role', data.role);
+        if (data.scopeType) localStorage.setItem('scopeType', data.scopeType);
+        if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
+        if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
         console.log('Registration successful:', data);
       }
 
@@ -55,6 +58,9 @@ const AuthService = {
         localStorage.setItem('token', data.token);
         localStorage.setItem('username', data.username);
         localStorage.setItem('role', data.role);
+        if (data.scopeType) localStorage.setItem('scopeType', data.scopeType);
+        if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
+        if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
         console.log('Login successful:', data);
       }
 
@@ -70,6 +76,9 @@ const AuthService = {
     localStorage.removeItem('token');
     localStorage.removeItem('username');
     localStorage.removeItem('role');
+    localStorage.removeItem('scopeType');
+    localStorage.removeItem('scopeId');
+    localStorage.removeItem('scopeName');
     console.log('Logout successful');
   },
 
@@ -78,9 +87,12 @@ const AuthService = {
     const token = localStorage.getItem('token');
     const username = localStorage.getItem('username');
     const role = localStorage.getItem('role');
+    const scopeType = localStorage.getItem('scopeType');
+    const scopeId = localStorage.getItem('scopeId');
+    const scopeName = localStorage.getItem('scopeName');
 
     if (token && username) {
-      return { token, username, role };
+      return { token, username, role, scopeType, scopeId: scopeId ? parseInt(scopeId) : null, scopeName };
     }
 
     return null;

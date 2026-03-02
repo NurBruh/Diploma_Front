@@ -57,6 +57,9 @@ const Register = ({ onRegister, onSwitchToLogin }) => {
         localStorage.setItem('token', data.token);
         localStorage.setItem('username', data.username);
         localStorage.setItem('role', data.role);
+        if (data.scopeType) localStorage.setItem('scopeType', data.scopeType);
+        if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
+        if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
         console.log('Registered:', data);
         onRegister(data);
       } else {
