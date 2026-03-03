@@ -110,9 +110,9 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
             {loading ? 'Вход...' : 'Войти'}
           </button>
 
-          <div className="auth-divider">
+          {/* <div className="auth-divider">
             <span>или</span>
-          </div>
+          </div> */}
 
           {/* <button
             type="button"

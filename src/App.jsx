@@ -20,9 +20,9 @@ const mapStudentFromBackend = (student) => ({
   patronymic: student.middleName || '',
   iin: student.iin || '',
   course: student.course,
-  study_form: student.educationForm || '',        // будет пустым из EPVO
+  study_form: student.educationForm || '',
   institute: student.faculty || '',
-  grant_type: student.grantName || '',            // раньше было grants[0].name
+  grant_type: student.grantName || '',
   has_scholarship: student.hasScholarship ? 'Да' : 'Нет',
   scholarship_status: student.hasScholarship ? 'Активна' : 'Неактивна',
   bank_account: student.iban || '',
@@ -65,6 +65,13 @@ function App() {
       fetchReferenceData()
     }
   }, [])
+
+  // Для директора института — предустанавливаем фильтр по его институту
+  useEffect(() => {
+    if (currentUser?.role === 'institute_director' && currentUser?.scopeName) {
+      setFilters(prev => ({ ...prev, institute: currentUser.scopeName }))
+    }
+  }, [currentUser])
 
   const fetchReferenceData = async () => {
     try {
@@ -187,7 +194,7 @@ function App() {
     }
 
     setFilteredStudents(filtered)
-    setSelectionKey(prev => prev + 1)  // сбрасываем чекбоксы
+    setSelectionKey(prev => prev + 1)
   }
 
   const handleRefresh = () => {
