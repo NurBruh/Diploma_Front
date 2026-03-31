@@ -7,7 +7,7 @@ const EditBankAccountModal = ({ student, onClose, onSave }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
-  const fullName = `${student.last_name} ${student.first_name} ${student.patronymic || ''}`.trim();
+  const fullName = (student.full_name || '').trim();
 
   const handleContinue = () => {
     setStep('edit');

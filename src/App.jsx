@@ -10,22 +10,24 @@ import Register from './components/Register'
 import AuthService from './services/AuthService'
 import './App.css'
 
-// Маппинг данных из бэкенда (camelCase) в формат фронтенда (snake_case)
+// Маппинг данных из бэкенда (StudentSsoDetailDto) в формат фронтенда
 const mapStudentFromBackend = (student) => ({
-  id: student.id,
-  first_name: student.firstName || '',
-  last_name: student.lastName || '',
-  patronymic: student.middleName || '',
-  iin: student.iin || '',
-  course: student.course,
-  study_form: student.educationForm || '',        // будет пустым из EPVO
-  institute: student.faculty || '',
-  grant_type: student.grantName || '',            // раньше было grants[0].name
-  has_scholarship: student.hasScholarship ? 'Да' : 'Нет',
-  scholarship_status: student.hasScholarship ? 'Активна' : 'Неактивна',
-  bank_account: student.iban || '',
-  deprivation_reasons: '',
-  curriculum_specialty: student.speciality || ''
+  id: student.studentId,
+  full_name: student.fullName || '',
+  iin: student.iinPlt || '',
+  course: student.courseNumber,
+  study_form: student.studyForm || '',
+  faculty: student.facultyName || '',
+  profession: student.professionName || '',
+  specialization: student.specialization || '',
+  payment_type: student.paymentType || '',
+  has_scholarship: student.paymentType === 'Стипендия' ? 'Да' : 'Нет',
+  gpa: student.gpa ?? null,
+  study_language: student.studyLanguage || '',
+  sex: student.sex || '',
+  grant_type: student.grantType || '',
+  bank_account: student.iic || '',
+  university_id: student.universityId,
 })
 
 function App() {
@@ -51,45 +53,38 @@ function App() {
     grantType: ''
   })
 
-  // Проверка авторизации при монтировании
+  // Авторизация отключена — всегда авторизован
   useEffect(() => {
-    const authenticated = AuthService.isAuthenticated()
-    setIsAuthenticated(authenticated)
+    setIsAuthenticated(true)
+    setCurrentUser({ username: 'dev', role: 'manager' })
 
-    if (authenticated) {
-      const user = AuthService.getCurrentUser()
-      setCurrentUser(user)
+    const savedHistory = localStorage.getItem('studentChangeHistory')
+    const savedPreviousData = localStorage.getItem('previousStudentData')
 
-      // Загрузка данных только для авторизованных пользователей
-      const savedHistory = localStorage.getItem('studentChangeHistory')
-      const savedPreviousData = localStorage.getItem('previousStudentData')
-
-      if (savedHistory) {
-        setChangeHistory(JSON.parse(savedHistory))
-      }
-      if (savedPreviousData) {
-        setPreviousData(JSON.parse(savedPreviousData))
-      }
-
-      fetchStudents()
+    if (savedHistory) {
+      setChangeHistory(JSON.parse(savedHistory))
     }
+    if (savedPreviousData) {
+      setPreviousData(JSON.parse(savedPreviousData))
+    }
+
+    fetchStudents()
   }, [])
 
   const detectChanges = (oldData, newData) => {
     const changes = []
     const fieldsToCheck = {
-      first_name: 'Имя',
-      last_name: 'Фамилия',
-      patronymic: 'Отчество',
+      full_name: 'ФИО',
+      iin: 'ИИН',
       course: 'Курс',
       study_form: 'Форма обучения',
-      institute: 'Институт',
+      faculty: 'Факультет',
+      profession: 'Профессия',
+      specialization: 'Специализация',
+      payment_type: 'Тип оплаты',
       grant_type: 'Тип гранта',
-      has_scholarship: 'Стипендия',
-      scholarship_status: 'Статус стипендии',
       bank_account: 'Расчетный счёт',
-      deprivation_reasons: 'Причины лишения',
-      curriculum_specialty: 'Специальность'
+      study_language: 'Язык обучения'
     }
 
     for (const [key, label] of Object.entries(fieldsToCheck)) {
@@ -118,23 +113,12 @@ function App() {
       let localDataArray = savedData ? JSON.parse(savedData) : []
 
       // 2. Получаем актуальные данные из бэкенда
-      const token = AuthService.getToken()
       const response = await fetch(`${API_BASE_URL}/Epvo/students`, {
         method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         }
       })
-
-      if (response.status === 401) {
-        // Токен истёк — разлогиниваем
-        AuthService.logout()
-        setIsAuthenticated(false)
-        setCurrentUser(null)
-        showNotification('Сессия истекла, войдите заново', 'error')
-        return
-      }
 
       if (!response.ok) {
         throw new Error(`Ошибка сервера: ${response.status}`)
@@ -227,18 +211,16 @@ function App() {
 
     // Фильтрация по ФИО
     if (filters.fullName) {
-      filtered = filtered.filter(student => {
-        const fullName = `${student.last_name} ${student.first_name} ${student.patronymic}`.toLowerCase()
-        return fullName.includes(filters.fullName.toLowerCase())
-      })
+      filtered = filtered.filter(student =>
+        (student.full_name || '').toLowerCase().includes(filters.fullName.toLowerCase())
+      )
     }
 
     // Фильтрация по ИИН
     if (filters.iin) {
-      filtered = filtered.filter(student => {
-        const iin = student.iin || student.id || ''
-        return iin.toString().includes(filters.iin)
-      })
+      filtered = filtered.filter(student =>
+        (student.iin || '').toString().includes(filters.iin)
+      )
     }
 
     // Фильтрация по курсу
@@ -255,10 +237,10 @@ function App() {
       )
     }
 
-    // Фильтрация по институту
+    // Фильтрация по факультету
     if (filters.institute) {
       filtered = filtered.filter(student =>
-        student.institute?.includes(filters.institute)
+        student.faculty?.includes(filters.institute)
       )
     }
 
@@ -281,22 +263,12 @@ function App() {
   const handleSyncToEpvo = async () => {
     setSyncLoading(true)
     try {
-      const token = AuthService.getToken()
       const response = await fetch(`${API_BASE_URL}/Epvo/sync-to-epvo`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         }
       })
-
-      if (response.status === 401) {
-        AuthService.logout()
-        setIsAuthenticated(false)
-        setCurrentUser(null)
-        showNotification(' Сессия истекла, войдите заново', 'error')
-        return
-      }
 
       if (!response.ok) {
         throw new Error(`Ошибка сервера: ${response.status}`)
@@ -379,23 +351,13 @@ function App() {
     }
     setSyncLoading(true)
     try {
-      const token = AuthService.getToken()
       const response = await fetch(`${API_BASE_URL}/Epvo/sync-batch`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ iinS: selectedIINs })
       })
-
-      if (response.status === 401) {
-        AuthService.logout()
-        setIsAuthenticated(false)
-        setCurrentUser(null)
-        showNotification('Сессия истекла, войдите заново', 'error')
-        return
-      }
 
       if (!response.ok) {
         throw new Error(`Ошибка сервера: ${response.status}`)
@@ -415,23 +377,13 @@ function App() {
 
   // Обновление расчётного счёта (IBAN) студента в ЕПВО
   const handleUpdateIban = async (iin, newIban) => {
-    const token = AuthService.getToken()
     const response = await fetch(`${API_BASE_URL}/Epvo/students/${iin}/iban`, {
       method: 'PATCH',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({ newIban })
     })
-
-    if (response.status === 401) {
-      AuthService.logout()
-      setIsAuthenticated(false)
-      setCurrentUser(null)
-      showNotification('Сессия истекла, войдите заново', 'error')
-      throw new Error('Сессия истекла')
-    }
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}))
@@ -507,6 +459,10 @@ function App() {
                 changeHistory={changeHistory}
                 students={students}
                 changesCount={getTotalChangesCount()}
+                referenceData={{
+                  studyForms: [...new Set(students.map(s => s.study_form).filter(Boolean))].map((sf, i) => ({ id: i, studyFormName: sf })),
+                  institutes: [...new Set(students.map(s => s.faculty).filter(Boolean))].map((f, i) => ({ id: i, instituteName: f })),
+                }}
               />
               <ExportTools />
               <StudentsTable

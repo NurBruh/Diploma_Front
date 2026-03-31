@@ -64,6 +64,7 @@ const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData,
             <option value="2">2</option>
             <option value="3">3</option>
             <option value="4">4</option>
+            <option value="5">5</option>
           </select>
         </div>
 
@@ -128,9 +129,9 @@ const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData,
             className="filter-select"
           >
             <option value="">Все</option>
-            <option value="Государственный образовательный грант">Государственный</option>
-            <option value="Грант акимата">Грант акимата</option>
-            <option value="Целевой грант">Целевой грант</option>
+            <option value="Государственный грант">Государственный грант</option>
+            <option value="Из собственных средств">Из собственных средств</option>
+            <option value="Трехсторонняя форма обучения">Трехсторонняя форма обучения</option>
           </select>
         </div>
 

@@ -15,8 +15,8 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
   }, [selectionKey]);
 
   const sortedStudents = (!students || students.length === 0) ? [] : [...students].sort((a, b) => {
-    const nameA = (a.last_name || '').trim();
-    const nameB = (b.last_name || '').trim();
+    const nameA = (a.full_name || '').trim();
+    const nameB = (b.full_name || '').trim();
     return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
   });
 
@@ -47,15 +47,6 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
     });
   };
 
-  // Извлекаем кафедру из строки curriculum_specialty
-  const extractDepartment = (curriculum) => {
-    if (!curriculum) return 'Не указано';
-    if (curriculum.includes('Компьютер')) return 'Кафедра "Компьютерные"';
-    if (curriculum.includes('Инженер')) return 'Программная инженерия (*)';
-    if (curriculum.includes('Архитектур')) return 'Архитектура';
-    return 'Не указано';
-  };
-
   if (loading) {
     return (
       <div className="loading-container">
@@ -73,6 +64,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
     );
   }
 
+  // Таблица колонок под новый DTO (StudentSsoDetailDto)
   return (
     <div className="table-container">
       <div className="table-wrapper">
@@ -84,12 +76,11 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
               <th>ИИН</th>
               <th>Курс</th>
               <th>Форма обучения</th>
-              <th>Институт</th>
-              <th>Кафедра</th>
+              <th>Факультет</th>
+              <th>Профессия</th>
+              <th>Тип оплаты</th>
               <th>Тип гранта</th>
-              <th>Статус стипендии</th>
               <th>Расчетный счёт</th>
-              <th>Причины лишения</th>
               <th className="th-select">
                 Все
                 <label className="checkbox-label">
@@ -109,27 +100,25 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
             {sortedStudents.map((student, index) => (
               <tr key={student.id} className={selectedIds.has(student.id) ? 'row-selected' : ''}>
                 <td>{index + 1}</td>
-                <td className="full-name">
-                  {student.last_name} {student.first_name} {student.patronymic}
-                </td>
-                <td className="iin-cell">{student.iin || student.id || 'Не указан'}</td>
-                <td>{student.course}</td>
-                <td>{student.study_form}</td>
-                <td>{student.institute}</td>
-                <td>{extractDepartment(student.curriculum_specialty)}</td>
+                <td className="full-name">{student.full_name || '—'}</td>
+                <td className="iin-cell">{student.iin || '—'}</td>
+                <td>{student.course || '—'}</td>
+                <td>{student.study_form || '—'}</td>
+                <td>{student.faculty || '—'}</td>
+                <td>{student.profession || '—'}</td>
                 <td>
-                  <span className={`grant-badge ${student.grant_type === 'Государственный' ? 'state' : student.grant_type === 'Ректорский' ? 'rector' : 'lyceum'}`}>
-                    {student.grant_type}
+                  <span className={`status-badge ${student.payment_type === 'Стипендия' ? 'active' : 'inactive'}`}>
+                    {student.payment_type || '—'}
                   </span>
                 </td>
                 <td>
-                  <span className={`status-badge ${student.scholarship_status === 'Активна' ? 'active' : 'inactive'}`}>
-                    {student.has_scholarship === 'Да' ? 'Назначено' : student.has_scholarship === 'Нет' ? 'Не назначено' : 'Не указано'}
+                  <span className={`grant-badge ${student.grant_type === 'Государственный грант' ? 'state' : student.grant_type === 'Из собственных средств' ? 'rector' : 'lyceum'}`}>
+                    {student.grant_type || '—'}
                   </span>
                 </td>
                 <td className="bank-account">
                   <div className="bank-account-cell">
-                    <span className="bank-account-text">{student.bank_account || 'Не указан'}</span>
+                    <span className="bank-account-text">{student.bank_account || '—'}</span>
                     <button
                       className="edit-iban-btn"
                       title="Редактировать расчётный счёт"
@@ -138,9 +127,6 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                       <BsFillPencilFill size={14} />
                     </button>
                   </div>
-                </td>
-                <td className="deprivation-reasons">
-                  {student.deprivation_reasons || 'Нет'}
                 </td>
                 <td className="td-select">
                   <input

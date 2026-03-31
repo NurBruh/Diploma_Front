@@ -13,13 +13,13 @@ const ExportTools = () => {
 
   return (
     <div className="export-tools">
-      <button className="import-btn" onClick={handleImport}>
+      {/* <button className="import-btn" onClick={handleImport}>
         <MdFileDownload size={16} />
         Импорт из Excel
-      </button>
+      </button> */}
 
       <div className="export-group">
-        <label>Формат экспорта</label>
+        {/* <label>Формат экспорта</label>
         <div className="export-buttons">
           <select className="export-select">
             <option>Выберите формат</option>
@@ -31,7 +31,7 @@ const ExportTools = () => {
             <MdFileUpload size={16} />
             Экспорт
           </button>
-        </div>
+        </div> */}
       </div>
     </div>
   );
