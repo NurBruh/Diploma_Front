@@ -4,11 +4,10 @@ import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
 import './StudentsTable.css';
 
-const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey, referenceData, currentUser }) => {
+const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey }) => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const selectAllRef = useRef(null);
-  const isManager = currentUser?.role === 'manager_or';
 
   // Сбрасываем чекбоксы при фильтрации
   useEffect(() => {
@@ -48,17 +47,13 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
     });
   };
 
-  // Определяем кафедру по названию специальности через справочные данные
+  // Извлекаем кафедру из строки curriculum_specialty
   const extractDepartment = (curriculum) => {
     if (!curriculum) return 'Не указано';
-    if (referenceData?.specialities) {
-      const spec = referenceData.specialities.find(s =>
-        curriculum.toLowerCase().includes(s.specialityName.toLowerCase()) ||
-        s.specialityName.toLowerCase().includes(curriculum.toLowerCase())
-      );
-      if (spec) return spec.departmentName;
-    }
-    return curriculum;
+    if (curriculum.includes('Компьютер')) return 'Кафедра "Компьютерные"';
+    if (curriculum.includes('Инженер')) return 'Программная инженерия (*)';
+    if (curriculum.includes('Архитектур')) return 'Архитектура';
+    return 'Не указано';
   };
 
   if (loading) {
@@ -80,12 +75,6 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
 
   return (
     <div className="table-container">
-      <div className="table-header-section">
-        <h2 className="table-title">Список студентов</h2>
-        <div className="student-count-badge">
-          Всего: <strong>{students.length}</strong>
-        </div>
-      </div>
       <div className="table-wrapper">
         <table className="students-table">
           <thead>
@@ -100,22 +89,20 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
               <th>Тип гранта</th>
               <th>Статус стипендии</th>
               <th>Расчетный счёт</th>
-              <th>Примечания</th>
-              {isManager && (
-                <th className="th-select">
-                  Все
-                  <label className="checkbox-label">
-                    <input
-                      ref={selectAllRef}
-                      type="checkbox"
-                      className="custom-checkbox"
-                      checked={allSelected}
-                      onChange={handleSelectAll}
-                    />
-
-                  </label>
-                </th>
-              )}
+              <th>Причины лишения</th>
+              <th className="th-select">
+                Все
+                <label className="checkbox-label">
+                  <input
+                    ref={selectAllRef}
+                    type="checkbox"
+                    className="custom-checkbox"
+                    checked={allSelected}
+                    onChange={handleSelectAll}
+                  />
+                  
+                </label>
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -143,38 +130,34 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                 <td className="bank-account">
                   <div className="bank-account-cell">
                     <span className="bank-account-text">{student.bank_account || 'Не указан'}</span>
-                    {isManager && (
-                      <button
-                        className="edit-iban-btn"
-                        title="Редактировать расчётный счёт"
-                        onClick={() => setEditingStudent(student)}
-                      >
-                        <BsFillPencilFill size={14} />
-                      </button>
-                    )}
+                    <button
+                      className="edit-iban-btn"
+                      title="Редактировать расчётный счёт"
+                      onClick={() => setEditingStudent(student)}
+                    >
+                      <BsFillPencilFill size={14} />
+                    </button>
                   </div>
                 </td>
                 <td className="deprivation-reasons">
-                  {student.notes || 'Нет'}
+                  {student.deprivation_reasons || 'Нет'}
                 </td>
-                {isManager && (
-                  <td className="td-select">
-                    <input
-                      type="checkbox"
-                      className="custom-checkbox"
-                      checked={selectedIds.has(student.id)}
-                      onChange={() => handleSelectRow(student.id)}
-                    />
-                  </td>
-                )}
+                <td className="td-select">
+                  <input
+                    type="checkbox"
+                    className="custom-checkbox"
+                    checked={selectedIds.has(student.id)}
+                    onChange={() => handleSelectRow(student.id)}
+                  />
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
+      
       <div className="table-footer">
-        {isManager && selectedIds.size > 0 && (
+        {selectedIds.size > 0 && (
           <div className="selected-actions">
             <span className="selected-count">Выбрано: <strong>{selectedIds.size}</strong></span>
             <button
@@ -195,7 +178,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
             </button>
           </div>
         )}
-
+        <p>Всего студентов: <strong>{students.length}</strong></p>
       </div>
 
       {editingStudent && (
