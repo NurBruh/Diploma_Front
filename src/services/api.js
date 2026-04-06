@@ -1,2 +1,2 @@
 
-export const API_BASE_URL = 'http://5.tcp.eu.ngrok.io:12052/api';
+export const API_BASE_URL = 'http://localhost:5150/api';

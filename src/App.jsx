@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { API_BASE_URL } from './services/api'
 import Header from './components/Header'
 import SearchFilters from './components/SearchFilters'
 import ExportTools from './components/ExportTools'
 import StudentsTable from './components/StudentsTable'
 import SsoEpvoComparison from './components/SsoEpvoComparison'
+import StudentComparison from './components/StudentComparison'
 import Login from './components/Login'
-import Register from './components/Register'
 import AuthService from './services/AuthService'
 import './App.css'
 
@@ -39,7 +39,6 @@ function App() {
   const [notification, setNotification] = useState(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [currentUser, setCurrentUser] = useState(null)
-  const [showRegister, setShowRegister] = useState(false)
   const [syncLoading, setSyncLoading] = useState(false)
   const [currentPage, setCurrentPage] = useState('main')
   const [selectionKey, setSelectionKey] = useState(0)
@@ -50,13 +49,17 @@ function App() {
     studyForm: '',
     institute: '',
     department: '',
+    profession: '',
     grantType: ''
   })
 
-  // Авторизация отключена — всегда авторизован
+  // Проверяем авторизацию из localStorage при загрузке
   useEffect(() => {
-    setIsAuthenticated(true)
-    setCurrentUser({ username: 'dev', role: 'manager' })
+    const saved = AuthService.getCurrentUser()
+    if (saved) {
+      setIsAuthenticated(true)
+      setCurrentUser(saved)
+    }
 
     const savedHistory = localStorage.getItem('studentChangeHistory')
     const savedPreviousData = localStorage.getItem('previousStudentData')
@@ -67,9 +70,14 @@ function App() {
     if (savedPreviousData) {
       setPreviousData(JSON.parse(savedPreviousData))
     }
-
-    fetchStudents()
   }, [])
+
+  // Загружаем студентов после авторизации
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      fetchStudents(currentUser)
+    }
+  }, [isAuthenticated, currentUser])
 
   const detectChanges = (oldData, newData) => {
     const changes = []
@@ -105,15 +113,26 @@ function App() {
     setTimeout(() => setNotification(null), 3000)
   }
 
-  const fetchStudents = async () => {
+  const fetchStudents = async (user = currentUser) => {
+    if (!user) return
     setLoading(true)
     try {
       // 1. Получаем сохраненные данные из localStorage (предыдущее состояние)
       const savedData = localStorage.getItem('previousStudentData')
       let localDataArray = savedData ? JSON.parse(savedData) : []
 
-      // 2. Получаем актуальные данные из бэкенда
-      const response = await fetch(`${API_BASE_URL}/Epvo/students`, {
+      // 2. Определяем URL в зависимости от роли
+      let url
+      if (user.role === 'advisor') {
+        url = `${API_BASE_URL}/Auth/advisor/${user.userId}/students`
+      } else if (user.role === 'institute_director') {
+        url = `${API_BASE_URL}/Auth/director/${user.userId}/students`
+      } else {
+        // registrar — полный доступ
+        url = `${API_BASE_URL}/Epvo/students`
+      }
+
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'
@@ -244,6 +263,13 @@ function App() {
       )
     }
 
+    // Фильтрация по профессии
+    if (filters.profession) {
+      filtered = filtered.filter(student =>
+        (student.profession || '').includes(filters.profession)
+      )
+    }
+
     // Фильтрация по типу гранта
     if (filters.grantType) {
       filtered = filtered.filter(student =>
@@ -304,12 +330,19 @@ function App() {
 
   // Обработчик успешной авторизации
   const handleLogin = (userData) => {
+    const user = {
+      userId: userData.userId,
+      fullName: userData.fullName,
+      role: userData.role,
+      roleDisplayName: userData.roleDisplayName,
+      scopeId: userData.scopeId || null,
+      scopeName: userData.scopeName || null,
+      token: userData.token,
+    }
     setIsAuthenticated(true)
-    setCurrentUser(userData)
-    setShowRegister(false)
-    showNotification(`Добро пожаловать, ${userData.username}!`, 'success')
+    setCurrentUser(user)
+    showNotification(`Добро пожаловать, ${userData.fullName}!`, 'success')
 
-    // Загружаем данные после авторизации
     const savedHistory = localStorage.getItem('studentChangeHistory')
     const savedPreviousData = localStorage.getItem('previousStudentData')
 
@@ -319,18 +352,6 @@ function App() {
     if (savedPreviousData) {
       setPreviousData(JSON.parse(savedPreviousData))
     }
-
-    fetchStudents()
-  }
-
-  // Обработчик успешной регистрации
-  const handleRegister = (userData) => {
-    setIsAuthenticated(true)
-    setCurrentUser(userData)
-    setShowRegister(false)
-    showNotification(`Регистрация успешна! Добро пожаловать, ${userData.username}!`, 'success')
-
-    fetchStudents()
   }
 
   // Обработчик выхода
@@ -399,7 +420,16 @@ function App() {
     showNotification('✅ Расчётный счёт обновлён в ССО. Актуализируйте данные в «ССО vs ЕПВО»', 'info')
   }
 
-  // Если пользователь не авторизован, показываем форму авторизации/регистрации
+  const isRegistrar = currentUser?.role === 'registrar'
+  const isReadOnly = !isRegistrar
+
+  const referenceData = useMemo(() => ({
+    studyForms: [...new Set(students.map(s => s.study_form).filter(Boolean))].map((sf, i) => ({ id: i, studyFormName: sf })),
+    institutes: [...new Set(students.map(s => s.faculty).filter(Boolean))].map((f, i) => ({ id: i, instituteName: f })),
+    professions: [...new Set(students.map(s => s.profession).filter(Boolean))].map((p, i) => ({ id: i, professionName: p })),
+  }), [students])
+
+  // Если пользователь не авторизован, показываем форму авторизации
   if (!isAuthenticated) {
     return (
       <>
@@ -408,17 +438,7 @@ function App() {
             {notification.message}
           </div>
         )}
-        {showRegister ? (
-          <Register
-            onRegister={handleRegister}
-            onSwitchToLogin={() => setShowRegister(false)}
-          />
-        ) : (
-          <Login
-            onLogin={handleLogin}
-            onSwitchToRegister={() => setShowRegister(true)}
-          />
-        )}
+        <Login onLogin={handleLogin} />
       </>
     )
   }
@@ -444,10 +464,14 @@ function App() {
 
       <main className="main-content">
         <div className="container">
-          {currentPage === 'comparison' ? (
+          {currentPage === 'comparison' && isRegistrar ? (
             <SsoEpvoComparison
               onSyncToEpvo={handleSyncToEpvo}
               syncLoading={syncLoading}
+              showNotification={showNotification}
+            />
+          ) : currentPage === 'data-comparison' && isRegistrar ? (
+            <StudentComparison
               showNotification={showNotification}
             />
           ) : (
@@ -459,19 +483,18 @@ function App() {
                 changeHistory={changeHistory}
                 students={students}
                 changesCount={getTotalChangesCount()}
-                referenceData={{
-                  studyForms: [...new Set(students.map(s => s.study_form).filter(Boolean))].map((sf, i) => ({ id: i, studyFormName: sf })),
-                  institutes: [...new Set(students.map(s => s.faculty).filter(Boolean))].map((f, i) => ({ id: i, instituteName: f })),
-                }}
+                currentUser={currentUser}
+                referenceData={referenceData}
               />
-              <ExportTools />
+              {!isReadOnly && <ExportTools />}
               <StudentsTable
                 students={filteredStudents}
                 loading={loading}
-                onUpdateIban={handleUpdateIban}
-                onSendSelectedToEpvo={handleSendSelectedToEpvo}
+                onUpdateIban={isReadOnly ? null : handleUpdateIban}
+                onSendSelectedToEpvo={isReadOnly ? null : handleSendSelectedToEpvo}
                 syncLoading={syncLoading}
                 selectionKey={selectionKey}
+                readOnly={isReadOnly}
               />
             </>
           )}

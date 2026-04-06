@@ -105,21 +105,20 @@ const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData,
 
         {/* Кафедра: скрыта для зав.кафедры, показана для директора и менеджера */}
         {!isDepartmentHead && (
-          <div className="filter-group">
-            <label>Кафедра</label>
-            <select
-              value={filters.department}
-              onChange={(e) => handleInputChange('department', e.target.value)}
-              className="filter-select"
-              disabled={!filters.institute}
-            >
-              <option value="">{filters.institute ? 'Все кафедры' : 'Сначала выберите институт'}</option>
-              {filteredDepartments.map(d => (
-                <option key={d.id} value={d.departmentName}>{d.departmentName}</option>
-              ))}
-            </select>
-          </div>
-        )}
+  <div className="filter-group">
+    <label>Профессия</label>
+    <select
+      value={filters.profession}
+      onChange={(e) => handleInputChange('profession', e.target.value)}
+      className="filter-select"
+    >
+      <option value="">Все</option>
+      {referenceData?.professions?.map(p => (
+        <option key={p.id} value={p.professionName}>{p.professionName}</option>
+      ))}
+    </select>
+  </div>
+)}
 
         <div className="filter-group">
           <label>Тип гранта</label>

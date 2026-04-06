@@ -1,18 +1,14 @@
 import React from 'react';
-import { MdHome, MdRefresh, MdSync, MdVisibility, MdPerson, MdExitToApp, MdCompareArrows } from 'react-icons/md';
+import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck } from 'react-icons/md';
 import './Header.css';
 
 const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, currentPage, onNavigate }) => {
   const role = currentUser?.role;
-  const isManager = role === 'manager_or';
+  const isRegistrar = role === 'registrar';
+  const isAdvisor = role === 'advisor';
 
-  const getRoleLabel = (role) => {
-    switch (role) {
-      case 'manager_or': return 'Менеджер ОР';
-      case 'department_head': return 'Заведующий кафедры';
-      case 'institute_director': return 'Директор института';
-      default: return role || 'Пользователь';
-    }
+  const getRoleLabel = () => {
+    return currentUser?.roleDisplayName || role || 'Пользователь';
   };
 
   return (
@@ -27,31 +23,19 @@ const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, c
             className={`nav-btn${currentPage !== 'comparison' ? ' active' : ''}`}
             onClick={() => onNavigate && onNavigate('main')}
           >
-            Стипендии ЕПВО
+            {isAdvisor ? 'Мои студенты' : isRegistrar ? 'Стипендии ЕПВО' : 'Студенты института'}
           </button>
         </nav>
 
         <div className="header-actions">
-          {isManager && (
+          {isRegistrar && (
             <button
-              className={`icon-btn sync-epvo-btn${syncLoading ? ' syncing' : ''}`}
-              title="Синхронизировать данные в ЕПВО"
-              onClick={onSyncToEpvo}
-              disabled={syncLoading}
+              className={`icon-btn compare-btn${currentPage === 'data-comparison' ? ' active-page' : ''}`}
+              title="Сравнение данных ССО ↔ ЕПВО"
+              onClick={() => onNavigate && onNavigate(currentPage === 'data-comparison' ? 'main' : 'data-comparison')}
             >
-              <MdSync size={20} className={syncLoading ? 'spin' : ''} />
-              {syncLoading ? 'Синхронизация...' : 'Синхр. в ЕПВО'}
-            </button>
-          )}
-
-          {isManager && (
-            <button
-              className={`icon-btn compare-btn${currentPage === 'comparison' ? ' active-page' : ''}`}
-              title="Сравнение ССО и ЕПВО"
-              onClick={() => onNavigate && onNavigate(currentPage === 'comparison' ? 'main' : 'comparison')}
-            >
-              <MdCompareArrows size={20} />
-              SSO vs ЕПВО
+              <MdFactCheck size={20} />
+              Сравнение данных
             </button>
           )}
 
@@ -69,8 +53,8 @@ const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, c
 
           <div className="profile">
             <div className="profile-info">
-              <span className="profile-name">{currentUser?.username || 'Пользователь'}</span>
-              <span className="profile-role">{getRoleLabel(currentUser?.role)}</span>
+              <span className="profile-name">{currentUser?.fullName || 'Пользователь'}</span>
+              <span className="profile-role">{getRoleLabel()}</span>
               {currentUser?.scopeName && (
                 <span className="profile-scope" style={{ fontSize: '0.7rem', color: '#6b7280' }}>{currentUser.scopeName}</span>
               )}
@@ -82,8 +66,8 @@ const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, c
               <div className="dropdown-menu">
                 <div className="dropdown-header">
                   <div className="dropdown-user-info">
-                    <div className="dropdown-username">{currentUser?.username}</div>
-                    <div className="dropdown-email">{getRoleLabel(currentUser?.role)}</div>
+                    <div className="dropdown-username">{currentUser?.fullName}</div>
+                    <div className="dropdown-email">{getRoleLabel()}</div>
                     {currentUser?.scopeName && (
                       <div className="dropdown-scope" style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{currentUser.scopeName}</div>
                     )}

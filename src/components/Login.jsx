@@ -3,9 +3,9 @@ import { MdError } from 'react-icons/md';
 import { API_BASE_URL } from '../services/api';
 import './Auth.css';
 
-const Login = ({ onLogin, onSwitchToRegister }) => {
+const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
-    username: '',
+    userId: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -31,7 +31,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          username: formData.username,
+          userId: formData.userId,
           password: formData.password
         })
       });
@@ -40,9 +40,10 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
 
       if (response.ok) {
         localStorage.setItem('token', data.token);
-        localStorage.setItem('username', data.username);
+        localStorage.setItem('userId', data.userId.toString());
+        localStorage.setItem('fullName', data.fullName);
         localStorage.setItem('role', data.role);
-        if (data.scopeType) localStorage.setItem('scopeType', data.scopeType);
+        localStorage.setItem('roleDisplayName', data.roleDisplayName);
         if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
         if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
         console.log('Logged in:', data);
@@ -76,13 +77,14 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
           )}
 
           <div className="form-group">
-            <label htmlFor="username">Имя пользователя</label>
+            <label htmlFor="userId">ID пользователя</label>
             <input
               type="text"
-              id="username"
-              name="username"
-              value={formData.username}
+              id="userId"
+              name="userId"
+              value={formData.userId}
               onChange={handleChange}
+              placeholder="Введите ваш ID"
               required
               autoFocus
               disabled={loading}
@@ -97,6 +99,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              placeholder="Введите пароль"
               required
               disabled={loading}
             />
@@ -109,19 +112,6 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
           >
             {loading ? 'Вход...' : 'Войти'}
           </button>
-
-          {/* <div className="auth-divider">
-            <span>или</span>
-          </div> */}
-
-          {/* <button
-            type="button"
-            className="auth-btn secondary"
-            onClick={onSwitchToRegister}
-            disabled={loading}
-          >
-            Зарегистрироваться
-          </button> */}
         </form>
       </div>
     </div>

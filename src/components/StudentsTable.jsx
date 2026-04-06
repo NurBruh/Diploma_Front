@@ -4,21 +4,34 @@ import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
 import './StudentsTable.css';
 
-const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey }) => {
+const PAGE_SIZE = 50;
+
+const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey, readOnly }) => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
+  const [currentPage, setCurrentPage] = useState(1);
   const selectAllRef = useRef(null);
 
-  // Сбрасываем чекбоксы при фильтрации
+  // Сбрасываем чекбоксы и страницу при фильтрации
   useEffect(() => {
     setSelectedIds(new Set());
+    setCurrentPage(1);
   }, [selectionKey]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [students]);
 
   const sortedStudents = (!students || students.length === 0) ? [] : [...students].sort((a, b) => {
     const nameA = (a.full_name || '').trim();
     const nameB = (b.full_name || '').trim();
     return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
   });
+
+  const totalPages = Math.max(1, Math.ceil(sortedStudents.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages);
+  const pageStart = (safePage - 1) * PAGE_SIZE;
+  const pageStudents = sortedStudents.slice(pageStart, pageStart + PAGE_SIZE);
 
   const allIds = sortedStudents.map((s) => s.id);
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
@@ -81,25 +94,27 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
               <th>Тип оплаты</th>
               <th>Тип гранта</th>
               <th>Расчетный счёт</th>
-              <th className="th-select">
-                Все
-                <label className="checkbox-label">
-                  <input
-                    ref={selectAllRef}
-                    type="checkbox"
-                    className="custom-checkbox"
-                    checked={allSelected}
-                    onChange={handleSelectAll}
-                  />
-                  
-                </label>
-              </th>
+              {!readOnly && (
+                <th className="th-select">
+                  Все
+                  <label className="checkbox-label">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      className="custom-checkbox"
+                      checked={allSelected}
+                      onChange={handleSelectAll}
+                    />
+                    
+                  </label>
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
-            {sortedStudents.map((student, index) => (
+            {pageStudents.map((student, index) => (
               <tr key={student.id} className={selectedIds.has(student.id) ? 'row-selected' : ''}>
-                <td>{index + 1}</td>
+                <td>{pageStart + index + 1}</td>
                 <td className="full-name">{student.full_name || '—'}</td>
                 <td className="iin-cell">{student.iin || '—'}</td>
                 <td>{student.course || '—'}</td>
@@ -119,23 +134,27 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                 <td className="bank-account">
                   <div className="bank-account-cell">
                     <span className="bank-account-text">{student.bank_account || '—'}</span>
-                    <button
-                      className="edit-iban-btn"
-                      title="Редактировать расчётный счёт"
-                      onClick={() => setEditingStudent(student)}
-                    >
-                      <BsFillPencilFill size={14} />
-                    </button>
+                    {!readOnly && (
+                      <button
+                        className="edit-iban-btn"
+                        title="Редактировать расчётный счёт"
+                        onClick={() => setEditingStudent(student)}
+                      >
+                        <BsFillPencilFill size={14} />
+                      </button>
+                    )}
                   </div>
                 </td>
-                <td className="td-select">
-                  <input
-                    type="checkbox"
-                    className="custom-checkbox"
-                    checked={selectedIds.has(student.id)}
-                    onChange={() => handleSelectRow(student.id)}
-                  />
-                </td>
+                {!readOnly && (
+                  <td className="td-select">
+                    <input
+                      type="checkbox"
+                      className="custom-checkbox"
+                      checked={selectedIds.has(student.id)}
+                      onChange={() => handleSelectRow(student.id)}
+                    />
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -143,7 +162,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
       </div>
       
       <div className="table-footer">
-        {selectedIds.size > 0 && (
+        {!readOnly && selectedIds.size > 0 && (
           <div className="selected-actions">
             <span className="selected-count">Выбрано: <strong>{selectedIds.size}</strong></span>
             <button
@@ -164,10 +183,33 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
             </button>
           </div>
         )}
+        <div className="pagination-row">
+          <button
+            className="page-btn"
+            onClick={() => setCurrentPage(1)}
+            disabled={safePage === 1}
+          >«</button>
+          <button
+            className="page-btn"
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            disabled={safePage === 1}
+          >‹</button>
+          <span className="page-info">Стр. {safePage} / {totalPages}</span>
+          <button
+            className="page-btn"
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            disabled={safePage === totalPages}
+          >›</button>
+          <button
+            className="page-btn"
+            onClick={() => setCurrentPage(totalPages)}
+            disabled={safePage === totalPages}
+          >»</button>
+        </div>
         <p>Всего студентов: <strong>{students.length}</strong></p>
       </div>
 
-      {editingStudent && (
+      {!readOnly && editingStudent && (
         <EditBankAccountModal
           student={editingStudent}
           onClose={() => setEditingStudent(null)}
