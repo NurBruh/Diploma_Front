@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MdRefresh, MdCheckCircle, MdWarning, MdError, MdFilterList, MdSearch } from 'react-icons/md';
-import { API_BASE_URL } from '../services/api';
+const API_BASE_URL = 'http://localhost:5150/api';
 import AuthService from '../services/AuthService';
-import './StudentComparison.css';
+import '../css/StudentComparison.css';
 
 const COMPARE_FIELDS = [
   { key: 'fullName', label: 'ФИО', sso: 'sso_FullName', epvo: 'epvo_FullName', diffLabel: 'ФИО' },

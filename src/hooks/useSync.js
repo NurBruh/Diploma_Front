@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { API_BASE_URL } from '../services/api'
+const API_BASE_URL = 'http://localhost:5150/api';
 import AuthService from '../services/AuthService'
 
 export const useSync = ({ showNotification, onUnauthorized, fetchStudents }) => {

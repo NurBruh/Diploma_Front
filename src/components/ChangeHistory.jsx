@@ -1,5 +1,5 @@
 import React from 'react';
-import './ChangeHistory.css';
+import '../css/ChangeHistory.css';
 
 const ChangeHistory = ({ changeHistory, students, onClose, onApplySsoChange, onRejectSsoChange }) => {
 

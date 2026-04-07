@@ -1,8 +1,9 @@
 import React from 'react';
-import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck } from 'react-icons/md';
-import './Header.css';
+import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck, MdCompareArrows } from 'react-icons/md';
+import { NavLink, Link } from 'react-router-dom';
+import '../css/Header.css';
 
-const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, currentPage, onNavigate }) => {
+const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser }) => {
   const role = currentUser?.role;
   const isRegistrar = role === 'registrar';
   const isAdvisor = role === 'advisor';
@@ -15,28 +16,40 @@ const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, c
     <header className="header">
       <div className="header-content">
         <nav className="breadcrumb">
-          <button className="nav-btn home-btn" onClick={() => onNavigate && onNavigate('main')}>
+          <Link className="nav-btn home-btn" to="/">
             <MdHome size={20} />
-          </button>
+          </Link>
           <span className="separator">›</span>
-          <button
-            className={`nav-btn${currentPage !== 'comparison' ? ' active' : ''}`}
-            onClick={() => onNavigate && onNavigate('main')}
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => `nav-btn${isActive ? ' active' : ''}`}
           >
             {isAdvisor ? 'Мои студенты' : isRegistrar ? 'Стипендии ЕПВО' : 'Студенты института'}
-          </button>
+          </NavLink>
         </nav>
 
         <div className="header-actions">
           {isRegistrar && (
-            <button
-              className={`icon-btn compare-btn${currentPage === 'data-comparison' ? ' active-page' : ''}`}
+            <NavLink
+              to="/comparison"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
+              title="Сравнение SSO vs EPVO"
+            >
+              <MdCompareArrows size={20} />
+              ССО vs ЕПВО
+            </NavLink>
+          )}
+
+          {isRegistrar && (
+            <NavLink
+              to="/data-comparison"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
               title="Сравнение данных ССО ↔ ЕПВО"
-              onClick={() => onNavigate && onNavigate(currentPage === 'data-comparison' ? 'main' : 'data-comparison')}
             >
               <MdFactCheck size={20} />
               Сравнение данных
-            </button>
+            </NavLink>
           )}
 
           <button

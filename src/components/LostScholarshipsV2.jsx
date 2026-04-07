@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { MdRefresh, MdCheckCircle, MdAdd } from 'react-icons/md';
-import { API_BASE_URL } from '../services/api';
+const API_BASE_URL = 'http://localhost:5150/api';
 import AuthService from '../services/AuthService';
-import './LostScholarships.css';
+import '../css/LostScholarships.css';
 
 /**
  * Вариант 2 — Лишённые стипендии из отдельной таблицы ScholarshipLossRecords

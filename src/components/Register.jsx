@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MdError } from 'react-icons/md';
-import { API_BASE_URL } from '../services/api';
-import './Auth.css';
+const API_BASE_URL = 'http://localhost:5150/api';
+import '../css/Auth.css';
 
 const Register = ({ onRegister, onSwitchToLogin }) => {
   const [formData, setFormData] = useState({

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { MdSync, MdRefresh, MdCheckCircle, MdWarning, MdError } from 'react-icons/md';
-import { API_BASE_URL } from '../services/api';
+const API_BASE_URL = 'http://localhost:5150/api';
 import AuthService from '../services/AuthService';
-import './SsoEpvoComparison.css';
+import '../css/SsoEpvoComparison.css';
 
 const FIELD_LABELS = {
   firstName: 'Имя',

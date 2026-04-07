@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { BsFillPencilFill } from 'react-icons/bs';
 import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
-import './StudentsTable.css';
+import '../css/StudentsTable.css';
 
 const PAGE_SIZE = 50;
 

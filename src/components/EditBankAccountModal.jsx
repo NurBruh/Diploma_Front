@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './EditBankAccountModal.css';
+import '../css/EditBankAccountModal.css';
 
 const EditBankAccountModal = ({ student, onClose, onSave }) => {
   const [step, setStep] = useState('confirm'); // 'confirm' | 'edit'

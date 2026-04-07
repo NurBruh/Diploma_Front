@@ -1,6 +1,6 @@
 import React from 'react';
 import { MdSearch } from 'react-icons/md';
-import './SearchFilters.css';
+import '../css/SearchFilters.css';
 
 const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData, currentUser }) => {
   const role = currentUser?.role;
