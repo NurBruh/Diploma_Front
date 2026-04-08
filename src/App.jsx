@@ -7,6 +7,8 @@ import ExportTools from './components/ExportTools';
 import StudentsTable from './components/StudentsTable';
 import SsoEpvoComparison from './components/SsoEpvoComparison';
 import StudentComparison from './components/StudentComparison';
+import SyncPreview from './components/SyncPreview';
+import SyncHistory from './components/SyncHistory';
 import Login from './components/Login';
 
 import { useNotification } from './hooks/useNotification';
@@ -147,6 +149,12 @@ function App() {
                   <StudentComparison
                     showNotification={showNotification}
                   />
+                } />
+                <Route path="/sync-preview" element={
+                  <SyncPreview showNotification={showNotification} />
+                } />
+                <Route path="/sync-history" element={
+                  <SyncHistory showNotification={showNotification} />
                 } />
               </>
             )}

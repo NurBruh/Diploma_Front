@@ -1,5 +1,5 @@
 import React from 'react';
-import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck, MdCompareArrows } from 'react-icons/md';
+import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck, MdCompareArrows, MdPreview, MdHistory } from 'react-icons/md';
 import { NavLink, Link } from 'react-router-dom';
 import '../css/Header.css';
 
@@ -49,6 +49,28 @@ const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser })
             >
               <MdFactCheck size={20} />
               Сравнение данных
+            </NavLink>
+          )}
+
+          {isRegistrar && (
+            <NavLink
+              to="/sync-preview"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
+              title="Предпросмотр синхронизации"
+            >
+              <MdPreview size={20} />
+              Предпросмотр
+            </NavLink>
+          )}
+
+          {isRegistrar && (
+            <NavLink
+              to="/sync-history"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
+              title="История синхронизации"
+            >
+              <MdHistory size={20} />
+              История
             </NavLink>
           )}
 
