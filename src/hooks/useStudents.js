@@ -17,6 +17,7 @@ const mapStudentFromBackend = (student) => ({
   sex: student.sex || '',
   grant_type: student.grantType || '',
   bank_account: student.iic || '',
+  update_date: student.updateDate || '',
   university_id: student.universityId,
 });
 

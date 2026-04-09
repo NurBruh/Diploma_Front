@@ -94,6 +94,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
               <th>Тип оплаты</th>
               <th>Тип гранта</th>
               <th>Расчетный счёт</th>
+              <th>Дата обновления</th>
               {!readOnly && (
                 <th className="th-select">
                   Все
@@ -145,6 +146,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                     )}
                   </div>
                 </td>
+                <td className="update-date">{student.update_date || '—'}</td>
                 {!readOnly && (
                   <td className="td-select">
                     <input

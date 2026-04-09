@@ -10,6 +10,7 @@ const COMPARE_FIELDS = [
   { key: 'studyForm', label: 'Форма обучения', sso: 'sso_StudyForm', epvo: 'epvo_StudyForm', diffLabel: 'Форма обучения' },
   { key: 'institute', label: 'Институт', sso: 'sso_Institute', epvo: 'epvo_FacultyName', diffLabel: 'Институт/Факультет' },
   { key: 'cafedra', label: 'Кафедра / Спец.', sso: 'sso_Cafedra', epvo: 'epvo_Specialization', diffLabel: 'Кафедра/Специализация' },
+  { key: 'speciality', label: 'Специальность (ССО)', sso: 'sso_Speciality', epvo: null, diffLabel: null },
   { key: 'payment', label: 'Тип оплаты', sso: 'sso_PaymentType', epvo: 'epvo_PaymentType', diffLabel: 'Тип оплаты' },
   { key: 'grant', label: 'Тип гранта', sso: 'sso_GrantType', epvo: 'epvo_GrantType', diffLabel: 'Тип гранта' },
 ];
@@ -220,7 +221,20 @@ const StudentComparison = ({ showNotification }) => {
                       </div>
                     </th>
                   ))}
-                  <th className="sc-th-iic">Р/С (ЕПВО)</th>
+                  <th className="sc-th-iic">
+                      <div className="sc-th-pair-label">Р/С</div>
+                      <div className="sc-th-pair-sub">
+                        <span className="sc-sub-sso">ССО</span>
+                        <span className="sc-sub-epvo">ЕПВО</span>
+                      </div>
+                  </th>
+                  <th className="sc-th-date">
+                      <div className="sc-th-pair-label">Дата обн.</div>
+                      <div className="sc-th-pair-sub">
+                        <span className="sc-sub-sso">ССО</span>
+                        <span className="sc-sub-epvo">ЕПВО</span>
+                      </div>
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -244,28 +258,41 @@ const StudentComparison = ({ showNotification }) => {
                         <td className="sc-td-iin">{item.iin || '—'}</td>
                         {COMPARE_FIELDS.map(f => {
                           const ssoVal = fmt(item[f.sso]);
-                          const epvoVal = fmt(item[f.epvo]);
-                          const hasDiff = isDiffField(item, f.diffLabel);
+                          const epvoVal = f.epvo ? fmt(item[f.epvo]) : null;
+                          const hasDiff = f.diffLabel ? isDiffField(item, f.diffLabel) : false;
                           return (
                             <td key={f.key} className={`sc-td-pair ${hasDiff ? 'sc-td-diff' : ''}`}>
                               <div className="sc-pair-vals">
                                 <span className={`sc-val-sso ${hasDiff ? 'sc-val-highlight-sso' : ''}`}>
                                   {ssoVal}
                                 </span>
-                                <span className={`sc-val-epvo ${hasDiff ? 'sc-val-highlight-epvo' : ''}`}>
-                                  {epvoVal}
-                                </span>
+                                {epvoVal !== null && (
+                                  <span className={`sc-val-epvo ${hasDiff ? 'sc-val-highlight-epvo' : ''}`}>
+                                    {epvoVal}
+                                  </span>
+                                )}
                               </div>
                             </td>
                           );
                         })}
-                        <td className="sc-td-iic">{fmt(item.epvo_Iic)}</td>
+                        <td className="sc-td-iic">
+                          <div className="sc-pair-vals">
+                            <span className="sc-val-sso">{fmt(item.sso_Iic)}</span>
+                            <span className="sc-val-epvo">{fmt(item.epvo_Iic)}</span>
+                          </div>
+                        </td>
+                        <td className="sc-td-date">
+                          <div className="sc-pair-vals">
+                            <span className="sc-val-sso">{fmt(item.sso_UpdatedDate)}</span>
+                            <span className="sc-val-epvo">{fmt(item.epvo_UpdateDate)}</span>
+                          </div>
+                        </td>
                       </tr>
 
                       {/* Развёрнутая строка с деталями различий */}
                       {isExpanded && item.hasDifference && (
                         <tr className="sc-row-detail">
-                          <td colSpan={COMPARE_FIELDS.length + 4}>
+                          <td colSpan={COMPARE_FIELDS.length + 5}>
                             <div className="sc-detail-box">
                               <strong>Расхождения:</strong>
                               {item.differentFields.map((field, i) => (
