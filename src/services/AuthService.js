@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5150/api';
+import { API_BASE_URL } from '../services';
 
 // API endpoint авторизации
 const AUTH_URL = `${API_BASE_URL}/Auth`;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MdRefresh, MdCheckCircle, MdWarning, MdError, MdFilterList, MdSearch } from 'react-icons/md';
-const API_BASE_URL = 'http://localhost:5150/api';
+import { API_BASE_URL } from '../services';
 import AuthService from '../services/AuthService';
 import '../css/StudentComparison.css';
 

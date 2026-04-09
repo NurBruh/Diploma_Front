@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { MdSync, MdRefresh, MdCheckCircle, MdWarning, MdError } from 'react-icons/md';
-const API_BASE_URL = 'http://localhost:5150/api';
+import { API_BASE_URL } from '../services';
 import AuthService from '../services/AuthService';
 import '../css/SsoEpvoComparison.css';
 

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MdRefresh, MdCheckCircle, MdError, MdHourglassEmpty } from 'react-icons/md';
+import { API_BASE_URL } from '../services';
 import AuthService from '../services/AuthService';
 import '../css/SyncHistory.css';
 
-const API_BASE_URL = 'http://localhost:5150/api';
+
 const PAGE_SIZE = 50;
 
 const STATUS_FILTERS = [

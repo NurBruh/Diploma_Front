@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { MdRefresh, MdCloudUpload, MdSave, MdWarning, MdCheckCircle, MdError } from 'react-icons/md';
 import AuthService from '../services/AuthService';
 import '../css/SyncPreview.css';
-
-const API_BASE_URL = 'http://localhost:5150/api';
+import { API_BASE_URL } from '../services';
 
 const FILTER_OPTIONS = [
   { value: 'all',       label: 'Все' },

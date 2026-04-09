@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MdRefresh, MdCheckCircle } from 'react-icons/md';
-const API_BASE_URL = 'http://localhost:5150/api';
+import { API_BASE_URL } from '../services';
 import AuthService from '../services/AuthService';
 import '../css/LostScholarships.css';
 

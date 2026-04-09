@@ -1,6 +1,5 @@
 import { useState, useCallback } from 'react';
-
-const API_BASE_URL = 'http://localhost:5150/api';
+import { API_BASE_URL } from '../services';
 
 const mapStudentFromBackend = (student) => ({
   id: student.studentId,
