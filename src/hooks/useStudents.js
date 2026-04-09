@@ -102,7 +102,7 @@ export const useStudents = (showNotification, currentUser) => {
       const ssoDataArray = backendData.map(mapStudentFromBackend);
 
       if (localDataArray.length === 0) {
-        localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray));
+        try { localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray)); } catch (_) {}
         setStudents(ssoDataArray);
         setFilteredStudents(ssoDataArray);
         if (showNotification) showNotification('Первичная загрузка данных', 'info');
@@ -136,8 +136,8 @@ export const useStudents = (showNotification, currentUser) => {
       });
 
       setChangeHistory(updatedHistory);
-      localStorage.setItem('studentChangeHistory', JSON.stringify(updatedHistory));
-      localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray));
+      try { localStorage.setItem('studentChangeHistory', JSON.stringify(updatedHistory)); } catch (_) {}
+      try { localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray)); } catch (_) {}
 
       setStudents(ssoDataArray);
       setFilteredStudents(ssoDataArray);

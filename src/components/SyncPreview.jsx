@@ -156,6 +156,8 @@ const SyncPreview = ({ showNotification }) => {
                 <th>ИИН</th>
                 <th>ФИО</th>
                 <th>Курс</th>
+                <th>Факультет</th>
+                <th>Специальность</th>
                 <th>Тип оплаты</th>
                 <th>Тип гранта</th>
                 <th>Статус</th>
@@ -164,7 +166,7 @@ const SyncPreview = ({ showNotification }) => {
             <tbody>
               {displayedItems.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="sp-table__empty">Нет записей</td>
+                  <td colSpan={9} className="sp-table__empty">Нет записей</td>
                 </tr>
               )}
               {displayedItems.map((item, idx) => (
@@ -173,6 +175,8 @@ const SyncPreview = ({ showNotification }) => {
                   <td className="sp-monospace">{item.iinPlt ?? '—'}</td>
                   <td>{item.fullName || '—'}</td>
                   <td>{item.courseNumber ?? '—'}</td>
+                  <td>{item.facultyName || '—'}</td>
+                  <td>{item.professionName || '—'}</td>
                   <td>{item.paymentType ?? '—'}</td>
                   <td>{item.grantType ?? '—'}</td>
                   <td>
