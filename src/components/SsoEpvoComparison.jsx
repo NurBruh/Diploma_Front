@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MdSync, MdRefresh, MdCheckCircle, MdWarning, MdError } from 'react-icons/md';
-import { API_BASE_URL } from '../services';
-import AuthService from '../services/AuthService';
+import { authFetch } from '../utils/authFetch';
 import '../css/SsoEpvoComparison.css';
 
 const FIELD_LABELS = {
@@ -73,18 +72,12 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
     const f = filterVal ?? filter;
     setLoading(true);
     try {
-      const token = AuthService.getToken();
       const params = new URLSearchParams({
         page: String(p),
         pageSize: String(PAGE_SIZE),
         filter: f,
       });
-      const response = await fetch(`${API_BASE_URL}/Epvo/compare?${params}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await authFetch(`/Epvo/compare?${params}`);
       if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
       const json = await response.json();
       // Если сервер уже поддерживает серверную пагинацию
@@ -145,20 +138,13 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
   const syncStudent = async (iin) => {
     setSyncingIIN(iin);
     try {
-      const token = AuthService.getToken();
-      const response = await fetch(`${API_BASE_URL}/Epvo/sync-student/${iin}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await authFetch(`/Epvo/sync-student/${iin}`, { method: 'POST' });
       if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
       const result = await response.json();
       showNotification && showNotification(`${result.message}`, 'success');
       await fetchComparison(currentPage, filter);
     } catch (e) {
-      showNotification && showNotification(' Ошибка при синхронизации студента', 'error');
+      showNotification && showNotification('Ошибка при синхронизации студента', 'error');
     } finally {
       setSyncingIIN(null);
     }

@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { API_BASE_URL } from '../services';
+import { authFetch } from '../utils/authFetch';
 
 const mapStudentFromBackend = (student) => ({
   id: student.studentId,
@@ -26,7 +26,6 @@ export const useStudents = (showNotification, currentUser) => {
   const [filteredStudents, setFilteredStudents] = useState([]);
   const [loading, setLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
-  const [previousData, setPreviousData] = useState({});
   const [changeHistory, setChangeHistory] = useState({});
   const [selectionKey, setSelectionKey] = useState(0);
   const [filters, setFilters] = useState({
@@ -42,9 +41,7 @@ export const useStudents = (showNotification, currentUser) => {
 
   const loadHistoryFromStorage = useCallback(() => {
     const savedHistory = localStorage.getItem('studentChangeHistory');
-    const savedPreviousData = localStorage.getItem('previousStudentData');
     if (savedHistory) setChangeHistory(JSON.parse(savedHistory));
-    if (savedPreviousData) setPreviousData(JSON.parse(savedPreviousData));
   }, []);
 
   const detectChanges = (oldData, newData) => {
@@ -82,19 +79,16 @@ export const useStudents = (showNotification, currentUser) => {
       const savedData = localStorage.getItem('previousStudentData');
       let localDataArray = savedData ? JSON.parse(savedData) : [];
 
-      let url;
+      let path;
       if (user.role === 'advisor') {
-        url = `${API_BASE_URL}/Auth/advisor/${user.userId}/students`;
+        path = `/Auth/advisor/${user.userId}/students`;
       } else if (user.role === 'institute_director') {
-        url = `${API_BASE_URL}/Auth/director/${user.userId}/students`;
+        path = `/Auth/director/${user.userId}/students`;
       } else {
-        url = `${API_BASE_URL}/Epvo/students`;
+        path = '/Epvo/students';
       }
 
-      const response = await fetch(url, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const response = await authFetch(path);
 
       if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
 
@@ -192,10 +186,7 @@ export const useStudents = (showNotification, currentUser) => {
   const handleSyncToEpvo = async () => {
     setSyncLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/Epvo/sync-to-epvo`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const response = await authFetch('/Epvo/sync-to-epvo', { method: 'POST' });
       if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
       const data = await response.json();
       if (showNotification) showNotification(`${data.message}`, 'success');
@@ -210,10 +201,9 @@ export const useStudents = (showNotification, currentUser) => {
   const handleClearHistory = () => {
     if (window.confirm('Очистить всю историю изменений? Это действие нельзя отменить.')) {
       setChangeHistory({});
-      setPreviousData({});
       localStorage.removeItem('studentChangeHistory');
       localStorage.removeItem('previousStudentData');
-      alert('История изменений очищена. Нажмите "Актуализировать" для сохранения текущих данных как базовых.');
+      alert('История изменений очищена. Нажмите «Актуализировать» для сохранения текущих данных как базовых.');
     }
   };
 
@@ -225,14 +215,13 @@ export const useStudents = (showNotification, currentUser) => {
 
   const handleSendSelectedToEpvo = async (selectedIINs) => {
     if (!selectedIINs || selectedIINs.length === 0) {
-      if (showNotification) showNotification(' Выберите хотя бы одного студента', 'error');
+      if (showNotification) showNotification('Выберите хотя бы одного студента', 'error');
       return;
     }
     setSyncLoading(true);
     try {
-      const response = await fetch(`${API_BASE_URL}/Epvo/sync-batch`, {
+      const response = await authFetch('/Epvo/sync-batch', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ iinS: selectedIINs })
       });
       if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
@@ -248,9 +237,8 @@ export const useStudents = (showNotification, currentUser) => {
   };
 
   const handleUpdateIban = async (iin, newIban) => {
-    const response = await fetch(`${API_BASE_URL}/Epvo/students/${iin}/iban`, {
+    const response = await authFetch(`/Epvo/students/${iin}/iban`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ newIban })
     });
     if (!response.ok) {
@@ -269,7 +257,6 @@ export const useStudents = (showNotification, currentUser) => {
     loading,
     syncLoading,
     changeHistory,
-    previousData,
     selectionKey,
     filters,
     setFilters,

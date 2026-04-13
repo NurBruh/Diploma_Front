@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MdRefresh, MdCloudUpload, MdSave, MdWarning, MdCheckCircle, MdError } from 'react-icons/md';
-import AuthService from '../services/AuthService';
+import { authFetch } from '../utils/authFetch';
 import '../css/SyncPreview.css';
-import { API_BASE_URL } from '../services';
 
 const FILTER_OPTIONS = [
   { value: 'all',       label: 'Все' },
@@ -20,10 +19,7 @@ const SyncPreview = ({ showNotification }) => {
   const fetchPreview = useCallback(async () => {
     setLoading(true);
     try {
-      const token = AuthService.getToken();
-      const res = await fetch(`${API_BASE_URL}/epvo-sso/sync-preview`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch('/epvo-sso/sync-preview');
       if (!res.ok) throw new Error(`Ошибка ${res.status}`);
       const json = await res.json();
       setData(json);
@@ -39,11 +35,7 @@ const SyncPreview = ({ showNotification }) => {
   const handleSaveToTemp = async () => {
     setSaving(true);
     try {
-      const token = AuthService.getToken();
-      const res = await fetch(`${API_BASE_URL}/epvo-sso/save-to-temp`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch('/epvo-sso/save-to-temp', { method: 'POST' });
       if (!res.ok) throw new Error(`Ошибка ${res.status}`);
       const json = await res.json();
       showNotification?.(`Сохранено в TEMP: ${json.saved ?? json.message ?? 'OK'}`, 'success');
@@ -58,11 +50,7 @@ const SyncPreview = ({ showNotification }) => {
     if (!window.confirm('Отправить данные из TEMP в ЕПВО?')) return;
     setSending(true);
     try {
-      const token = AuthService.getToken();
-      const res = await fetch(`${API_BASE_URL}/epvo-sso/send-temp-to-epvo`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch('/epvo-sso/send-temp-to-epvo', { method: 'POST' });
       if (!res.ok) throw new Error(`Ошибка ${res.status}`);
       const json = await res.json();
       showNotification?.(

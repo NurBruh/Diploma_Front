@@ -3,7 +3,6 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 
 import Header from './components/Header';
 import SearchFilters from './components/SearchFilters';
-import ExportTools from './components/ExportTools';
 import StudentsTable from './components/StudentsTable';
 import SsoEpvoComparison from './components/SsoEpvoComparison';
 import StudentComparison from './components/StudentComparison';
@@ -32,7 +31,6 @@ function App() {
     loading,
     syncLoading,
     changeHistory,
-    previousData,
     selectionKey,
     filters,
     setFilters,
@@ -123,7 +121,7 @@ function App() {
                   currentUser={currentUser}
                   referenceData={referenceData}
                 />
-                {!isReadOnly && <ExportTools />}
+
                 <StudentsTable
                   students={filteredStudents}
                   loading={loading}

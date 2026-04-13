@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MdRefresh, MdCheckCircle, MdWarning, MdError, MdFilterList, MdSearch } from 'react-icons/md';
-import { API_BASE_URL } from '../services';
-import AuthService from '../services/AuthService';
+import { authFetch } from '../utils/authFetch';
 import '../css/StudentComparison.css';
 
 const COMPARE_FIELDS = [
@@ -32,7 +31,6 @@ const StudentComparison = ({ showNotification }) => {
     const s = searchVal !== undefined ? searchVal : search;
     setLoading(true);
     try {
-      const token = AuthService.getToken();
       const params = new URLSearchParams({
         page: String(p),
         pageSize: String(PAGE_SIZE),
@@ -40,12 +38,7 @@ const StudentComparison = ({ showNotification }) => {
       });
       if (s.trim()) params.set('search', s.trim());
 
-      const response = await fetch(`${API_BASE_URL}/comparison/students?${params}`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
+      const response = await authFetch(`/comparison/students?${params}`);
       if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
       const json = await response.json();
       setData(json);

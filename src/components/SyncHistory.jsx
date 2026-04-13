@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { MdRefresh, MdCheckCircle, MdError, MdHourglassEmpty } from 'react-icons/md';
-import { API_BASE_URL } from '../services';
-import AuthService from '../services/AuthService';
+import { authFetch } from '../utils/authFetch';
 import '../css/SyncHistory.css';
 
 
@@ -38,16 +37,13 @@ const SyncHistory = ({ showNotification }) => {
   const fetchHistory = useCallback(async (p, s) => {
     setLoading(true);
     try {
-      const token = AuthService.getToken();
       const params = new URLSearchParams({
         page:     String(p ?? page),
         pageSize: String(PAGE_SIZE),
       });
       if ((s ?? status)) params.set('status', s ?? status);
 
-      const res = await fetch(`${API_BASE_URL}/epvo-sso/sync-logs?${params}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`/epvo-sso/sync-logs?${params}`);
       if (!res.ok) throw new Error(`Ошибка ${res.status}`);
       const json = await res.json();
       setData(json);
