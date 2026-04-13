@@ -4,10 +4,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Header from './components/Header';
 import SearchFilters from './components/SearchFilters';
 import StudentsTable from './components/StudentsTable';
-import SsoEpvoComparison from './components/SsoEpvoComparison';
 import StudentComparison from './components/StudentComparison';
 import SyncPreview from './components/SyncPreview';
 import SyncHistory from './components/SyncHistory';
+import ChangeHistory from './components/ChangeHistory';
 import Login from './components/Login';
 
 import { useNotification } from './hooks/useNotification';
@@ -136,13 +136,6 @@ function App() {
             
             {isRegistrar && (
               <>
-                <Route path="/comparison" element={
-                  <SsoEpvoComparison
-                    onSyncToEpvo={handleSyncToEpvo}
-                    syncLoading={syncLoading}
-                    showNotification={showNotification}
-                  />
-                } />
                 <Route path="/data-comparison" element={
                   <StudentComparison
                     showNotification={showNotification}
@@ -153,6 +146,9 @@ function App() {
                 } />
                 <Route path="/sync-history" element={
                   <SyncHistory showNotification={showNotification} />
+                } />
+                <Route path="/change-history" element={
+                  <ChangeHistory showNotification={showNotification} />
                 } />
               </>
             )}

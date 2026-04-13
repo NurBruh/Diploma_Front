@@ -1,5 +1,5 @@
 import React from 'react';
-import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck, MdCompareArrows, MdPreview, MdHistory } from 'react-icons/md';
+import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck, MdPreview, MdHistory } from 'react-icons/md';
 import { NavLink, Link } from 'react-router-dom';
 import '../css/Header.css';
 
@@ -32,17 +32,6 @@ const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser })
         <div className="header-actions">
           {isRegistrar && (
             <NavLink
-              to="/comparison"
-              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
-              title="Сравнение SSO vs EPVO"
-            >
-              <MdCompareArrows size={20} />
-              ССО vs ЕПВО
-            </NavLink>
-          )}
-
-          {isRegistrar && (
-            <NavLink
               to="/data-comparison"
               className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
               title="Сравнение данных ССО ↔ ЕПВО"
@@ -70,7 +59,18 @@ const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser })
               title="История синхронизации"
             >
               <MdHistory size={20} />
-              История
+              История синхронизации
+            </NavLink>
+          )}
+
+          {isRegistrar && (
+            <NavLink
+              to="/change-history"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
+              title="История изменений полей"
+            >
+              <MdHistory size={20} />
+              История изменений
             </NavLink>
           )}
 

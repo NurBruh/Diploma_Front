@@ -12,6 +12,7 @@ const COMPARE_FIELDS = [
   { key: 'speciality', label: 'Специальность (ССО)', sso: 'sso_Speciality', epvo: null, diffLabel: null },
   { key: 'payment', label: 'Тип оплаты', sso: 'sso_PaymentType', epvo: 'epvo_PaymentType', diffLabel: 'Тип оплаты' },
   { key: 'grant', label: 'Тип гранта', sso: 'sso_GrantType', epvo: 'epvo_GrantType', diffLabel: 'Тип гранта' },
+  { key: 'iic', label: 'ИИК (Р/С)', sso: 'sso_Iic', epvo: 'epvo_Iic', diffLabel: 'ИИК (Р/С)' },
 ];
 
 const PAGE_SIZE = 50;
@@ -213,13 +214,7 @@ const StudentComparison = ({ showNotification }) => {
                       </div>
                     </th>
                   ))}
-                  <th className="sc-th-iic">
-                      <div className="sc-th-pair-label">Р/С</div>
-                      <div className="sc-th-pair-sub">
-                        <span className="sc-sub-sso">ССО</span>
-                        <span className="sc-sub-epvo">ЕПВО</span>
-                      </div>
-                  </th>
+                  <th className="sc-th-priority">Приоритет</th>
                   <th className="sc-th-date">
                       <div className="sc-th-pair-label">Дата обн.</div>
                       <div className="sc-th-pair-sub">
@@ -267,11 +262,21 @@ const StudentComparison = ({ showNotification }) => {
                             </td>
                           );
                         })}
-                        <td className="sc-td-iic">
-                          <div className="sc-pair-vals">
-                            <span className="sc-val-sso">{fmt(item.sso_Iic)}</span>
-                            <span className="sc-val-epvo">{fmt(item.epvo_Iic)}</span>
-                          </div>
+                        <td className="sc-td-priority">
+                          {item.priority && (
+                            <span style={{
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              fontSize: '0.75rem',
+                              fontWeight: 600,
+                              background: item.priority === 'SSO' ? '#dbeafe' :
+                                         item.priority === 'EPVO' ? '#fef3c7' : '#dcfce7',
+                              color: item.priority === 'SSO' ? '#1d4ed8' :
+                                     item.priority === 'EPVO' ? '#92400e' : '#166534'
+                            }}>
+                              {item.priority}
+                            </span>
+                          )}
                         </td>
                         <td className="sc-td-date">
                           <div className="sc-pair-vals">
@@ -284,7 +289,7 @@ const StudentComparison = ({ showNotification }) => {
                       {/* Развёрнутая строка с деталями различий */}
                       {isExpanded && item.hasDifference && (
                         <tr className="sc-row-detail">
-                          <td colSpan={COMPARE_FIELDS.length + 5}>
+                          <td colSpan={COMPARE_FIELDS.length + 4}>
                             <div className="sc-detail-box">
                               <strong>Расхождения:</strong>
                               {item.differentFields.map((field, i) => (

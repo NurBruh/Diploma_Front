@@ -19,12 +19,10 @@ const SyncPreview = ({ showNotification }) => {
   const fetchPreview = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await authFetch('/epvo-sso/sync-preview');
-      if (!res.ok) throw new Error(`Ошибка ${res.status}`);
-      const json = await res.json();
-      setData(json);
+      const res = await authFetch.get('/epvo-sso/sync-preview');
+      setData(res.data);
     } catch (err) {
-      showNotification?.(`Не удалось загрузить предпросмотр: ${err.message}`, 'error');
+      showNotification?.(`Не удалось загрузить предпросмотр: ${err.response?.data?.message ?? err.message}`, 'error');
     } finally {
       setLoading(false);
     }
@@ -49,15 +47,14 @@ const SyncPreview = ({ showNotification }) => {
     if (!window.confirm('Отправить данные из TEMP в ЕПВО?')) return;
     setSending(true);
     try {
-      const res = await authFetch('/epvo-sso/send-temp-to-epvo', { method: 'POST' });
-      if (!res.ok) throw new Error(`Ошибка ${res.status}`);
-      const json = await res.json();
+      const res = await authFetch.post('/epvo-sso/send-temp-to-epvo');
+      const json = res.data;
       showNotification?.(
         `Отправлено в ЕПВО. Успешно: ${json.success}, ошибок: ${json.errors}`,
         json.errors > 0 ? 'warning' : 'success'
       );
     } catch (err) {
-      showNotification?.(`Ошибка отправки: ${err.message}`, 'error');
+      showNotification?.(`Ошибка отправки: ${err.response?.data?.message ?? err.message}`, 'error');
     } finally {
       setSending(false);
     }
