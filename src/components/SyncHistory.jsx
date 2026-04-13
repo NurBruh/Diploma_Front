@@ -43,10 +43,8 @@ const SyncHistory = ({ showNotification }) => {
       });
       if ((s ?? status)) params.set('status', s ?? status);
 
-      const res = await authFetch(`/epvo-sso/sync-logs?${params}`);
-      if (!res.ok) throw new Error(`Ошибка ${res.status}`);
-      const json = await res.json();
-      setData(json);
+      const res = await authFetch.get(`/epvo-sso/sync-logs?${params}`);
+      setData(res.data);
     } catch (err) {
       showNotification?.(`Не удалось загрузить историю: ${err.message}`, 'error');
     } finally {

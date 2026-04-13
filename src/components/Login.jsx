@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { MdError } from 'react-icons/md';
 import { API_BASE_URL } from '../services';
+import axios from 'axios';
 import '../css/Auth.css';
 
 const Login = ({ onLogin }) => {
@@ -25,36 +26,30 @@ const Login = ({ onLogin }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/Auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: formData.userId,
-          password: formData.password
-        })
+      const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
+        userId: formData.userId,
+        password: formData.password
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userId', data.userId.toString());
-        localStorage.setItem('fullName', data.fullName);
-        localStorage.setItem('role', data.role);
-        localStorage.setItem('roleDisplayName', data.roleDisplayName);
-        if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
-        if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
-        console.log('Logged in:', data);
-        onLogin(data);
-      }else {
-        setError(data.message || 'Ошибка авторизации');
-        console.error('Login error:', data.message);
-      }
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.userId.toString());
+      localStorage.setItem('fullName', data.fullName);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('roleDisplayName', data.roleDisplayName);
+      if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
+      if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
+      console.log('Logged in:', data);
+      onLogin(data);
     } catch (err) {
-      setError('Ошибка подключения к серверу');
-      console.error('Network error:', err);
+      if (err.response) {
+        setError(err.response.data.message || 'Ошибка авторизации');
+        console.error('Login error:', err.response.data.message);
+      } else {
+        setError('Ошибка подключения к серверу');
+        console.error('Network error:', err);
+      }
     } finally {
       setLoading(false);
     }

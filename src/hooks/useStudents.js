@@ -88,11 +88,9 @@ export const useStudents = (showNotification, currentUser) => {
         path = '/Epvo/students';
       }
 
-      const response = await authFetch(path);
+      const response = await authFetch.get(path);
 
-      if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
-
-      const backendData = await response.json();
+      const backendData = response.data;
       const ssoDataArray = backendData.map(mapStudentFromBackend);
 
       if (localDataArray.length === 0) {
@@ -217,8 +215,7 @@ export const useStudents = (showNotification, currentUser) => {
     if (!selectedIINs || selectedIINs.length === 0) {
       if (showNotification) showNotification('Выберите хотя бы одного студента', 'error');
       return;
-    }
-    setSyncLoading(true);
+    }g(true);
     try {
       const response = await authFetch('/Epvo/sync-batch', {
         method: 'POST',

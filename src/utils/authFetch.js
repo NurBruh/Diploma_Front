@@ -1,34 +1,23 @@
+import axios from 'axios';
 import AuthService from '../services/AuthService';
-
-/**
- * Обёртка над fetch, которая автоматически добавляет:
- * - Content-Type: application/json
- * - Authorization: Bearer <token> (если токен есть в localStorage)
- *
- * Использование:
- *   const data = await authFetch('/Epvo/students');
- *   const data = await authFetch('/Epvo/sync-batch', { method: 'POST', body: JSON.stringify({...}) });
- *
- * @param {string} path — путь после API_BASE_URL, например '/Epvo/students'
- * @param {RequestInit} options — стандартные fetch-опции (method, body, etc.)
- * @returns {Promise<Response>}
- */
 import { API_BASE_URL } from '../services';
 
-export const authFetch = (path, options = {}) => {
-  const token = AuthService.getToken();
-
-  const headers = {
+export const authFetch = axios.create({
+  baseURL: API_BASE_URL,
+  headers: {
     'Content-Type': 'application/json',
-    ...options.headers,
-  };
+  },
+});
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+authFetch.interceptors.request.use(
+  (config) => {
+    const token = AuthService.getToken();
+    if (token) {
+      config.headers['Authorization'] = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
   }
-
-  return fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
-};
+);

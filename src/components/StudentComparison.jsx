@@ -38,9 +38,8 @@ const StudentComparison = ({ showNotification }) => {
       });
       if (s.trim()) params.set('search', s.trim());
 
-      const response = await authFetch(`/comparison/students?${params}`);
-      if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
-      const json = await response.json();
+      const response = await authFetch.get(`/comparison/students?${params}`);
+      const json = response.data;
       setData(json);
       setCurrentPage(json.page);
     } catch (e) {

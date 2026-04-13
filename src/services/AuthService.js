@@ -1,3 +1,4 @@
+import axios from 'axios';
 import { API_BASE_URL } from '../services';
 
 // API endpoint авторизации
@@ -7,33 +8,28 @@ const AuthService = {
   // Авторизация через SSO (userId = password для теста)
   login: async (userId, password) => {
     try {
-      const response = await fetch(`${AUTH_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId,
-          password
-        })
+      const response = await axios.post(`${AUTH_URL}/login`, {
+        userId,
+        password
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userId', data.userId.toString());
-        localStorage.setItem('fullName', data.fullName);
-        localStorage.setItem('role', data.role);
-        localStorage.setItem('roleDisplayName', data.roleDisplayName);
-        if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
-        if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
-        console.log('Login successful:', data);
-      }
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.userId.toString());
+      localStorage.setItem('fullName', data.fullName);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('roleDisplayName', data.roleDisplayName);
+      if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
+      if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
+      console.log('Login successful:', data);
 
-      return { success: response.ok, data };
+      return { success: true, data };
     } catch (error) {
       console.error('Login error:', error);
+      if (error.response) {
+        return { success: false, error: error.response.data.message || 'Ошибка авторизации' };
+      }
       return { success: false, error: 'Ошибка подключения к серверу' };
     }
   },
@@ -86,15 +82,14 @@ const AuthService = {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: 'GET',
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       });
 
-      return await response.json();
+      return response.data;
     } catch (error) {
       console.error('Protected data fetch error:', error);
       throw error;

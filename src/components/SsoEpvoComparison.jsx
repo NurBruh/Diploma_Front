@@ -138,9 +138,8 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
   const syncStudent = async (iin) => {
     setSyncingIIN(iin);
     try {
-      const response = await authFetch(`/Epvo/sync-student/${iin}`, { method: 'POST' });
-      if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
-      const result = await response.json();
+      const response = await authFetch.post(`/Epvo/sync-student/${iin}`);
+      const result = response.data;
       showNotification && showNotification(`${result.message}`, 'success');
       await fetchComparison(currentPage, filter);
     } catch (e) {
@@ -412,3 +411,4 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
 };
 
 export default SsoEpvoComparison;
+n;

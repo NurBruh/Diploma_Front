@@ -35,9 +35,8 @@ const SyncPreview = ({ showNotification }) => {
   const handleSaveToTemp = async () => {
     setSaving(true);
     try {
-      const res = await authFetch('/epvo-sso/save-to-temp', { method: 'POST' });
-      if (!res.ok) throw new Error(`Ошибка ${res.status}`);
-      const json = await res.json();
+      const res = await authFetch.post('/epvo-sso/save-to-temp');
+      const json = res.data;
       showNotification?.(`Сохранено в TEMP: ${json.saved ?? json.message ?? 'OK'}`, 'success');
     } catch (err) {
       showNotification?.(`Ошибка сохранения: ${err.message}`, 'error');
