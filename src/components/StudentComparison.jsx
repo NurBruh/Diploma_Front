@@ -24,6 +24,7 @@ const StudentComparison = ({ showNotification }) => {
   const [search, setSearch] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedIin, setExpandedIin] = useState(null);
+  const [detailModalItem, setDetailModalItem] = useState(null);
   const searchTimerRef = useRef(null);
 
   const fetchComparison = useCallback(async (page, filterVal, searchVal) => {
@@ -294,11 +295,17 @@ const StudentComparison = ({ showNotification }) => {
                               <strong>Расхождения:</strong>
                               {item.differentFields.map((field, i) => (
                                 <span key={i} className="sc-detail-tag">{field}</span>
-                            ))}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
+                              ))}
+                              <button
+                                className="sc-btn-details"
+                                onClick={(e) => { e.stopPropagation(); setDetailModalItem(item); }}
+                              >
+                                Подробнее
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
                   </React.Fragment>
                 );
               })}
@@ -312,6 +319,45 @@ const StudentComparison = ({ showNotification }) => {
       <div className="sc-footer">
         Показано {pageItems.length} из {filteredCount} записей (всего: {stats.total})
       </div>
+
+      {/* Модальное окно подробного сравнения */}
+      {detailModalItem && (
+        <div className="sc-modal-overlay" onClick={() => setDetailModalItem(null)}>
+          <div className="sc-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="sc-modal-header">
+              <div>
+                <div className="sc-modal-title">Детальное сравнение</div>
+                <div className="sc-modal-subtitle">
+                  {fmt(detailModalItem.sso_FullName || detailModalItem.epvo_FullName)}
+                  &nbsp;&middot;&nbsp;
+                  <span className="sc-modal-iin">{detailModalItem.iin}</span>
+                </div>
+              </div>
+              <button className="sc-modal-close" onClick={() => setDetailModalItem(null)}>✕</button>
+            </div>
+            <div className="sc-modal-body">
+              <table className="sc-modal-table">
+                <thead>
+                  <tr>
+                    <th>Поле</th>
+                    <th><span className="sc-sub-sso">ССО</span></th>
+                    <th><span className="sc-sub-epvo">ЕПВО</span></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {COMPARE_FIELDS.filter(f => f.diffLabel && detailModalItem.differentFields.includes(f.diffLabel)).map(f => (
+                    <tr key={f.key}>
+                      <td className="sc-modal-field">{f.diffLabel}</td>
+                      <td><span className="sc-modal-val sc-modal-val-sso">{fmt(detailModalItem[f.sso])}</span></td>
+                      <td><span className="sc-modal-val sc-modal-val-epvo">{f.epvo ? fmt(detailModalItem[f.epvo]) : '—'}</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
