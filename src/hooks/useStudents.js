@@ -215,7 +215,8 @@ export const useStudents = (showNotification, currentUser) => {
     if (!selectedIINs || selectedIINs.length === 0) {
       if (showNotification) showNotification('Выберите хотя бы одного студента', 'error');
       return;
-    }g(true);
+    }
+    setSyncLoading(true);
     try {
       const response = await authFetch('/Epvo/sync-batch', {
         method: 'POST',

@@ -542,3 +542,107 @@
   .sc-search { min-width: 100%; }
   .sc-stats { gap: 0.5rem; }
 }
+
+/* ── Checkbox Column ── */
+.sc-th-cb {
+  width: 36px;
+  text-align: center;
+  padding: 0.5rem 0.35rem !important;
+}
+
+.sc-td-cb {
+  text-align: center;
+  padding: 0.4rem 0.35rem;
+  width: 36px;
+}
+
+.sc-td-cb input[type="checkbox"],
+.sc-th-cb input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+  accent-color: var(--primary-color, #1a56db);
+}
+
+.sc-td-cb input[type="checkbox"]:disabled { cursor: default; opacity: 0.35; }
+
+.sc-cb-placeholder {
+  display: inline-block;
+  width: 15px;
+  height: 15px;
+}
+
+/* Selected row highlight */
+.sc-row-selected {
+  background: #eff6ff !important;
+  outline: 2px solid #bfdbfe;
+  outline-offset: -2px;
+}
+
+/* ── Batch Sync Panel ── */
+.sc-sync-panel {
+  position: sticky;
+  bottom: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1.25rem;
+  margin: 0.75rem 0;
+  background: #1e40af;
+  color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(30, 64, 175, 0.35);
+  animation: slideUp 0.2s ease;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.sc-sync-info {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.sc-sync-info strong {
+  font-size: 1.05rem;
+  margin: 0 2px;
+}
+
+.sc-sync-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.sc-btn-clear {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.4);
+  color: #fff;
+  font-size: 0.82rem;
+}
+
+.sc-btn-clear:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.sc-btn-sync {
+  background: #fff;
+  border-color: #fff;
+  color: #1e40af;
+  font-size: 0.85rem;
+  font-weight: 700;
+  padding: 0.5rem 1.2rem;
+}
+
+.sc-btn-sync:hover:not(:disabled) {
+  background: #eff6ff;
+}
+
+.sc-btn-sync:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

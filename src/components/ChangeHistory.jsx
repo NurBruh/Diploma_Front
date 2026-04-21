@@ -17,7 +17,7 @@ const ChangeHistory = ({ showNotification }) => {
       if (searchIin.trim()) {
         params.iin = searchIin.trim();
       }
-      const res = await authFetch.get('/api/comparison/change-logs', { params });
+      const res = await authFetch.get('/comparison/change-logs', { params });
       const data = res.data;
 
       if (Array.isArray(data)) {

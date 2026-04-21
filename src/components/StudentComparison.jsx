@@ -25,6 +25,8 @@ const StudentComparison = ({ showNotification }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [expandedIin, setExpandedIin] = useState(null);
   const [detailModalItem, setDetailModalItem] = useState(null);
+  const [selectedIins, setSelectedIins] = useState(new Set());
+  const [syncLoading, setSyncLoading] = useState(false);
   const searchTimerRef = useRef(null);
 
   const fetchComparison = useCallback(async (page, filterVal, searchVal) => {
@@ -58,6 +60,7 @@ const StudentComparison = ({ showNotification }) => {
   const handleFilterChange = (newFilter) => {
     setFilter(newFilter);
     setCurrentPage(1);
+    setSelectedIins(new Set());
     fetchComparison(1, newFilter, search);
   };
 
@@ -67,6 +70,7 @@ const StudentComparison = ({ showNotification }) => {
     clearTimeout(searchTimerRef.current);
     searchTimerRef.current = setTimeout(() => {
       setCurrentPage(1);
+      setSelectedIins(new Set());
       fetchComparison(1, filter, val);
     }, 400);
   };
@@ -106,6 +110,55 @@ const StudentComparison = ({ showNotification }) => {
     matching: data?.matching ?? 0,
   };
 
+  const hasIicDiff = (item) => item.differentFields?.includes('ИИК (Р/С)');
+  const iicDiffItems = pageItems.filter(hasIicDiff);
+  const allPageIicSelected = iicDiffItems.length > 0 && iicDiffItems.every(item => selectedIins.has(item.iin));
+  const somePageIicSelected = iicDiffItems.some(item => selectedIins.has(item.iin));
+
+  const toggleSelectAllIicOnPage = () => {
+    if (allPageIicSelected) {
+      setSelectedIins(prev => {
+        const next = new Set(prev);
+        iicDiffItems.forEach(item => next.delete(item.iin));
+        return next;
+      });
+    } else {
+      setSelectedIins(prev => {
+        const next = new Set(prev);
+        iicDiffItems.forEach(item => next.add(item.iin));
+        return next;
+      });
+    }
+  };
+
+  const toggleIin = (iin) => {
+    setSelectedIins(prev => {
+      const next = new Set(prev);
+      if (next.has(iin)) next.delete(iin);
+      else next.add(iin);
+      return next;
+    });
+  };
+
+  const handleBatchSync = async () => {
+    if (selectedIins.size === 0) return;
+    setSyncLoading(true);
+    try {
+      const res = await authFetch.post('/epvo/sync-batch', { iinS: [...selectedIins] });
+      const d = res.data;
+      showNotification?.(
+        `Обновлено: ${d.updated ?? 0}, Ошибок: ${d.errors ?? 0}`,
+        d.success ? 'success' : 'warning'
+      );
+      setSelectedIins(new Set());
+      fetchComparison(currentPage, filter, search);
+    } catch {
+      showNotification?.('Ошибка при актуализации ИИК', 'error');
+    } finally {
+      setSyncLoading(false);
+    }
+  };
+
   const Pagination = () => (
     <div className="sc-pagination">
       <button className="sc-page-btn" onClick={() => handlePageChange(1)} disabled={safePage === 1}>«</button>
@@ -127,7 +180,7 @@ const StudentComparison = ({ showNotification }) => {
       <div className="sc-header">
         <div className="sc-title-row">
           <h2 className="sc-title">Сравнение данных: ССО ↔ ЕПВО</h2>
-          <button className="sc-btn sc-btn-refresh" onClick={() => fetchComparison(currentPage, filter, search)} disabled={loading}>
+          <button className="sc-btn sc-btn-refresh" onClick={() => { setSelectedIins(new Set()); fetchComparison(currentPage, filter, search); }} disabled={loading}>
             <MdRefresh size={18} className={loading ? 'spin' : ''} />
             {loading ? 'Загрузка...' : 'Обновить'}
           </button>
@@ -203,6 +256,16 @@ const StudentComparison = ({ showNotification }) => {
             <table className="sc-table">
               <thead>
                 <tr>
+                  <th className="sc-th-cb">
+                    <input
+                      type="checkbox"
+                      title="Выбрать все с расхождением ИИК на странице"
+                      checked={allPageIicSelected}
+                      ref={el => { if (el) el.indeterminate = !allPageIicSelected && somePageIicSelected; }}
+                      onChange={toggleSelectAllIicOnPage}
+                      disabled={iicDiffItems.length === 0}
+                    />
+                  </th>
                   <th className="sc-th-num">№</th>
                   <th className="sc-th-status">Статус</th>
                   <th className="sc-th-iin">ИИН</th>
@@ -234,9 +297,18 @@ const StudentComparison = ({ showNotification }) => {
                   return (
                     <React.Fragment key={item.iin || idx}>
                       <tr
-                        className={`sc-row ${item.hasDifference ? 'sc-row-diff' : 'sc-row-ok'}`}
+                        className={`sc-row ${item.hasDifference ? 'sc-row-diff' : 'sc-row-ok'}${selectedIins.has(item.iin) ? ' sc-row-selected' : ''}`}
                         onClick={() => setExpandedIin(isExpanded ? null : item.iin)}
                       >
+                        <td className="sc-td-cb" onClick={e => e.stopPropagation()}>
+                          {hasIicDiff(item) ? (
+                            <input
+                              type="checkbox"
+                              checked={selectedIins.has(item.iin)}
+                              onChange={() => toggleIin(item.iin)}
+                            />
+                          ) : <span className="sc-cb-placeholder" />}
+                        </td>
                         <td className="sc-td-num">{rowNum}</td>
                         <td className="sc-td-status">
                           <span className={`sc-badge ${status.cls}`}>
@@ -290,7 +362,7 @@ const StudentComparison = ({ showNotification }) => {
                       {/* Развёрнутая строка с деталями различий */}
                       {isExpanded && item.hasDifference && (
                         <tr className="sc-row-detail">
-                          <td colSpan={COMPARE_FIELDS.length + 4}>
+                          <td colSpan={COMPARE_FIELDS.length + 5}>
                             <div className="sc-detail-box">
                               <strong>Расхождения:</strong>
                               {item.differentFields.map((field, i) => (
@@ -314,6 +386,30 @@ const StudentComparison = ({ showNotification }) => {
           </div>
           <Pagination />
         </>
+      )}
+
+      {selectedIins.size > 0 && (
+        <div className="sc-sync-panel">
+          <span className="sc-sync-info">
+            Выбрано: <strong>{selectedIins.size}</strong> студент{selectedIins.size === 1 ? '' : selectedIins.size < 5 ? 'а' : 'ов'} с расхождением ИИК
+          </span>
+          <div className="sc-sync-actions">
+            <button
+              className="sc-btn sc-btn-clear"
+              onClick={() => setSelectedIins(new Set())}
+              disabled={syncLoading}
+            >
+              Снять выделение
+            </button>
+            <button
+              className="sc-btn sc-btn-sync"
+              onClick={handleBatchSync}
+              disabled={syncLoading}
+            >
+              {syncLoading ? 'Актуализация...' : `Актуализировать ИИК (${selectedIins.size})`}
+            </button>
+          </div>
+        </div>
       )}
 
       <div className="sc-footer">
