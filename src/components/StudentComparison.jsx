@@ -15,6 +15,7 @@ const COMPARE_FIELDS = [
   { key: 'payment', label: 'Тип оплаты', sso: 'sso_PaymentType', epvo: 'epvo_PaymentType', diffLabel: 'Тип оплаты' },
   { key: 'grant', label: 'Тип гранта', sso: 'sso_GrantType', epvo: 'epvo_GrantType', diffLabel: 'Тип гранта' },
   { key: 'iic', label: 'ИИК (Р/С)', sso: 'sso_Iic', epvo: 'epvo_Iic', diffLabel: 'ИИК (Р/С)' },
+  { key: 'bic', label: 'БИК', sso: 'sso_Bic', epvo: 'epvo_Bic', diffLabel: 'БИК' },
 ];
 
 const PAGE_SIZE = 50;
@@ -112,7 +113,7 @@ const StudentComparison = ({ showNotification }) => {
     matching: data?.matching ?? 0,
   };
 
-  const hasIicDiff = (item) => item.differentFields?.includes('ИИК (Р/С)');
+  const hasIicDiff = (item) => item.differentFields?.includes('ИИК (Р/С)') || item.differentFields?.includes('БИК');
   const iicDiffItems = pageItems.filter(hasIicDiff);
   const allPageIicSelected = iicDiffItems.length > 0 && iicDiffItems.every(item => selectedIins.has(item.iin));
   const somePageIicSelected = iicDiffItems.some(item => selectedIins.has(item.iin));
@@ -155,7 +156,7 @@ const StudentComparison = ({ showNotification }) => {
       setSelectedIins(new Set());
       fetchComparison(currentPage, filter, search);
     } catch {
-      showNotification?.('Ошибка при актуализации ИИК', 'error');
+      showNotification?.('Ошибка при актуализации реквизитов', 'error');
     } finally {
       setSyncLoading(false);
     }
@@ -393,7 +394,7 @@ const StudentComparison = ({ showNotification }) => {
       {selectedIins.size > 0 && (
         <div className="sc-sync-panel">
           <span className="sc-sync-info">
-            Выбрано: <strong>{selectedIins.size}</strong> студент{selectedIins.size === 1 ? '' : selectedIins.size < 5 ? 'а' : 'ов'} с расхождением ИИК
+            Выбрано: <strong>{selectedIins.size}</strong> студент{selectedIins.size === 1 ? '' : selectedIins.size < 5 ? 'а' : 'ов'} с расхождением реквизитов
           </span>
           <div className="sc-sync-actions">
             <button
@@ -408,7 +409,7 @@ const StudentComparison = ({ showNotification }) => {
               onClick={handleBatchSync}
               disabled={syncLoading}
             >
-              {syncLoading ? 'Актуализация...' : `Актуализировать ИИК (${selectedIins.size})`}
+              {syncLoading ? 'Актуализация...' : `Актуализировать реквизиты (${selectedIins.size})`}
             </button>
           </div>
         </div>

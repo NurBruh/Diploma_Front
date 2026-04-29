@@ -184,10 +184,8 @@ export const useStudents = (showNotification, currentUser) => {
   const handleSyncToEpvo = async () => {
     setSyncLoading(true);
     try {
-      const response = await authFetch('/Epvo/sync-to-epvo', { method: 'POST' });
-      if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
-      const data = await response.json();
-      if (showNotification) showNotification(`${data.message}`, 'success');
+      const res = await authFetch.post('/Epvo/sync-to-epvo');
+      if (showNotification) showNotification(`${res.data.message}`, 'success');
     } catch (error) {
       console.error('Ошибка синхронизации в ЕПВО:', error);
       if (showNotification) showNotification('Ошибка при синхронизации данных в ЕПВО', 'error');
@@ -218,12 +216,8 @@ export const useStudents = (showNotification, currentUser) => {
     }
     setSyncLoading(true);
     try {
-      const response = await authFetch('/Epvo/sync-batch', {
-        method: 'POST',
-        body: JSON.stringify({ iinS: selectedIINs })
-      });
-      if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
-      const data = await response.json();
+      const res = await authFetch.post('/Epvo/sync-batch', { iinS: selectedIINs });
+      const data = res.data;
       if (showNotification) showNotification(`${data.message || `Отправлено ${data.syncedCount} студентов в ЕПВО`}`, 'success');
       await fetchStudents(currentUser);
     } catch (error) {
