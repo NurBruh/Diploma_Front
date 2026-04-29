@@ -141,6 +141,10 @@
   background: #f0fdf4;
 }
 
+.sp-row--diff {
+  background: #eff6ff;
+}
+
 .sp-table__empty {
   text-align: center;
   padding: 24px;
@@ -173,6 +177,28 @@
 .sp-badge--dup {
   background: #fef3c7;
   color: #b45309;
+}
+
+.sp-badge--diff {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.sp-btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sp-btn-icon:hover {
+  background: #e2e8f0;
 }
 
 /* Action buttons */
@@ -215,4 +241,65 @@
 .sp-btn--success {
   background: #16a34a;
   color: #fff;
+}
+
+/* Expandable diff row */
+.sp-row--detail td {
+  padding: 0;
+  background: #f8fafc;
+}
+
+.sp-diff-panel {
+  padding: 14px 20px;
+}
+
+.sp-diff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.sp-diff-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.sp-diff-field {
+  font-weight: 600;
+  color: #475569;
+  min-width: 120px;
+}
+
+.sp-diff-sso {
+  color: #16a34a;
+  font-weight: 500;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-diff-epvo {
+  color: #dc2626;
+  font-weight: 500;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sp-diff-arrow {
+  color: #94a3b8;
+}
+
+.sp-actions {
+  display: flex;
+  gap: 4px;
 }
