@@ -91,12 +91,12 @@ const SyncPreview = ({ showNotification }) => {
     }
     setSaving(true);
     try {
-      // Сохраняем все записи текущей страницы (или можно было бы выбирать)
-      const payload = data.items.map((i) => i.tempData).filter(Boolean);
-      const res = await authFetch.post('/epvo-sso/sync-preview-comparison/save-temp', { items: payload });
+      // Сохраняем все записи текущей страницы по ИИН
+      const iins = data.items.map((i) => i.iinPlt).filter(Boolean);
+      const res = await authFetch.post('/epvo-sso/sync-preview-comparison/save-temp', { iins });
       const json = res.data;
       showNotification?.(
-        `Сохранено в STUDENT_TEMP: ${json.count ?? 0}. SessionId: ${json.sessionId ?? 'N/A'}`,
+        `Сохранено в STUDENT_TEMP: ${json.count ?? 0}`,
         'success'
       );
       fetchPreview(currentPage, filter, search);
@@ -126,22 +126,12 @@ const SyncPreview = ({ showNotification }) => {
 
   const handleSaveEdit = async (updatedItem) => {
     try {
-      const payload = { ...updatedItem.data, dataSource: 'MANUAL' };
-      await authFetch.post('/epvo-sso/update-temp-student', payload);
+      // Редактирование записи в STUDENT_TEMP напрямую
+      await authFetch.post('/epvo-sso/update-temp-student', updatedItem);
 
-      setData((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          items: prev.items.map((i) =>
-            i.studentId === updatedItem.studentId
-              ? { ...i, tempData: payload, isInTemp: true }
-              : i
-          ),
-        };
-      });
       setEditItem(null);
       showNotification?.('Изменения сохранены в STUDENT_TEMP', 'success');
+      fetchPreview(currentPage, filter, search);
     } catch (err) {
       showNotification?.(`Ошибка сохранения: ${err.response?.data?.message ?? err.message}`, 'error');
     }
@@ -293,7 +283,7 @@ const SyncPreview = ({ showNotification }) => {
                       <td>{item.epvoUpdateDate ? new Date(item.epvoUpdateDate).toLocaleDateString('ru-RU') : '—'}</td>
                       <td>
                         {item.isInTemp ? (
-                          <span className="sp-badge sp-badge--ok" title={item.tempSyncSessionId ?? ''}>
+                          <span className="sp-badge sp-badge--ok">
                             <MdCheckCircle size={14} /> В TEMP
                           </span>
                         ) : (
