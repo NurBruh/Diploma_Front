@@ -303,3 +303,75 @@
   display: flex;
   gap: 4px;
 }
+
+/* Pagination */
+.sp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 16px 0;
+}
+
+.sp-page-btn {
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #f8fafc;
+  color: #475569;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.15s;
+}
+
+.sp-page-btn:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.sp-page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sp-page-info {
+  font-size: 0.9rem;
+  color: #475569;
+  white-space: nowrap;
+}
+
+/* Search + filter row */
+.sp-filter-group {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.sp-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  min-width: 220px;
+}
+
+.sp-search input {
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  width: 100%;
+  color: #334155;
+}
+
+/* Badges extra */
+.sp-badge--ok {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.sp-badge--warn {
+  background: #fef3c7;
+  color: #b45309;
+}

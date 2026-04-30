@@ -1,5 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { MdRefresh, MdCloudUpload, MdSave, MdWarning, MdError, MdEdit, MdExpandMore, MdExpandLess, MdCheckCircle } from 'react-icons/md';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  MdRefresh,
+  MdCloudUpload,
+  MdSave,
+  MdWarning,
+  MdError,
+  MdEdit,
+  MdExpandMore,
+  MdExpandLess,
+  MdCheckCircle,
+  MdFilterList,
+  MdSearch,
+} from 'react-icons/md';
 import { authFetch } from '../utils/authFetch';
 import EditStudentModal from './EditStudentModal';
 import '../css/SyncPreview.css';
@@ -8,30 +20,69 @@ const FILTER_OPTIONS = [
   { value: 'all', label: 'Все' },
   { value: 'diff', label: 'С различиями' },
   { value: 'new', label: 'Только в ССО' },
+  { value: 'temp', label: 'В TEMP' },
+  { value: 'not-temp', label: 'Не в TEMP' },
 ];
+
+const PAGE_SIZE = 50;
 
 const SyncPreview = ({ showNotification }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [search, setSearch] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [editItem, setEditItem] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
+  const searchTimerRef = useRef(null);
 
-  const fetchPreview = useCallback(async () => {
+  const fetchPreview = useCallback(async (page, filterVal, searchVal) => {
+    const p = page ?? currentPage;
+    const f = filterVal ?? filter;
+    const s = searchVal !== undefined ? searchVal : search;
     setLoading(true);
     try {
-      const res = await authFetch.get('/epvo-sso/sync-preview');
+      const params = new URLSearchParams({
+        page: String(p),
+        pageSize: String(PAGE_SIZE),
+        filter: f,
+      });
+      if (s.trim()) params.set('search', s.trim());
+
+      const res = await authFetch.get(`/epvo-sso/sync-preview-comparison?${params}`);
       setData(res.data);
+      setCurrentPage(res.data.page);
     } catch (err) {
       showNotification?.(`Не удалось загрузить предпросмотр: ${err.response?.data?.message ?? err.message}`, 'error');
     } finally {
       setLoading(false);
     }
-  }, [showNotification]);
+  }, [currentPage, filter, search, showNotification]);
 
-  useEffect(() => { fetchPreview(); }, [fetchPreview]);
+  useEffect(() => { fetchPreview(1, 'all', ''); }, []);
+
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
+    setCurrentPage(1);
+    fetchPreview(1, newFilter, search);
+  };
+
+  const handleSearchChange = (e) => {
+    const val = e.target.value;
+    setSearch(val);
+    clearTimeout(searchTimerRef.current);
+    searchTimerRef.current = setTimeout(() => {
+      setCurrentPage(1);
+      fetchPreview(1, filter, val);
+    }, 400);
+  };
+
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    fetchPreview(newPage, filter, search);
+  };
 
   const handleSaveToTemp = async () => {
     if (!data?.items?.length) {
@@ -40,10 +91,15 @@ const SyncPreview = ({ showNotification }) => {
     }
     setSaving(true);
     try {
-      const payload = data.items.map(i => i.data);
-      const res = await authFetch.post('/epvo-sso/save-to-temp', payload);
+      // Сохраняем все записи текущей страницы (или можно было бы выбирать)
+      const payload = data.items.map((i) => i.tempData).filter(Boolean);
+      const res = await authFetch.post('/epvo-sso/sync-preview-comparison/save-temp', { items: payload });
       const json = res.data;
-      showNotification?.(`Сохранено в TEMP: ${json.count ?? json.message ?? 'OK'}`, 'success');
+      showNotification?.(
+        `Сохранено в STUDENT_TEMP: ${json.count ?? 0}. SessionId: ${json.sessionId ?? 'N/A'}`,
+        'success'
+      );
+      fetchPreview(currentPage, filter, search);
     } catch (err) {
       showNotification?.(`Ошибка сохранения: ${err.response?.data?.message ?? err.message}`, 'error');
     } finally {
@@ -70,32 +126,18 @@ const SyncPreview = ({ showNotification }) => {
 
   const handleSaveEdit = async (updatedItem) => {
     try {
-      // Сразу сохраняем в STUDENT_TEMP
-      await authFetch.post('/epvo-sso/update-temp-student', updatedItem.data);
+      const payload = { ...updatedItem.data, dataSource: 'MANUAL' };
+      await authFetch.post('/epvo-sso/update-temp-student', payload);
 
-      const d = updatedItem.data;
-      const fullName = `${d.lastName || ''} ${d.firstName || ''} ${d.patronymic || ''}`.trim();
-      const paymentType = d.paymentFormId === 2 ? 'Стипендия'
-                        : d.paymentFormId === 1 ? 'Платник'
-                        : updatedItem.paymentType;
-      const grantType = d.grantType === -4 ? 'Государственный грант'
-                      : d.grantType === -7 ? 'Из собственных средств'
-                      : d.grantType === -6 ? 'Трехсторонняя форма обучения'
-                      : updatedItem.grantType;
-
-      const enrichedItem = {
-        ...updatedItem,
-        fullName: fullName || updatedItem.fullName,
-        courseNumber: d.courseNumber ?? updatedItem.courseNumber,
-        paymentType,
-        grantType,
-      };
-
-      setData(prev => {
+      setData((prev) => {
         if (!prev) return prev;
         return {
           ...prev,
-          items: prev.items.map(i => i.studentId === enrichedItem.studentId ? enrichedItem : i)
+          items: prev.items.map((i) =>
+            i.studentId === updatedItem.studentId
+              ? { ...i, tempData: payload, isInTemp: true }
+              : i
+          ),
         };
       });
       setEditItem(null);
@@ -105,26 +147,36 @@ const SyncPreview = ({ showNotification }) => {
     }
   };
 
-  const displayedItems = data?.items?.filter(item => {
-    if (filter === 'diff') return !item.isNew;
-    if (filter === 'new') return item.isNew;
-    return true;
-  }) ?? [];
-
   const toggleExpand = (studentId) => {
-    setExpandedId(prev => prev === studentId ? null : studentId);
+    setExpandedId((prev) => (prev === studentId ? null : studentId));
   };
+
+  const pageItems = data?.items ?? [];
+  const totalPages = data?.totalPages ?? 1;
+  const safePage = data?.page ?? 1;
+  const filteredCount = data?.filteredCount ?? 0;
+
+  const Pagination = () => (
+    <div className="sp-pagination">
+      <button className="sp-page-btn" onClick={() => handlePageChange(1)} disabled={safePage === 1}>«</button>
+      <button className="sp-page-btn" onClick={() => handlePageChange(Math.max(1, safePage - 1))} disabled={safePage === 1}>‹</button>
+      <span className="sp-page-info">
+        Стр. <strong>{safePage}</strong> / <strong>{totalPages}</strong>
+        &nbsp;·&nbsp;
+        {filteredCount > 0 ? `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filteredCount)} из ` : ''}
+        <strong>{filteredCount}</strong>
+      </span>
+      <button className="sp-page-btn" onClick={() => handlePageChange(Math.min(totalPages, safePage + 1))} disabled={safePage === totalPages}>›</button>
+      <button className="sp-page-btn" onClick={() => handlePageChange(totalPages)} disabled={safePage === totalPages}>»</button>
+    </div>
+  );
 
   return (
     <div className="sync-preview">
       <div className="sync-preview__header">
         <h2 className="sync-preview__title">Предпросмотр синхронизации</h2>
         <div className="sync-preview__actions">
-          <button
-            className="sp-btn sp-btn--secondary"
-            onClick={fetchPreview}
-            disabled={loading}
-          >
+          <button className="sp-btn sp-btn--secondary" onClick={() => fetchPreview(currentPage, filter, search)} disabled={loading}>
             <MdRefresh size={18} />
             Обновить
           </button>
@@ -132,6 +184,7 @@ const SyncPreview = ({ showNotification }) => {
             className="sp-btn sp-btn--primary"
             onClick={handleSaveToTemp}
             disabled={saving || loading || !data?.items?.length}
+            title="Сохранить отображаемые записи в STUDENT_TEMP"
           >
             <MdSave size={18} />
             {saving ? 'Сохранение…' : 'Сохранить в TEMP'}
@@ -150,7 +203,7 @@ const SyncPreview = ({ showNotification }) => {
       {data && (
         <div className="sync-preview__stats">
           <div className="sp-stat sp-stat--total">
-            <span className="sp-stat__value">{data.total}</span>
+            <span className="sp-stat__value">{data.totalItems}</span>
             <span className="sp-stat__label">Всего</span>
           </div>
           <div className="sp-stat sp-stat--new">
@@ -167,109 +220,146 @@ const SyncPreview = ({ showNotification }) => {
       )}
 
       <div className="sync-preview__filters">
-        {FILTER_OPTIONS.map(opt => (
-          <button
-            key={opt.value}
-            className={`sp-filter-btn${filter === opt.value ? ' active' : ''}`}
-            onClick={() => setFilter(opt.value)}
-          >
-            {opt.label}
-          </button>
-        ))}
+        <div className="sp-filter-group">
+          {FILTER_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              className={`sp-filter-btn${filter === opt.value ? ' active' : ''}`}
+              onClick={() => handleFilterChange(opt.value)}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        <div className="sp-search">
+          <MdSearch size={18} />
+          <input
+            type="text"
+            placeholder="Поиск по ФИО или ИИН..."
+            value={search}
+            onChange={handleSearchChange}
+          />
+        </div>
       </div>
 
       {loading && <div className="sync-preview__loading">Загрузка данных из КазНИТУ…</div>}
 
       {!loading && data && (
-        <div className="sync-preview__table-wrap">
-          <table className="sp-table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>ИИН</th>
-                <th>ФИО</th>
-                <th>Курс</th>
-                <th>Факультет</th>
-                <th>Специальность</th>
-                <th>Тип оплаты</th>
-                <th>Тип гранта</th>
-                <th>Статус</th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody>
-              {displayedItems.length === 0 && (
+        <>
+          <Pagination />
+          <div className="sync-preview__table-wrap">
+            <table className="sp-table">
+              <thead>
                 <tr>
-                  <td colSpan={10} className="sp-table__empty">Нет записей</td>
+                  <th>#</th>
+                  <th>ИИН</th>
+                  <th>ФИО</th>
+                  <th>Курс</th>
+                  <th>Форма обучения</th>
+                  <th>Институт</th>
+                  <th>Специализация</th>
+                  <th>Тип оплаты</th>
+                  <th>Тип гранта</th>
+                  <th>ИИК</th>
+                  <th>БИК</th>
+                  <th>Дата обн. (ССО)</th>
+                  <th>Дата обн. (ЕПВО)</th>
+                  <th>Статус TEMP</th>
+                  <th>Статус</th>
+                  <th>Действия</th>
                 </tr>
-              )}
-              {displayedItems.map((item, idx) => (
-                <React.Fragment key={item.studentId}>
-                  <tr className={item.isNew ? 'sp-row--new' : 'sp-row--diff'}>
-                    <td>{idx + 1}</td>
-                    <td className="sp-monospace">{item.iinPlt ?? '—'}</td>
-                    <td>{item.fullName || '—'}</td>
-                    <td>{item.courseNumber ?? '—'}</td>
-                    <td>{item.facultyName || '—'}</td>
-                    <td>{item.professionName || '—'}</td>
-                    <td>{item.paymentType ?? '—'}</td>
-                    <td>{item.grantType ?? '—'}</td>
-                    <td>
-                      {item.isNew ? (
-                        <span className="sp-badge sp-badge--new">
-                          <MdError size={14} /> Нет в ЕПВО
-                        </span>
-                      ) : (
-                        <span className="sp-badge sp-badge--diff">
-                          <MdWarning size={14} /> {item.differentFields?.length ?? 0} разл.
-                        </span>
-                      )}
-                    </td>
-                    <td>
-                      <div className="sp-actions">
-                        {!item.isNew && item.fieldDiffs?.length > 0 && (
+              </thead>
+              <tbody>
+                {pageItems.length === 0 && (
+                  <tr>
+                    <td colSpan={16} className="sp-table__empty">Нет записей</td>
+                  </tr>
+                )}
+                {pageItems.map((item, idx) => (
+                  <React.Fragment key={item.studentId}>
+                    <tr className={item.isNew ? 'sp-row--new' : 'sp-row--diff'}>
+                      <td>{(safePage - 1) * PAGE_SIZE + idx + 1}</td>
+                      <td className="sp-monospace">{item.iinPlt ?? '—'}</td>
+                      <td>{item.fullName || '—'}</td>
+                      <td>{item.courseNumber ?? '—'}</td>
+                      <td>{item.studyForm ?? '—'}</td>
+                      <td>{item.facultyName ?? '—'}</td>
+                      <td>{item.specialization ?? '—'}</td>
+                      <td>{item.paymentType ?? '—'}</td>
+                      <td>{item.grantType ?? '—'}</td>
+                      <td className="sp-monospace">{item.iic ?? '—'}</td>
+                      <td className="sp-monospace">{item.bic ?? '—'}</td>
+                      <td>{item.ssoUpdatedDate ? new Date(item.ssoUpdatedDate).toLocaleDateString('ru-RU') : '—'}</td>
+                      <td>{item.epvoUpdateDate ? new Date(item.epvoUpdateDate).toLocaleDateString('ru-RU') : '—'}</td>
+                      <td>
+                        {item.isInTemp ? (
+                          <span className="sp-badge sp-badge--ok" title={item.tempSyncSessionId ?? ''}>
+                            <MdCheckCircle size={14} /> В TEMP
+                          </span>
+                        ) : (
+                          <span className="sp-badge sp-badge--warn">
+                            <MdWarning size={14} /> Нет
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        {item.isNew ? (
+                          <span className="sp-badge sp-badge--new">
+                            <MdError size={14} /> Нет в ЕПВО
+                          </span>
+                        ) : (
+                          <span className="sp-badge sp-badge--diff">
+                            <MdWarning size={14} /> {item.differentFields?.length ?? 0} разл.
+                          </span>
+                        )}
+                      </td>
+                      <td>
+                        <div className="sp-actions">
+                          {!item.isNew && item.fieldDiffs?.length > 0 && (
+                            <button
+                              className="sp-btn-icon"
+                              title="Показать различия"
+                              onClick={() => toggleExpand(item.studentId)}
+                            >
+                              {expandedId === item.studentId ? <MdExpandLess size={18} /> : <MdExpandMore size={18} />}
+                            </button>
+                          )}
                           <button
                             className="sp-btn-icon"
-                            title="Показать различия"
-                            onClick={() => toggleExpand(item.studentId)}
+                            title="Редактировать"
+                            onClick={() => setEditItem(item)}
                           >
-                            {expandedId === item.studentId ? <MdExpandLess size={18} /> : <MdExpandMore size={18} />}
+                            <MdEdit size={18} />
                           </button>
-                        )}
-                        <button
-                          className="sp-btn-icon"
-                          title="Редактировать"
-                          onClick={() => setEditItem(item)}
-                        >
-                          <MdEdit size={18} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                  {expandedId === item.studentId && item.fieldDiffs?.length > 0 && (
-                    <tr className="sp-row--detail">
-                      <td colSpan={10}>
-                        <div className="sp-diff-panel">
-                          <strong>Различия:</strong>
-                          <div className="sp-diff-grid">
-                            {item.fieldDiffs.map((diff, i) => (
-                              <div key={i} className="sp-diff-item">
-                                <span className="sp-diff-field">{diff.fieldName}</span>
-                                <span className="sp-diff-sso" title="ССО">{diff.ssoValue ?? '—'}</span>
-                                <span className="sp-diff-arrow">→</span>
-                                <span className="sp-diff-epvo" title="ЕПВО">{diff.epvoValue ?? '—'}</span>
-                              </div>
-                            ))}
-                          </div>
                         </div>
                       </td>
                     </tr>
-                  )}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    {expandedId === item.studentId && item.fieldDiffs?.length > 0 && (
+                      <tr className="sp-row--detail">
+                        <td colSpan={16}>
+                          <div className="sp-diff-panel">
+                            <strong>Различия:</strong>
+                            <div className="sp-diff-grid">
+                              {item.fieldDiffs.map((diff, i) => (
+                                <div key={i} className="sp-diff-item">
+                                  <span className="sp-diff-field">{diff.fieldName}</span>
+                                  <span className="sp-diff-sso" title="ССО">{diff.ssoValue ?? '—'}</span>
+                                  <span className="sp-diff-arrow">→</span>
+                                  <span className="sp-diff-epvo" title="ЕПВО">{diff.epvoValue ?? '—'}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination />
+        </>
       )}
 
       {!loading && !data && (
