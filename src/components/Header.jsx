@@ -3,7 +3,7 @@ import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck, MdPreview, Md
 import { NavLink, Link } from 'react-router-dom';
 import '../css/Header.css';
 
-const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser }) => {
+const Header = ({ onLogout, currentUser }) => {
   const role = currentUser?.role;
   const isRegistrar = role === 'registrar';
   const isAdvisor = role === 'advisor';

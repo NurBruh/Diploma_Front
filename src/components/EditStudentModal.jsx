@@ -16,6 +16,8 @@ const DIFF_FIELD_MAP = {
   'Специализация': ['specializationId'],
   'Тип оплаты': ['paymentFormId'],
   'Тип гранта': ['grantType'],
+  'ИИК (Р/С)': ['iic'],
+  'БИК': ['bic'],
 };
 
 const EditStudentModal = ({ item, onSave, onClose }) => {
@@ -40,10 +42,14 @@ const EditStudentModal = ({ item, onSave, onClose }) => {
 
   const handleChange = (e) => {
     const { name, value, type } = e.target;
+    const fieldType = e.target.dataset.fieldType || type;
+    const isNumeric = /^-?\d+(\.\d+)?$/.test(value);
     setForm(prev => ({
       ...prev,
-      [name]: type === 'number' ? (value === '' ? null : Number(value))
-             : type === 'select' ? (value === 'true' ? true : value === 'false' ? false : value)
+      [name]: fieldType === 'number' ? (value === '' ? null : Number(value))
+             : value === 'true' ? true
+             : value === 'false' ? false
+             : fieldType === 'select' && isNumeric ? Number(value)
              : value
     }));
   };
@@ -63,7 +69,7 @@ const EditStudentModal = ({ item, onSave, onClose }) => {
         </label>
         {children || (
           type === 'select' ? (
-            <select name={name} value={form[name] ?? ''} onChange={handleChange}>
+            <select name={name} data-field-type={type} value={form[name] ?? ''} onChange={handleChange}>
               <option value="">—</option>
               {options.map(o => (
                 <option key={o.value} value={o.value}>{o.label}</option>

@@ -2,7 +2,7 @@ import React from 'react';
 import { MdSearch } from 'react-icons/md';
 import '../css/SearchFilters.css';
 
-const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData, currentUser }) => {
+const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUser }) => {
   const role = currentUser?.role;
   const isDepartmentHead = role === 'department_head';
   const isInstituteDirector = role === 'institute_director';
@@ -10,11 +10,6 @@ const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData,
   const handleInputChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
   };
-
-  // Кафедры показываем ТОЛЬКО если выбран институт
-  const filteredDepartments = filters.institute
-    ? (referenceData?.departments?.filter(d => d.instituteName === filters.institute) || [])
-    : [];
 
   // Заголовок в зависимости от роли
   const getTitle = () => {

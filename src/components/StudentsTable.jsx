@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { BsFillPencilFill } from 'react-icons/bs';
 import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
@@ -22,11 +22,14 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
     setCurrentPage(1);
   }, [students]);
 
-  const sortedStudents = (!students || students.length === 0) ? [] : [...students].sort((a, b) => {
-    const nameA = (a.full_name || '').trim();
-    const nameB = (b.full_name || '').trim();
-    return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
-  });
+  const sortedStudents = useMemo(() => {
+    if (!students || students.length === 0) return [];
+    return [...students].sort((a, b) => {
+      const nameA = (a.full_name || '').trim();
+      const nameB = (b.full_name || '').trim();
+      return nameA < nameB ? -1 : (nameA > nameB ? 1 : 0);
+    });
+  }, [students]);
 
   const totalPages = Math.max(1, Math.ceil(sortedStudents.length / PAGE_SIZE));
   const safePage = Math.min(currentPage, totalPages);

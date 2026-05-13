@@ -123,7 +123,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
         });
         setCurrentPage(safePage);
       }
-    } catch (e) {
+    } catch {
       showNotification && showNotification('Ошибка при загрузке данных сравнения', 'error');
     } finally {
       setLoading(false);
@@ -142,7 +142,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
       const result = response.data;
       showNotification && showNotification(`${result.message}`, 'success');
       await fetchComparison(currentPage, filter);
-    } catch (e) {
+    } catch {
       showNotification && showNotification('Ошибка при синхронизации студента', 'error');
     } finally {
       setSyncingIIN(null);
@@ -411,4 +411,3 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
 };
 
 export default SsoEpvoComparison;
-n;

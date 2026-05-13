@@ -70,11 +70,24 @@ function App() {
   const isRegistrar = currentUser?.role === 'registrar';
   const isReadOnly = !isRegistrar;
 
-  const referenceData = useMemo(() => ({
-    studyForms: [...new Set(students.map(s => s.study_form).filter(Boolean))].map((sf, i) => ({ id: i, studyFormName: sf })),
-    institutes: [...new Set(students.map(s => s.faculty).filter(Boolean))].map((f, i) => ({ id: i, instituteName: f })),
-    professions: [...new Set(students.map(s => s.profession).filter(Boolean))].map((p, i) => ({ id: i, professionName: p })),
-  }), [students]);
+  const referenceData = useMemo(() => {
+    const studyFormsSet = new Set();
+    const institutesSet = new Set();
+    const professionsSet = new Set();
+
+    for (let i = 0; i < students.length; i++) {
+      const s = students[i];
+      if (s.study_form) studyFormsSet.add(s.study_form);
+      if (s.faculty) institutesSet.add(s.faculty);
+      if (s.profession) professionsSet.add(s.profession);
+    }
+
+    return {
+      studyForms: Array.from(studyFormsSet).map((sf, i) => ({ id: i, studyFormName: sf })),
+      institutes: Array.from(institutesSet).map((f, i) => ({ id: i, instituteName: f })),
+      professions: Array.from(professionsSet).map((p, i) => ({ id: i, professionName: p })),
+    };
+  }, [students]);
 
   if (!isAuthenticated) {
     return (

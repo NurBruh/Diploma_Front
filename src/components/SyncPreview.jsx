@@ -85,18 +85,21 @@ const SyncPreview = ({ showNotification }) => {
   };
 
   const handleSaveToTemp = async () => {
-    if (!data?.items?.length) {
+    if (!data?.filteredCount) {
       showNotification?.('Нет данных для сохранения', 'warning');
       return;
     }
     setSaving(true);
     try {
-      // Сохраняем все записи текущей страницы по ИИН
-      const iins = data.items.map((i) => i.iinPlt).filter(Boolean);
-      const res = await authFetch.post('/epvo-sso/sync-preview-comparison/save-temp', { iins });
+      const res = await authFetch.post('/epvo-sso/sync-preview-comparison/save-temp', {
+        all: true,
+        filter,
+        search: search.trim() || null,
+        overwriteExisting: false,
+      });
       const json = res.data;
       showNotification?.(
-        `Сохранено в STUDENT_TEMP: ${json.count ?? 0}`,
+        `Сохранено новых записей в STUDENT_TEMP: ${json.count ?? 0}`,
         'success'
       );
       fetchPreview(currentPage, filter, search);
@@ -111,12 +114,13 @@ const SyncPreview = ({ showNotification }) => {
     if (!window.confirm('Отправить данные из TEMP в ЕПВО?')) return;
     setSending(true);
     try {
-      const res = await authFetch.post('/epvo-sso/send-temp-to-epvo');
+      const res = await authFetch.post('/epvo-sso/sync-temp-to-epvo');
       const json = res.data;
       showNotification?.(
-        `Отправлено в ЕПВО. Успешно: ${json.success}, ошибок: ${json.errors}`,
+        json.message ?? `Отправлено в ЕПВО. Успешно: ${json.success}, ошибок: ${json.errors}`,
         json.errors > 0 ? 'warning' : 'success'
       );
+      fetchPreview(currentPage, filter, search);
     } catch (err) {
       showNotification?.(`Ошибка отправки: ${err.response?.data?.message ?? err.message}`, 'error');
     } finally {
@@ -127,7 +131,7 @@ const SyncPreview = ({ showNotification }) => {
   const handleSaveEdit = async (updatedItem) => {
     try {
       // Редактирование записи в STUDENT_TEMP напрямую
-      await authFetch.post('/epvo-sso/update-temp-student', updatedItem);
+      await authFetch.post('/epvo-sso/update-temp-student', updatedItem.data);
 
       setEditItem(null);
       showNotification?.('Изменения сохранены в STUDENT_TEMP', 'success');
@@ -173,11 +177,11 @@ const SyncPreview = ({ showNotification }) => {
           <button
             className="sp-btn sp-btn--primary"
             onClick={handleSaveToTemp}
-            disabled={saving || loading || !data?.items?.length}
-            title="Сохранить отображаемые записи в STUDENT_TEMP"
+            disabled={saving || loading || !data?.filteredCount}
+            title="Сохранить все найденные записи в STUDENT_TEMP"
           >
             <MdSave size={18} />
-            {saving ? 'Сохранение…' : 'Сохранить в TEMP'}
+            {saving ? 'Сохранение…' : 'Сохранить все в TEMP'}
           </button>
           <button
             className="sp-btn sp-btn--success"

@@ -49,7 +49,7 @@ const StudentComparison = ({ showNotification }) => {
       const json = response.data;
       setData(json);
       setCurrentPage(json.page);
-    } catch (e) {
+    } catch {
       showNotification?.('Ошибка при загрузке данных сравнения', 'error');
     } finally {
       setLoading(false);

@@ -20,6 +20,20 @@ const mapStudentFromBackend = (student) => ({
   update_date: student.updateDate || '',
   university_id: student.universityId,
 });
+const FIELDS_TO_CHECK = {
+  full_name: 'ФИО',
+  iin: 'ИИН',
+  course: 'Курс',
+  study_form: 'Форма обучения',
+  faculty: 'Факультет',
+  profession: 'Профессия',
+  specialization: 'Специализация',
+  payment_type: 'Тип оплаты',
+  grant_type: 'Тип гранта',
+  bank_account: 'Расчетный счёт',
+  study_language: 'Язык обучения'
+};
+const FIELDS_KEYS = Object.keys(FIELDS_TO_CHECK);
 
 export const useStudents = (showNotification, currentUser) => {
   const [students, setStudents] = useState([]);
@@ -46,24 +60,11 @@ export const useStudents = (showNotification, currentUser) => {
 
   const detectChanges = (oldData, newData) => {
     const changes = [];
-    const fieldsToCheck = {
-      full_name: 'ФИО',
-      iin: 'ИИН',
-      course: 'Курс',
-      study_form: 'Форма обучения',
-      faculty: 'Факультет',
-      profession: 'Профессия',
-      specialization: 'Специализация',
-      payment_type: 'Тип оплаты',
-      grant_type: 'Тип гранта',
-      bank_account: 'Расчетный счёт',
-      study_language: 'Язык обучения'
-    };
-
-    for (const [key, label] of Object.entries(fieldsToCheck)) {
+    for (let i = 0; i < FIELDS_KEYS.length; i++) {
+      const key = FIELDS_KEYS[i];
       if (String(oldData[key] || '') !== String(newData[key] || '')) {
         changes.push({
-          field: label,
+          field: FIELDS_TO_CHECK[key],
           oldValue: oldData[key] || 'Не указано',
           newValue: newData[key] || 'Не указано'
         });
@@ -94,7 +95,7 @@ export const useStudents = (showNotification, currentUser) => {
       const ssoDataArray = backendData.map(mapStudentFromBackend);
 
       if (localDataArray.length === 0) {
-        try { localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray)); } catch (_) {}
+        try { localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray)); } catch { /* localStorage may be unavailable */ }
         setStudents(ssoDataArray);
         setFilteredStudents(ssoDataArray);
         if (showNotification) showNotification('Первичная загрузка данных', 'info');
@@ -128,8 +129,8 @@ export const useStudents = (showNotification, currentUser) => {
       });
 
       setChangeHistory(updatedHistory);
-      try { localStorage.setItem('studentChangeHistory', JSON.stringify(updatedHistory)); } catch (_) {}
-      try { localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray)); } catch (_) {}
+      try { localStorage.setItem('studentChangeHistory', JSON.stringify(updatedHistory)); } catch { /* localStorage may be unavailable */ }
+      try { localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray)); } catch { /* localStorage may be unavailable */ }
 
       setStudents(ssoDataArray);
       setFilteredStudents(ssoDataArray);
@@ -229,18 +230,11 @@ export const useStudents = (showNotification, currentUser) => {
   };
 
   const handleUpdateIban = async (iin, newIban) => {
-    const response = await authFetch(`/Epvo/students/${iin}/iban`, {
-      method: 'PATCH',
-      body: JSON.stringify({ newIban })
-    });
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.message || `Ошибка сервера: ${response.status}`);
-    }
+    await authFetch.patch(`/Epvo/students/${iin}/iban`, { newIban });
     const updateList = (list) => list.map(s => s.iin === iin ? { ...s, bank_account: newIban } : s);
     setStudents(prev => updateList(prev));
     setFilteredStudents(prev => updateList(prev));
-    if (showNotification) showNotification('✅ Расчётный счёт обновлён в ССО. Актуализируйте данные в «ССО vs ЕПВО»', 'info');
+    if (showNotification) showNotification('Расчётный счёт обновлён в ССО. Актуализируйте данные в «ССО vs ЕПВО»', 'info');
   };
 
   return {
