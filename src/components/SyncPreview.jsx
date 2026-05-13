@@ -35,6 +35,7 @@ const SyncPreview = ({ showNotification }) => {
   const [saving, setSaving] = useState(false);
   const [sending, setSending] = useState(false);
   const [editItem, setEditItem] = useState(null);
+  const [editLoadingId, setEditLoadingId] = useState(null);
   const [expandedId, setExpandedId] = useState(null);
   const searchTimerRef = useRef(null);
 
@@ -138,6 +139,31 @@ const SyncPreview = ({ showNotification }) => {
       fetchPreview(currentPage, filter, search);
     } catch (err) {
       showNotification?.(`Ошибка сохранения: ${err.response?.data?.message ?? err.message}`, 'error');
+    }
+  };
+
+  const handleOpenEdit = async (item) => {
+    if (!item?.iinPlt) {
+      showNotification?.('Нельзя открыть редактирование: нет ИИН', 'warning');
+      return;
+    }
+
+    setEditLoadingId(item.studentId);
+    try {
+      const res = await authFetch.get(`/epvo-sso/sync-preview-comparison/edit/${encodeURIComponent(item.iinPlt)}`);
+      const editData = res.data;
+      const editableData = editData.tempData ?? editData.ssoData ?? editData.epvoData ?? item.data ?? {};
+
+      setEditItem({
+        ...item,
+        data: editableData,
+        differentFields: editData.diffFields ?? item.differentFields ?? [],
+        editData,
+      });
+    } catch (err) {
+      showNotification?.(`Не удалось открыть редактирование: ${err.response?.data?.message ?? err.message}`, 'error');
+    } finally {
+      setEditLoadingId(null);
     }
   };
 
@@ -321,7 +347,8 @@ const SyncPreview = ({ showNotification }) => {
                           <button
                             className="sp-btn-icon"
                             title="Редактировать"
-                            onClick={() => setEditItem(item)}
+                            disabled={editLoadingId === item.studentId}
+                            onClick={() => handleOpenEdit(item)}
                           >
                             <MdEdit size={18} />
                           </button>
