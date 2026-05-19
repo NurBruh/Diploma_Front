@@ -102,13 +102,14 @@
 
 /* Table */
 .sync-preview__table-wrap {
-  overflow-x: auto;
+  overflow: auto;
   border-radius: 12px;
   border: 1px solid #e2e8f0;
 }
 
 .sp-table {
   width: 100%;
+  min-width: 1640px;
   border-collapse: collapse;
   font-size: 0.9rem;
 }
@@ -121,6 +122,7 @@
   color: #475569;
   white-space: nowrap;
   border-bottom: 1px solid #e2e8f0;
+  z-index: 6;
 }
 
 .sp-table td {

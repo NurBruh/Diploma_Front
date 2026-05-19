@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MdRefresh, MdCheckCircle, MdWarning, MdError, MdFilterList, MdSearch } from 'react-icons/md';
 import { authFetch } from '../utils/authFetch';
+import TableScrollSync from './TableScrollSync';
 import '../css/StudentComparison.css';
 
 const COMPARE_FIELDS = [
@@ -255,7 +256,7 @@ const StudentComparison = ({ showNotification }) => {
       ) : (
         <>
           <Pagination />
-          <div className="sc-table-wrapper">
+          <TableScrollSync bodyClassName="sc-table-wrapper">
             <table className="sc-table">
               <thead>
                 <tr>
@@ -386,7 +387,7 @@ const StudentComparison = ({ showNotification }) => {
               })}
             </tbody>
             </table>
-          </div>
+          </TableScrollSync>
           <Pagination />
         </>
       )}

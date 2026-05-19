@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { BsFillPencilFill } from 'react-icons/bs';
 import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
+import TableScrollSync from './TableScrollSync';
 import '../css/StudentsTable.css';
 
 const PAGE_SIZE = 50;
@@ -83,7 +84,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
   // Таблица колонок под новый DTO (StudentSsoDetailDto)
   return (
     <div className="table-container">
-      <div className="table-wrapper">
+      <TableScrollSync bodyClassName="table-wrapper">
         <table className="students-table">
           <thead>
             <tr>
@@ -164,7 +165,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
             ))}
           </tbody>
         </table>
-      </div>
+      </TableScrollSync>
       
       <div className="table-footer">
         {!readOnly && selectedIds.size > 0 && (

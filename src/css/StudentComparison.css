@@ -180,7 +180,7 @@
   background: var(--surface-white, #fff);
   border-radius: 8px;
   box-shadow: var(--shadow-sm, 0 1px 3px rgba(0,0,0,.1));
-  overflow-x: auto;
+  overflow: auto;
 }
 
 .sc-table {
@@ -188,12 +188,6 @@
   border-collapse: collapse;
   font-size: 0.8rem;
   min-width: 1200px;
-}
-
-.sc-table thead {
-  position: sticky;
-  top: 0;
-  z-index: 2;
 }
 
 .sc-table th {
@@ -207,6 +201,7 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  z-index: 6;
 }
 
 .sc-th-num { width: 40px; text-align: center; }

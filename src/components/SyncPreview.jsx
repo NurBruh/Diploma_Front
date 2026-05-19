@@ -14,6 +14,7 @@ import {
 } from 'react-icons/md';
 import { authFetch } from '../utils/authFetch';
 import EditStudentModal from './EditStudentModal';
+import TableScrollSync from './TableScrollSync';
 import '../css/SyncPreview.css';
 
 const FILTER_OPTIONS = [
@@ -267,7 +268,7 @@ const SyncPreview = ({ showNotification }) => {
       {!loading && data && (
         <>
           <Pagination />
-          <div className="sync-preview__table-wrap">
+          <TableScrollSync bodyClassName="sync-preview__table-wrap">
             <table className="sp-table">
               <thead>
                 <tr>
@@ -378,7 +379,7 @@ const SyncPreview = ({ showNotification }) => {
                 ))}
               </tbody>
             </table>
-          </div>
+          </TableScrollSync>
           <Pagination />
         </>
       )}
