@@ -7,7 +7,16 @@ import '../css/StudentsTable.css';
 
 const PAGE_SIZE = 50;
 
-const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, syncLoading, selectionKey, readOnly }) => {
+const StudentsTable = ({
+  students,
+  loading,
+  onUpdateIban,
+  onSendSelectedToEpvo,
+  syncLoading,
+  selectionKey,
+  readOnly,
+  showBankColumns = true
+}) => {
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
@@ -94,11 +103,12 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
               <th>Курс</th>
               <th>Форма обучения</th>
               <th>Факультет</th>
+              <th>Кафедра</th>
               <th>Профессия</th>
               <th>Тип оплаты</th>
               <th>Тип гранта</th>
-              <th>Расчетный счёт</th>
-              <th>Дата обновления</th>
+              {showBankColumns && <th>Расчетный счёт</th>}
+              {showBankColumns && <th>Дата обновления</th>}
               {!readOnly && (
                 <th className="th-select">
                   Все
@@ -125,6 +135,7 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                 <td>{student.course || '—'}</td>
                 <td>{student.study_form || '—'}</td>
                 <td>{student.faculty || '—'}</td>
+                <td>{student.department || '—'}</td>
                 <td>{student.profession || '—'}</td>
                 <td>
                   <span className={`status-badge ${student.payment_type === 'Стипендия' ? 'active' : 'inactive'}`}>
@@ -136,21 +147,23 @@ const StudentsTable = ({ students, loading, onUpdateIban, onSendSelectedToEpvo, 
                     {student.grant_type || '—'}
                   </span>
                 </td>
-                <td className="bank-account">
-                  <div className="bank-account-cell">
-                    <span className="bank-account-text">{student.bank_account || '—'}</span>
-                    {!readOnly && (
-                      <button
-                        className="edit-iban-btn"
-                        title="Редактировать расчётный счёт"
-                        onClick={() => setEditingStudent(student)}
-                      >
-                        <BsFillPencilFill size={14} />
-                      </button>
-                    )}
-                  </div>
-                </td>
-                <td className="update-date">{student.update_date || '—'}</td>
+                {showBankColumns && (
+                  <td className="bank-account">
+                    <div className="bank-account-cell">
+                      <span className="bank-account-text">{student.bank_account || '—'}</span>
+                      {!readOnly && (
+                        <button
+                          className="edit-iban-btn"
+                          title="Редактировать расчётный счёт"
+                          onClick={() => setEditingStudent(student)}
+                        >
+                          <BsFillPencilFill size={14} />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                )}
+                {showBankColumns && <td className="update-date">{student.update_date || '—'}</td>}
                 {!readOnly && (
                   <td className="td-select">
                     <input

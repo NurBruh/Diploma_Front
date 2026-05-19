@@ -1,0 +1,145 @@
+.role-dashboard {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.role-dashboard__header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.role-dashboard__header h1 {
+  margin: 0;
+  font-size: 1.55rem;
+  line-height: 1.2;
+  color: var(--text-primary);
+}
+
+.role-dashboard__header p {
+  margin: 0.35rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+}
+
+.role-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(150px, 1fr)) minmax(320px, 1.6fr);
+  gap: 0.9rem;
+  align-items: stretch;
+}
+
+.role-stat-card,
+.role-breakdown {
+  background: var(--surface-white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.role-stat-card {
+  padding: 1rem;
+  min-height: 96px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.role-stat-card span,
+.role-stat-card small {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.role-stat-card strong {
+  color: var(--text-primary);
+  font-size: 1.8rem;
+  line-height: 1;
+}
+
+.role-breakdown {
+  padding: 1rem;
+  grid-row: span 2;
+}
+
+.role-breakdown__title {
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.role-breakdown__empty {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.role-breakdown__row {
+  padding: 0.55rem 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.role-breakdown__row:first-of-type {
+  border-top: 0;
+}
+
+.role-breakdown__label,
+.role-breakdown__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.role-breakdown__label {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.role-breakdown__label span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.role-breakdown__meta {
+  color: var(--text-secondary);
+  margin-top: 0.3rem;
+}
+
+.role-breakdown__bar {
+  height: 6px;
+  background: #edf1f5;
+  border-radius: 999px;
+  overflow: hidden;
+  margin-top: 0.45rem;
+}
+
+.role-breakdown__bar span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  background: #1a73e8;
+}
+
+@media (max-width: 1180px) {
+  .role-stats {
+    grid-template-columns: repeat(2, minmax(150px, 1fr));
+  }
+
+  .role-breakdown {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .role-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .role-dashboard__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -9,6 +9,9 @@ import SyncPreview from './components/SyncPreview';
 import SyncHistory from './components/SyncHistory';
 import ChangeHistory from './components/ChangeHistory';
 import Login from './components/Login';
+import AdvisorDashboard from './pages/roles/advisor/AdvisorDashboard';
+import InstituteDirectorDashboard from './pages/roles/instituteDirector/InstituteDirectorDashboard';
+import DepartmentHeadDashboard from './pages/roles/departmentHead/DepartmentHeadDashboard';
 
 import { useNotification } from './hooks/useNotification';
 import { useAuth } from './hooks/useAuth';
@@ -73,21 +76,76 @@ function App() {
   const referenceData = useMemo(() => {
     const studyFormsSet = new Set();
     const institutesSet = new Set();
+    const departmentsSet = new Set();
     const professionsSet = new Set();
 
     for (let i = 0; i < students.length; i++) {
       const s = students[i];
       if (s.study_form) studyFormsSet.add(s.study_form);
       if (s.faculty) institutesSet.add(s.faculty);
+      if (s.department) departmentsSet.add(s.department);
       if (s.profession) professionsSet.add(s.profession);
     }
 
     return {
       studyForms: Array.from(studyFormsSet).map((sf, i) => ({ id: i, studyFormName: sf })),
       institutes: Array.from(institutesSet).map((f, i) => ({ id: i, instituteName: f })),
+      departments: Array.from(departmentsSet).map((d, i) => ({ id: i, departmentName: d })),
       professions: Array.from(professionsSet).map((p, i) => ({ id: i, professionName: p })),
     };
   }, [students]);
+
+  const rolePageProps = {
+    currentUser,
+    students,
+    filteredStudents,
+    loading,
+    filters,
+    setFilters,
+    onSearch: handleSearch,
+    referenceData,
+    selectionKey
+  };
+
+  const renderHome = () => {
+    if (currentUser?.role === 'advisor') {
+      return <AdvisorDashboard {...rolePageProps} />;
+    }
+
+    if (currentUser?.role === 'institute_director') {
+      return <InstituteDirectorDashboard {...rolePageProps} />;
+    }
+
+    if (currentUser?.role === 'department_head') {
+      return <DepartmentHeadDashboard {...rolePageProps} />;
+    }
+
+    return (
+      <>
+        <SearchFilters
+          filters={filters}
+          setFilters={setFilters}
+          onSearch={handleSearch}
+          changeHistory={changeHistory}
+          students={students}
+          changesCount={getTotalChangesCount()}
+          currentUser={currentUser}
+          referenceData={referenceData}
+        />
+
+        <StudentsTable
+          students={filteredStudents}
+          loading={loading}
+          onUpdateIban={isReadOnly ? null : handleUpdateIban}
+          onSendSelectedToEpvo={isReadOnly ? null : handleSendSelectedToEpvo}
+          syncLoading={syncLoading}
+          selectionKey={selectionKey}
+          readOnly={isReadOnly}
+          showBankColumns
+        />
+      </>
+    );
+  };
 
   if (!isAuthenticated) {
     return (
@@ -122,30 +180,7 @@ function App() {
       <main className="main-content">
         <div className="container">
           <Routes>
-            <Route path="/" element={
-              <>
-                <SearchFilters
-                  filters={filters}
-                  setFilters={setFilters}
-                  onSearch={handleSearch}
-                  changeHistory={changeHistory}
-                  students={students}
-                  changesCount={getTotalChangesCount()}
-                  currentUser={currentUser}
-                  referenceData={referenceData}
-                />
-
-                <StudentsTable
-                  students={filteredStudents}
-                  loading={loading}
-                  onUpdateIban={isReadOnly ? null : handleUpdateIban}
-                  onSendSelectedToEpvo={isReadOnly ? null : handleSendSelectedToEpvo}
-                  syncLoading={syncLoading}
-                  selectionKey={selectionKey}
-                  readOnly={isReadOnly}
-                />
-              </>
-            } />
+            <Route path="/" element={renderHome()} />
             
             {isRegistrar && (
               <>

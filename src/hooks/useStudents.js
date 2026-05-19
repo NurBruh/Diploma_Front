@@ -8,6 +8,7 @@ const mapStudentFromBackend = (student) => ({
   course: student.courseNumber,
   study_form: student.studyForm || '',
   faculty: student.facultyName || '',
+  department: student.departmentName || '',
   profession: student.professionName || '',
   specialization: student.specialization || '',
   payment_type: student.paymentType || '',
@@ -26,6 +27,7 @@ const FIELDS_TO_CHECK = {
   course: 'Курс',
   study_form: 'Форма обучения',
   faculty: 'Факультет',
+  department: 'Кафедра',
   profession: 'Профессия',
   specialization: 'Специализация',
   payment_type: 'Тип оплаты',
@@ -85,6 +87,8 @@ export const useStudents = (showNotification, currentUser) => {
         path = `/Auth/advisor/${user.userId}/students`;
       } else if (user.role === 'institute_director') {
         path = `/Auth/director/${user.userId}/students`;
+      } else if (user.role === 'department_head') {
+        path = `/Auth/department-head/${user.userId}/students`;
       } else {
         path = '/Epvo/students';
       }
@@ -166,6 +170,9 @@ export const useStudents = (showNotification, currentUser) => {
     }
     if (filters.institute) {
       filtered = filtered.filter(student => student.faculty?.includes(filters.institute));
+    }
+    if (filters.department) {
+      filtered = filtered.filter(student => (student.department || '').includes(filters.department));
     }
     if (filters.profession) {
       filtered = filtered.filter(student => (student.profession || '').includes(filters.profession));

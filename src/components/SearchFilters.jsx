@@ -14,10 +14,10 @@ const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUs
   // Заголовок в зависимости от роли
   const getTitle = () => {
     if (isDepartmentHead && currentUser?.scopeName)
-      return `Обучающиеся на гранте — ${currentUser.scopeName}`;
+      return `Обучающиеся — ${currentUser.scopeName}`;
     if (isInstituteDirector && currentUser?.scopeName)
-      return `Обучающиеся на гранте — ${currentUser.scopeName}`;
-    return 'Обучающиеся на гранте';
+      return `Обучающиеся — ${currentUser.scopeName}`;
+    return 'Обучающиеся';
   };
 
   return (
@@ -100,20 +100,34 @@ const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUs
 
         {/* Кафедра: скрыта для зав.кафедры, показана для директора и менеджера */}
         {!isDepartmentHead && (
-  <div className="filter-group">
-    <label>Профессия</label>
-    <select
-      value={filters.profession}
-      onChange={(e) => handleInputChange('profession', e.target.value)}
-      className="filter-select"
-    >
-      <option value="">Все</option>
-      {referenceData?.professions?.map(p => (
-        <option key={p.id} value={p.professionName}>{p.professionName}</option>
-      ))}
-    </select>
-  </div>
-)}
+          <div className="filter-group">
+            <label>Кафедра</label>
+            <select
+              value={filters.department}
+              onChange={(e) => handleInputChange('department', e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Все</option>
+              {referenceData?.departments?.map(dep => (
+                <option key={dep.id} value={dep.departmentName}>{dep.departmentName}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        <div className="filter-group">
+          <label>Профессия</label>
+          <select
+            value={filters.profession}
+            onChange={(e) => handleInputChange('profession', e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Все</option>
+            {referenceData?.professions?.map(p => (
+              <option key={p.id} value={p.professionName}>{p.professionName}</option>
+            ))}
+          </select>
+        </div>
 
         <div className="filter-group">
           <label>Тип гранта</label>

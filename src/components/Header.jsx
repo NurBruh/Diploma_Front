@@ -7,6 +7,7 @@ const Header = ({ onLogout, currentUser }) => {
   const role = currentUser?.role;
   const isRegistrar = role === 'registrar';
   const isAdvisor = role === 'advisor';
+  const isDepartmentHead = role === 'department_head';
 
   const getRoleLabel = () => {
     return currentUser?.roleDisplayName || role || 'Пользователь';
@@ -25,7 +26,7 @@ const Header = ({ onLogout, currentUser }) => {
             end
             className={({ isActive }) => `nav-btn${isActive ? ' active' : ''}`}
           >
-            {isAdvisor ? 'Мои студенты' : isRegistrar ? 'Стипендии ЕПВО' : 'Студенты института'}
+            {isAdvisor ? 'Мои студенты' : isDepartmentHead ? 'Студенты кафедры' : isRegistrar ? 'Стипендии ЕПВО' : 'Студенты института'}
           </NavLink>
         </nav>
 
