@@ -1,7 +1,6 @@
 import React from 'react';
 import SearchFilters from '../../../components/SearchFilters';
 import StudentsTable from '../../../components/StudentsTable';
-import RoleStats from './RoleStats';
 import '../../../css/RoleDashboard.css';
 
 const RoleDashboardView = ({
@@ -16,9 +15,7 @@ const RoleDashboardView = ({
   onSearch,
   referenceData,
   selectionKey,
-  showBankColumns,
-  groupKey,
-  groupLabel
+  showBankColumns
 }) => {
   return (
     <div className="role-dashboard">
@@ -28,13 +25,6 @@ const RoleDashboardView = ({
           {subtitle && <p>{subtitle}</p>}
         </div>
       </header>
-
-      <RoleStats
-        students={students}
-        filteredStudents={filteredStudents}
-        groupKey={groupKey}
-        groupLabel={groupLabel}
-      />
 
       <SearchFilters
         filters={filters}

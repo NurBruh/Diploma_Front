@@ -12,6 +12,7 @@ import Login from './components/Login';
 import AdvisorDashboard from './pages/roles/advisor/AdvisorDashboard';
 import InstituteDirectorDashboard from './pages/roles/instituteDirector/InstituteDirectorDashboard';
 import DepartmentHeadDashboard from './pages/roles/departmentHead/DepartmentHeadDashboard';
+import RoleAnalyticsDashboard from './pages/roles/shared/RoleAnalyticsDashboard';
 
 import { useNotification } from './hooks/useNotification';
 import { useAuth } from './hooks/useAuth';
@@ -72,6 +73,8 @@ function App() {
 
   const isRegistrar = currentUser?.role === 'registrar';
   const isReadOnly = !isRegistrar;
+  const canViewRoleDashboard = currentUser?.role === 'institute_director'
+    || currentUser?.role === 'department_head';
 
   const referenceData = useMemo(() => {
     const studyFormsSet = new Set();
@@ -181,6 +184,19 @@ function App() {
         <div className="container">
           <Routes>
             <Route path="/" element={renderHome()} />
+
+            {canViewRoleDashboard && (
+              <Route
+                path="/dashboard"
+                element={
+                  <RoleAnalyticsDashboard
+                    currentUser={currentUser}
+                    students={students}
+                    mode={currentUser?.role === 'department_head' ? 'department' : 'institute'}
+                  />
+                }
+              />
+            )}
             
             {isRegistrar && (
               <>

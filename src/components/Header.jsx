@@ -1,5 +1,5 @@
 import React from 'react';
-import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck, MdPreview, MdHistory } from 'react-icons/md';
+import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck, MdPreview, MdHistory, MdDashboard } from 'react-icons/md';
 import { NavLink, Link } from 'react-router-dom';
 import '../css/Header.css';
 
@@ -8,6 +8,7 @@ const Header = ({ onLogout, currentUser }) => {
   const isRegistrar = role === 'registrar';
   const isAdvisor = role === 'advisor';
   const isDepartmentHead = role === 'department_head';
+  const canViewDashboard = role === 'institute_director' || role === 'department_head';
 
   const getRoleLabel = () => {
     return currentUser?.roleDisplayName || role || 'Пользователь';
@@ -31,6 +32,17 @@ const Header = ({ onLogout, currentUser }) => {
         </nav>
 
         <div className="header-actions">
+          {canViewDashboard && (
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
+              title="Дашборд"
+            >
+              <MdDashboard size={20} />
+              Дашборд
+            </NavLink>
+          )}
+
           {isRegistrar && (
             <NavLink
               to="/data-comparison"

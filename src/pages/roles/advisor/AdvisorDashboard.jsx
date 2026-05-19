@@ -7,8 +7,6 @@ const AdvisorDashboard = (props) => (
     title="Мои студенты"
     subtitle={props.currentUser?.fullName}
     showBankColumns={false}
-    groupKey="department"
-    groupLabel="Кафедры"
   />
 );
 

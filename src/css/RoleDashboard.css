@@ -143,3 +143,141 @@
     flex-direction: column;
   }
 }
+
+.analytics-page {
+  gap: 1rem;
+}
+
+.analytics-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(160px, 1fr));
+  gap: 0.9rem;
+}
+
+.analytics-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.analytics-department,
+.analytics-speciality,
+.analytics-empty {
+  background: var(--surface-white);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+
+.analytics-empty {
+  padding: 1.25rem;
+  color: var(--text-secondary);
+}
+
+.analytics-department > summary,
+.analytics-speciality > summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(160px, 280px);
+  gap: 1rem;
+  align-items: center;
+  padding: 1rem 1.15rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.analytics-department > summary::-webkit-details-marker,
+.analytics-speciality > summary::-webkit-details-marker {
+  display: none;
+}
+
+.analytics-department > summary strong,
+.analytics-speciality > summary strong {
+  display: block;
+  color: var(--text-primary);
+  font-size: 0.98rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.analytics-department > summary span,
+.analytics-speciality > summary span {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.analytics-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #edf1f5;
+  overflow: hidden;
+}
+
+.analytics-bar span {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  background: #1a73e8;
+}
+
+.analytics-specialities {
+  padding: 0 1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.analytics-speciality {
+  box-shadow: none;
+}
+
+.analytics-speciality > summary {
+  padding: 0.8rem 0.9rem;
+}
+
+.analytics-split {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0 0.9rem 0.8rem;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.analytics-students {
+  max-height: 360px;
+  overflow: auto;
+  border-top: 1px solid var(--border-color);
+}
+
+.analytics-students table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+}
+
+.analytics-students th {
+  position: sticky;
+  top: 0;
+  background: #f8f9fa;
+  color: var(--text-secondary);
+  text-align: left;
+  padding: 0.65rem 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.analytics-students td {
+  padding: 0.6rem 0.9rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.analytics-mono {
+  font-family: 'Consolas', 'Monaco', monospace;
+}
+
+@media (max-width: 760px) {
+  .analytics-summary,
+  .analytics-department > summary,
+  .analytics-speciality > summary {
+    grid-template-columns: 1fr;
+  }
+}

@@ -4,11 +4,9 @@ import RoleDashboardView from '../shared/RoleDashboardView';
 const InstituteDirectorDashboard = (props) => (
   <RoleDashboardView
     {...props}
-    title="Дашборд института"
+    title="Студенты института"
     subtitle={props.currentUser?.scopeName}
     showBankColumns
-    groupKey="department"
-    groupLabel="Кафедры института"
   />
 );
 
