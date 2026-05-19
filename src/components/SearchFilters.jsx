@@ -1,8 +1,8 @@
 import React from 'react';
 import { MdSearch } from 'react-icons/md';
-import './SearchFilters.css';
+import '../css/SearchFilters.css';
 
-const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData, currentUser }) => {
+const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUser }) => {
   const role = currentUser?.role;
   const isDepartmentHead = role === 'department_head';
   const isInstituteDirector = role === 'institute_director';
@@ -11,18 +11,13 @@ const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData,
     setFilters(prev => ({ ...prev, [field]: value }));
   };
 
-  // Кафедры показываем ТОЛЬКО если выбран институт
-  const filteredDepartments = filters.institute
-    ? (referenceData?.departments?.filter(d => d.instituteName === filters.institute) || [])
-    : [];
-
   // Заголовок в зависимости от роли
   const getTitle = () => {
     if (isDepartmentHead && currentUser?.scopeName)
-      return `Обучающиеся на гранте — ${currentUser.scopeName}`;
+      return `Обучающиеся — ${currentUser.scopeName}`;
     if (isInstituteDirector && currentUser?.scopeName)
-      return `Обучающиеся на гранте — ${currentUser.scopeName}`;
-    return 'Обучающиеся на гранте';
+      return `Обучающиеся — ${currentUser.scopeName}`;
+    return 'Обучающиеся';
   };
 
   return (
@@ -64,6 +59,7 @@ const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData,
             <option value="2">2</option>
             <option value="3">3</option>
             <option value="4">4</option>
+            <option value="5">5</option>
           </select>
         </div>
 
@@ -110,15 +106,28 @@ const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData,
               value={filters.department}
               onChange={(e) => handleInputChange('department', e.target.value)}
               className="filter-select"
-              disabled={!filters.institute}
             >
-              <option value="">{filters.institute ? 'Все кафедры' : 'Сначала выберите институт'}</option>
-              {filteredDepartments.map(d => (
-                <option key={d.id} value={d.departmentName}>{d.departmentName}</option>
+              <option value="">Все</option>
+              {referenceData?.departments?.map(dep => (
+                <option key={dep.id} value={dep.departmentName}>{dep.departmentName}</option>
               ))}
             </select>
           </div>
         )}
+
+        <div className="filter-group">
+          <label>Профессия</label>
+          <select
+            value={filters.profession}
+            onChange={(e) => handleInputChange('profession', e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Все</option>
+            {referenceData?.professions?.map(p => (
+              <option key={p.id} value={p.professionName}>{p.professionName}</option>
+            ))}
+          </select>
+        </div>
 
         <div className="filter-group">
           <label>Тип гранта</label>
@@ -128,9 +137,9 @@ const SearchFilters = ({ filters, setFilters, onSearch, students, referenceData,
             className="filter-select"
           >
             <option value="">Все</option>
-            <option value="Государственный образовательный грант">Государственный</option>
-            <option value="Грант акимата">Грант акимата</option>
-            <option value="Целевой грант">Целевой грант</option>
+            <option value="Государственный грант">Государственный грант</option>
+            <option value="Из собственных средств">Из собственных средств</option>
+            <option value="Трехсторонняя форма обучения">Трехсторонняя форма обучения</option>
           </select>
         </div>
 

@@ -1,72 +1,35 @@
-import { API_BASE_URL } from './api';
+import axios from 'axios';
+import { API_BASE_URL } from '../services';
 
 // API endpoint авторизации
 const AUTH_URL = `${API_BASE_URL}/Auth`;
 
 const AuthService = {
-  // Регистрация нового пользователя
-  register: async (username, email, password) => {
+  // Авторизация через SSO (userId = password для теста)
+  login: async (userId, password) => {
     try {
-      const response = await fetch(`${AUTH_URL}/register`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          email,
-          password
-        })
+      const response = await axios.post(`${AUTH_URL}/login`, {
+        userId,
+        password
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('username', data.username);
-        localStorage.setItem('role', data.role);
-        if (data.scopeType) localStorage.setItem('scopeType', data.scopeType);
-        if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
-        if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
-        console.log('Registration successful:', data);
-      }
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.userId.toString());
+      localStorage.setItem('fullName', data.fullName);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('roleDisplayName', data.roleDisplayName);
+      if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
+      if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
+      console.log('Login successful:', data);
 
-      return { success: response.ok, data };
-    } catch (error) {
-      console.error('Registration error:', error);
-      return { success: false, error: 'Ошибка подключения к серверу' };
-    }
-  },
-
-  // Авторизация пользователя
-  login: async (username, password) => {
-    try {
-      const response = await fetch(`${AUTH_URL}/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username,
-          password
-        })
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('username', data.username);
-        localStorage.setItem('role', data.role);
-        if (data.scopeType) localStorage.setItem('scopeType', data.scopeType);
-        if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
-        if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
-        console.log('Login successful:', data);
-      }
-
-      return { success: response.ok, data };
+      return { success: true, data };
     } catch (error) {
       console.error('Login error:', error);
+      if (error.response) {
+        return { success: false, error: error.response.data.message || 'Ошибка авторизации' };
+      }
       return { success: false, error: 'Ошибка подключения к серверу' };
     }
   },
@@ -74,9 +37,10 @@ const AuthService = {
   // Выход из системы
   logout: () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('username');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('fullName');
     localStorage.removeItem('role');
-    localStorage.removeItem('scopeType');
+    localStorage.removeItem('roleDisplayName');
     localStorage.removeItem('scopeId');
     localStorage.removeItem('scopeName');
     console.log('Logout successful');
@@ -85,14 +49,15 @@ const AuthService = {
   // Получение текущего пользователя
   getCurrentUser: () => {
     const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username');
+    const userId = localStorage.getItem('userId');
+    const fullName = localStorage.getItem('fullName');
     const role = localStorage.getItem('role');
-    const scopeType = localStorage.getItem('scopeType');
+    const roleDisplayName = localStorage.getItem('roleDisplayName');
     const scopeId = localStorage.getItem('scopeId');
     const scopeName = localStorage.getItem('scopeName');
 
-    if (token && username) {
-      return { token, username, role, scopeType, scopeId: scopeId ? parseInt(scopeId) : null, scopeName };
+    if (token && userId) {
+      return { token, userId: parseInt(userId), fullName, role, roleDisplayName, scopeId: scopeId ? parseInt(scopeId) : null, scopeName };
     }
 
     return null;
@@ -117,15 +82,14 @@ const AuthService = {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: 'GET',
+      const response = await axios.get(`${API_BASE_URL}${endpoint}`, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         }
       });
 
-      return await response.json();
+      return response.data;
     } catch (error) {
       console.error('Protected data fetch error:', error);
       throw error;

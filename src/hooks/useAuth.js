@@ -1,72 +1,54 @@
-import { useState, useEffect } from 'react'
-import AuthService from '../services/AuthService'
+import { useState, useEffect } from 'react';
+import AuthService from '../services/AuthService';
 
-export const useAuth = ({ showNotification, onFetchData, onClearData }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [currentUser, setCurrentUser] = useState(null)
-  const [showRegister, setShowRegister] = useState(false)
+export const useAuth = (showNotification, onLoginSuccess) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
 
-  // Проверка авторизации при монтировании
   useEffect(() => {
-    const authenticated = AuthService.isAuthenticated()
-    setIsAuthenticated(authenticated)
-    if (authenticated) {
-      const user = AuthService.getCurrentUser()
-      setCurrentUser(user)
-      onFetchData?.()
+    const saved = AuthService.getCurrentUser();
+    if (saved) {
+      setIsAuthenticated(true);
+      setCurrentUser(saved);
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
     }
-  }, [])
+  }, []);
 
   const handleLogin = (userData) => {
-    setIsAuthenticated(true)
-    setCurrentUser({
-      ...userData,
-      scopeType: userData.scopeType || null,
+    const user = {
+      userId: userData.userId,
+      fullName: userData.fullName,
+      role: userData.role,
+      roleDisplayName: userData.roleDisplayName,
       scopeId: userData.scopeId || null,
-      scopeName: userData.scopeName || null
-    })
-    setShowRegister(false)
-    showNotification(`Добро пожаловать, ${userData.username}!`, 'success')
-    onFetchData?.()
-  }
-
-  const handleRegister = (userData) => {
-    setIsAuthenticated(true)
-    setCurrentUser({
-      ...userData,
-      scopeType: userData.scopeType || null,
-      scopeId: userData.scopeId || null,
-      scopeName: userData.scopeName || null
-    })
-    setShowRegister(false)
-    showNotification(`Регистрация успешна! Добро пожаловать, ${userData.username}!`, 'success')
-    onFetchData?.()
-  }
+      scopeName: userData.scopeName || null,
+      token: userData.token,
+    };
+    setIsAuthenticated(true);
+    setCurrentUser(user);
+    if (showNotification) {
+      showNotification(`Добро пожаловать, ${userData.fullName}!`, 'success');
+    }
+    if (onLoginSuccess) {
+      onLoginSuccess();
+    }
+  };
 
   const handleLogout = () => {
-    AuthService.logout()
-    setIsAuthenticated(false)
-    setCurrentUser(null)
-    onClearData?.()
-    showNotification('Вы вышли из системы', 'info')
-  }
-
-  // Вызывается из хуков при получении 401
-  const handleUnauthorized = () => {
-    AuthService.logout()
-    setIsAuthenticated(false)
-    setCurrentUser(null)
-    showNotification('Сессия истекла, войдите заново', 'error')
-  }
+    AuthService.logout();
+    setIsAuthenticated(false);
+    setCurrentUser(null);
+    if (showNotification) {
+      showNotification('Вы вышли из системы', 'info');
+    }
+  };
 
   return {
     isAuthenticated,
     currentUser,
-    showRegister,
-    setShowRegister,
     handleLogin,
-    handleRegister,
-    handleLogout,
-    handleUnauthorized
-  }
-}
+    handleLogout
+  };
+};

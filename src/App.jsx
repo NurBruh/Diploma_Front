@@ -1,359 +1,155 @@
-import { useState, useEffect } from 'react'
-import { API_BASE_URL } from './services/api'
-import Header from './components/Header'
-import SearchFilters from './components/SearchFilters'
-import ExportTools from './components/ExportTools'
-import StudentsTable from './components/StudentsTable'
-import SsoEpvoComparison from './components/SsoEpvoComparison'
-import LostScholarshipsV1 from './components/LostScholarshipsV1'
-import LostScholarshipsV2 from './components/LostScholarshipsV2'
-import Login from './components/Login'
-import Register from './components/Register'
-import AuthService from './services/AuthService'
-import './App.css'
+import { useEffect, useMemo } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-// Маппинг данных из бэкенда (camelCase) в формат фронтенда (snake_case)
-const mapStudentFromBackend = (student) => ({
-  id: student.id,
-  first_name: student.firstName || '',
-  last_name: student.lastName || '',
-  patronymic: student.middleName || '',
-  iin: student.iin || '',
-  course: student.course,
-  study_form: student.educationForm || '',
-  institute: student.faculty || '',
-  grant_type: student.grantName || '',
-  has_scholarship: student.hasScholarship ? 'Да' : 'Нет',
-  scholarship_status: student.hasScholarship ? 'Активна' : 'Неактивна',
-  bank_account: student.iban || '',
-  notes: student.scholarshipNotes || '',
-  curriculum_specialty: student.speciality || ''
-})
+import Header from './components/Header';
+import SearchFilters from './components/SearchFilters';
+import StudentsTable from './components/StudentsTable';
+import StudentComparison from './components/StudentComparison';
+import SyncPreview from './components/SyncPreview';
+import SyncHistory from './components/SyncHistory';
+import ChangeHistory from './components/ChangeHistory';
+import Login from './components/Login';
+import AdvisorDashboard from './pages/roles/advisor/AdvisorDashboard';
+import InstituteDirectorDashboard from './pages/roles/instituteDirector/InstituteDirectorDashboard';
+import DepartmentHeadDashboard from './pages/roles/departmentHead/DepartmentHeadDashboard';
+import RoleAnalyticsDashboard from './pages/roles/shared/RoleAnalyticsDashboard';
+
+import { useNotification } from './hooks/useNotification';
+import { useAuth } from './hooks/useAuth';
+import { useStudents } from './hooks/useStudents';
+
+import './css/App.css';
 
 function App() {
-  const [students, setStudents] = useState([])
-  const [filteredStudents, setFilteredStudents] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [notification, setNotification] = useState(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [currentUser, setCurrentUser] = useState(null)
-  const [showRegister, setShowRegister] = useState(false)
-  const [syncLoading, setSyncLoading] = useState(false)
-  const [currentPage, setCurrentPage] = useState('main')
-  const [selectionKey, setSelectionKey] = useState(0)
-  const [referenceData, setReferenceData] = useState(null)
-  const [filters, setFilters] = useState({
-    fullName: '',
-    iin: '',
-    course: '',
-    studyForm: '',
-    institute: '',
-    department: '',
-    grantType: ''
-  })
+  const { notification, showNotification } = useNotification();
+  const {
+    isAuthenticated,
+    currentUser,
+    handleLogin: authLogin,
+    handleLogout: authLogout
+  } = useAuth(showNotification);
 
-  // Проверка авторизации при монтировании
+  const {
+    students,
+    filteredStudents,
+    loading,
+    syncLoading,
+    changeHistory,
+    selectionKey,
+    filters,
+    setFilters,
+    loadHistoryFromStorage,
+    fetchStudents,
+    handleSearch,
+    handleSyncToEpvo,
+    handleClearHistory,
+    getTotalChangesCount,
+    handleSendSelectedToEpvo,
+    handleUpdateIban,
+    clearStudents
+  } = useStudents(showNotification, currentUser);
+
+  // Загружаем студентов после успешной авторизации или при загрузке, если уже авторизованы
   useEffect(() => {
-    const authenticated = AuthService.isAuthenticated()
-    setIsAuthenticated(authenticated)
-
-    if (authenticated) {
-      const user = AuthService.getCurrentUser()
-      setCurrentUser(user)
-
-      fetchStudents()
-      fetchReferenceData()
+    if (isAuthenticated && currentUser) {
+      loadHistoryFromStorage();
+      fetchStudents(currentUser);
     }
-  }, [])
-
-  // Для директора института — предустанавливаем фильтр по его институту
-  useEffect(() => {
-    if (currentUser?.role === 'institute_director' && currentUser?.scopeName) {
-      setFilters(prev => ({ ...prev, institute: currentUser.scopeName }))
-    }
-  }, [currentUser])
-
-  const fetchReferenceData = async () => {
-    try {
-      const token = AuthService.getToken()
-      const response = await fetch(`${API_BASE_URL}/ReferenceData`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setReferenceData(data)
-      }
-    } catch (error) {
-      console.error('Ошибка загрузки справочных данных:', error)
-    }
-  }
-
-  const showNotification = (message, type = 'success') => {
-    setNotification({ message, type })
-    setTimeout(() => setNotification(null), 3000)
-  }
-
-  const fetchStudents = async () => {
-    setLoading(true)
-    try {
-      const token = AuthService.getToken()
-      const response = await fetch(`${API_BASE_URL}/Epvo/students`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.status === 401) {
-        AuthService.logout()
-        setIsAuthenticated(false)
-        setCurrentUser(null)
-        showNotification('Сессия истекла, войдите заново', 'error')
-        return
-      }
-
-      if (!response.ok) {
-        throw new Error(`Ошибка сервера: ${response.status}`)
-      }
-
-      const backendData = await response.json()
-      const ssoDataArray = backendData.map(mapStudentFromBackend)
-
-      setStudents(ssoDataArray)
-      setFilteredStudents(ssoDataArray)
-      showNotification('Данные загружены', 'info')
-
-    } catch (error) {
-      console.error('Ошибка при загрузке данных:', error)
-      showNotification('Ошибка при загрузке данных с сервера', 'error')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleSearch = () => {
-    let filtered = [...students]
-
-    // Фильтрация по ФИО
-    if (filters.fullName) {
-      filtered = filtered.filter(student => {
-        const fullName = `${student.last_name} ${student.first_name} ${student.patronymic}`.toLowerCase()
-        return fullName.includes(filters.fullName.toLowerCase())
-      })
-    }
-
-    // Фильтрация по ИИН
-    if (filters.iin) {
-      filtered = filtered.filter(student => {
-        const iin = student.iin || student.id || ''
-        return iin.toString().includes(filters.iin)
-      })
-    }
-
-    // Фильтрация по курсу
-    if (filters.course) {
-      filtered = filtered.filter(student =>
-        student.course?.toString() === filters.course
-      )
-    }
-
-    // Фильтрация по форме обучения
-    if (filters.studyForm) {
-      filtered = filtered.filter(student =>
-        student.study_form === filters.studyForm
-      )
-    }
-
-    // Фильтрация по институту
-    if (filters.institute) {
-      filtered = filtered.filter(student =>
-        student.institute?.includes(filters.institute)
-      )
-    }
-
-    // Фильтрация по кафедре (через справочник специальностей)
-    if (filters.department && referenceData?.specialities) {
-      const specsInDept = referenceData.specialities
-        .filter(s => s.departmentName === filters.department)
-        .map(s => s.specialityName.toLowerCase())
-      filtered = filtered.filter(student => {
-        const spec = (student.curriculum_specialty || '').toLowerCase()
-        return specsInDept.some(s => spec.includes(s) || s.includes(spec))
-      })
-    }
-
-    // Фильтрация по типу гранта
-    if (filters.grantType) {
-      filtered = filtered.filter(student =>
-        student.grant_type === filters.grantType
-      )
-    }
-
-    setFilteredStudents(filtered)
-    setSelectionKey(prev => prev + 1)
-  }
-
-  const handleRefresh = () => {
-    fetchStudents()
-  }
-
-  // Синхронизация данных SSO → ЕПВО
-  const handleSyncToEpvo = async () => {
-    setSyncLoading(true)
-    try {
-      const token = AuthService.getToken()
-      const response = await fetch(`${API_BASE_URL}/Epvo/sync-to-epvo`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      })
-
-      if (response.status === 401) {
-        AuthService.logout()
-        setIsAuthenticated(false)
-        setCurrentUser(null)
-        showNotification(' Сессия истекла, войдите заново', 'error')
-        return
-      }
-
-      if (!response.ok) {
-        throw new Error(`Ошибка сервера: ${response.status}`)
-      }
-
-      const data = await response.json()
-      showNotification(`${data.message}`, 'success')
-    } catch (error) {
-      console.error('Ошибка синхронизации в ЕПВО:', error)
-      showNotification('Ошибка при синхронизации данных в ЕПВО', 'error')
-    } finally {
-      setSyncLoading(false)
-    }
-  }
+  }, [isAuthenticated, currentUser]);
 
   const handleLogin = (userData) => {
-    setIsAuthenticated(true)
-    setCurrentUser({
-      ...userData,
-      scopeType: userData.scopeType || null,
-      scopeId: userData.scopeId || null,
-      scopeName: userData.scopeName || null
-    })
-    setShowRegister(false)
-    showNotification(`Добро пожаловать, ${userData.username}!`, 'success')
+    authLogin(userData);
+    loadHistoryFromStorage();
+  };
 
-    fetchStudents()
-    fetchReferenceData()
-  }
-
-  // Обработчик успешной регистрации
-  const handleRegister = (userData) => {
-    setIsAuthenticated(true)
-    setCurrentUser({
-      ...userData,
-      scopeType: userData.scopeType || null,
-      scopeId: userData.scopeId || null,
-      scopeName: userData.scopeName || null
-    })
-    setShowRegister(false)
-    showNotification(`Регистрация успешна! Добро пожаловать, ${userData.username}!`, 'success')
-
-    fetchStudents()
-    fetchReferenceData()
-  }
-
-  // Обработчик выхода
   const handleLogout = () => {
-    AuthService.logout()
-    setIsAuthenticated(false)
-    setCurrentUser(null)
-    setStudents([])
-    setFilteredStudents([])
-    showNotification('Вы вышли из системы', 'info')
-  }
+    authLogout();
+    clearStudents();
+  };
 
-  // Отправка выбранных студентов (чекбокс) в ЕПВО как массив
-  const handleSendSelectedToEpvo = async (selectedIINs) => {
-    if (!selectedIINs || selectedIINs.length === 0) {
-      showNotification(' Выберите хотя бы одного студента', 'error')
-      return
-    }
-    setSyncLoading(true)
-    try {
-      const token = AuthService.getToken()
-      const response = await fetch(`${API_BASE_URL}/Epvo/sync-batch`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({ iinS: selectedIINs })
-      })
+  const handleRefresh = () => {
+    fetchStudents(currentUser);
+  };
 
-      if (response.status === 401) {
-        AuthService.logout()
-        setIsAuthenticated(false)
-        setCurrentUser(null)
-        showNotification('Сессия истекла, войдите заново', 'error')
-        return
-      }
+  const isRegistrar = currentUser?.role === 'registrar';
+  const isReadOnly = !isRegistrar;
+  const canViewRoleDashboard = currentUser?.role === 'institute_director'
+    || currentUser?.role === 'department_head';
 
-      if (!response.ok) {
-        throw new Error(`Ошибка сервера: ${response.status}`)
-      }
+  const referenceData = useMemo(() => {
+    const studyFormsSet = new Set();
+    const institutesSet = new Set();
+    const departmentsSet = new Set();
+    const professionsSet = new Set();
 
-      const data = await response.json()
-      showNotification(`${data.message || `Отправлено ${data.syncedCount} студентов в ЕПВО`}`, 'success')
-      // Перезагружаем таблицу чтобы увидеть обновлённые данные
-      await fetchStudents()
-    } catch (error) {
-      console.error('Ошибка отправки в ЕПВО:', error)
-      showNotification('Ошибка при отправке выбранных студентов в ЕПВО', 'error')
-    } finally {
-      setSyncLoading(false)
-    }
-  }
-
-  // Обновление расчётного счёта (IBAN) студента в ЕПВО
-  const handleUpdateIban = async (iin, newIban) => {
-    const token = AuthService.getToken()
-    const response = await fetch(`${API_BASE_URL}/Epvo/students/${iin}/iban`, {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
-      },
-      body: JSON.stringify({ newIban })
-    })
-
-    if (response.status === 401) {
-      AuthService.logout()
-      setIsAuthenticated(false)
-      setCurrentUser(null)
-      showNotification('Сессия истекла, войдите заново', 'error')
-      throw new Error('Сессия истекла')
+    for (let i = 0; i < students.length; i++) {
+      const s = students[i];
+      if (s.study_form) studyFormsSet.add(s.study_form);
+      if (s.faculty) institutesSet.add(s.faculty);
+      if (s.department) departmentsSet.add(s.department);
+      if (s.profession) professionsSet.add(s.profession);
     }
 
-    if (!response.ok) {
-      const errData = await response.json().catch(() => ({}))
-      throw new Error(errData.message || `Ошибка сервера: ${response.status}`)
+    return {
+      studyForms: Array.from(studyFormsSet).map((sf, i) => ({ id: i, studyFormName: sf })),
+      institutes: Array.from(institutesSet).map((f, i) => ({ id: i, instituteName: f })),
+      departments: Array.from(departmentsSet).map((d, i) => ({ id: i, departmentName: d })),
+      professions: Array.from(professionsSet).map((p, i) => ({ id: i, professionName: p })),
+    };
+  }, [students]);
+
+  const rolePageProps = {
+    currentUser,
+    students,
+    filteredStudents,
+    loading,
+    filters,
+    setFilters,
+    onSearch: handleSearch,
+    referenceData,
+    selectionKey
+  };
+
+  const renderHome = () => {
+    if (currentUser?.role === 'advisor') {
+      return <AdvisorDashboard {...rolePageProps} />;
     }
 
-    // Обновляем локальные данные
-    const updateList = (list) =>
-      list.map(s => s.iin === iin ? { ...s, bank_account: newIban } : s)
+    if (currentUser?.role === 'institute_director') {
+      return <InstituteDirectorDashboard {...rolePageProps} />;
+    }
 
-    setStudents(prev => updateList(prev))
-    setFilteredStudents(prev => updateList(prev))
-    showNotification('✅ Расчётный счёт обновлён в ССО. Актуализируйте данные в «ССО vs ЕПВО»', 'info')
-  }
+    if (currentUser?.role === 'department_head') {
+      return <DepartmentHeadDashboard {...rolePageProps} />;
+    }
 
-  // Если пользователь не авторизован, показываем форму авторизации/регистрации
+    return (
+      <>
+        <SearchFilters
+          filters={filters}
+          setFilters={setFilters}
+          onSearch={handleSearch}
+          changeHistory={changeHistory}
+          students={students}
+          changesCount={getTotalChangesCount()}
+          currentUser={currentUser}
+          referenceData={referenceData}
+        />
+
+        <StudentsTable
+          students={filteredStudents}
+          loading={loading}
+          onUpdateIban={isReadOnly ? null : handleUpdateIban}
+          onSendSelectedToEpvo={isReadOnly ? null : handleSendSelectedToEpvo}
+          syncLoading={syncLoading}
+          selectionKey={selectionKey}
+          readOnly={isReadOnly}
+          showBankColumns
+        />
+      </>
+    );
+  };
+
   if (!isAuthenticated) {
     return (
       <>
@@ -362,31 +158,20 @@ function App() {
             {notification.message}
           </div>
         )}
-        {showRegister ? (
-          <Register
-            onRegister={handleRegister}
-            onSwitchToLogin={() => setShowRegister(false)}
-          />
-        ) : (
-          <Login
-            onLogin={handleLogin}
-            onSwitchToRegister={() => setShowRegister(true)}
-          />
-        )}
+        <Login onLogin={handleLogin} />
       </>
-    )
+    );
   }
 
   return (
     <div className="app">
       <Header
         onRefresh={handleRefresh}
+        onClearHistory={handleClearHistory}
         onLogout={handleLogout}
         onSyncToEpvo={handleSyncToEpvo}
         syncLoading={syncLoading}
         currentUser={currentUser}
-        currentPage={currentPage}
-        onNavigate={setCurrentPage}
       />
 
       {notification && (
@@ -397,73 +182,48 @@ function App() {
 
       <main className="main-content">
         <div className="container">
-          {currentPage === 'comparison' && currentUser?.role === 'manager_or' ? (
-            <SsoEpvoComparison
-              onSyncToEpvo={handleSyncToEpvo}
-              syncLoading={syncLoading}
-              showNotification={showNotification}
-            />
-          ) : currentPage === 'lost-v1' ? (
-            <LostScholarshipsV1 showNotification={showNotification} />
-          ) : currentPage === 'lost-v2' ? (
-            <LostScholarshipsV2 showNotification={showNotification} />
-          ) : (
-            <>
-              <SearchFilters
-                filters={filters}
-                setFilters={setFilters}
-                onSearch={handleSearch}
-                students={students}
-                referenceData={referenceData}
-                currentUser={currentUser}
+          <Routes>
+            <Route path="/" element={renderHome()} />
+
+            {canViewRoleDashboard && (
+              <Route
+                path="/dashboard"
+                element={
+                  <RoleAnalyticsDashboard
+                    currentUser={currentUser}
+                    students={students}
+                    mode={currentUser?.role === 'department_head' ? 'department' : 'institute'}
+                  />
+                }
               />
-              {/* <ExportTools /> */}
-              <div style={{
-                display: 'flex', gap: '10px', margin: '0 0 12px 0'
-              }}>
-                <button
-                  onClick={() => setCurrentPage(currentPage === 'lost-v1' ? 'main' : 'lost-v1')}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    padding: '8px 18px', borderRadius: '8px', border: '1px solid #d1d5db',
-                    background: currentPage === 'lost-v1' ? '#dc2626' : '#fff',
-                    color: currentPage === 'lost-v1' ? '#fff' : '#374151',
-                    fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  Лишённые стипендии 
-                </button>
-                {/* <button
-                  onClick={() => setCurrentPage(currentPage === 'lost-v2' ? 'main' : 'lost-v2')}
-                  style={{
-                    display: 'inline-flex', alignItems: 'center', gap: '6px',
-                    padding: '8px 18px', borderRadius: '8px', border: '1px solid #d1d5db',
-                    background: currentPage === 'lost-v2' ? '#dc2626' : '#fff',
-                    color: currentPage === 'lost-v2' ? '#fff' : '#374151',
-                    fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer',
-                    transition: 'all 0.2s'
-                  }}
-                >
-                  Лишённые (В2)
-                </button> */}
-              </div>
-              <StudentsTable
-                students={filteredStudents}
-                loading={loading}
-                onUpdateIban={handleUpdateIban}
-                onSendSelectedToEpvo={handleSendSelectedToEpvo}
-                syncLoading={syncLoading}
-                selectionKey={selectionKey}
-                referenceData={referenceData}
-                currentUser={currentUser}
-              />
-            </>
-          )}
+            )}
+            
+            {isRegistrar && (
+              <>
+                <Route path="/data-comparison" element={
+                  <StudentComparison
+                    showNotification={showNotification}
+                  />
+                } />
+                <Route path="/sync-preview" element={
+                  <SyncPreview showNotification={showNotification} />
+                } />
+                <Route path="/sync-history" element={
+                  <SyncHistory showNotification={showNotification} />
+                } />
+                <Route path="/change-history" element={
+                  <ChangeHistory showNotification={showNotification} />
+                } />
+              </>
+            )}
+
+            {/* Запасной роут (если URL не найден или нет прав) */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </div>
       </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

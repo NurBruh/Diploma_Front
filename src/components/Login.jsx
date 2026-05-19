@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { MdError } from 'react-icons/md';
-import { API_BASE_URL } from '../services/api';
-import './Auth.css';
+import { API_BASE_URL } from '../services';
+import axios from 'axios';
+import '../css/Auth.css';
 
-const Login = ({ onLogin, onSwitchToRegister }) => {
+const Login = ({ onLogin }) => {
   const [formData, setFormData] = useState({
-    username: '',
+    userId: '',
     password: ''
   });
   const [error, setError] = useState('');
@@ -25,35 +26,30 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/Auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password
-        })
+      const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
+        userId: formData.userId,
+        password: formData.password
       });
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (response.ok) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('username', data.username);
-        localStorage.setItem('role', data.role);
-        if (data.scopeType) localStorage.setItem('scopeType', data.scopeType);
-        if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
-        if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
-        console.log('Logged in:', data);
-        onLogin(data);
-      }else {
-        setError(data.message || 'Ошибка авторизации');
-        console.error('Login error:', data.message);
-      }
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('userId', data.userId.toString());
+      localStorage.setItem('fullName', data.fullName);
+      localStorage.setItem('role', data.role);
+      localStorage.setItem('roleDisplayName', data.roleDisplayName);
+      if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
+      if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
+      console.log('Logged in:', data);
+      onLogin(data);
     } catch (err) {
-      setError('Ошибка подключения к серверу');
-      console.error('Network error:', err);
+      if (err.response) {
+        setError(err.response.data.message || 'Ошибка авторизации');
+        console.error('Login error:', err.response.data.message);
+      } else {
+        setError('Ошибка подключения к серверу');
+        console.error('Network error:', err);
+      }
     } finally {
       setLoading(false);
     }
@@ -76,13 +72,14 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
           )}
 
           <div className="form-group">
-            <label htmlFor="username">Имя пользователя</label>
+            <label htmlFor="userId">ID пользователя</label>
             <input
               type="text"
-              id="username"
-              name="username"
-              value={formData.username}
+              id="userId"
+              name="userId"
+              value={formData.userId}
               onChange={handleChange}
+              placeholder="Введите ваш ID"
               required
               autoFocus
               disabled={loading}
@@ -97,6 +94,7 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
               name="password"
               value={formData.password}
               onChange={handleChange}
+              placeholder="Введите пароль"
               required
               disabled={loading}
             />
@@ -109,19 +107,6 @@ const Login = ({ onLogin, onSwitchToRegister }) => {
           >
             {loading ? 'Вход...' : 'Войти'}
           </button>
-
-          {/* <div className="auth-divider">
-            <span>или</span>
-          </div> */}
-
-          {/* <button
-            type="button"
-            className="auth-btn secondary"
-            onClick={onSwitchToRegister}
-            disabled={loading}
-          >
-            Зарегистрироваться
-          </button> */}
         </form>
       </div>
     </div>

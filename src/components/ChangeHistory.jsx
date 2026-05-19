@@ -1,140 +1,176 @@
-import React from 'react';
-import './ChangeHistory.css';
+import React, { useState, useEffect, useCallback } from 'react';
+import { authFetch } from '../utils/authFetch';
+import '../css/SyncHistory.css';
 
-const ChangeHistory = ({ changeHistory, students, onClose, onApplySsoChange, onRejectSsoChange }) => {
+const ChangeHistory = ({ showNotification }) => {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchIin, setSearchIin] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(50);
+  const [totalCount, setTotalCount] = useState(0);
 
-  const allChanges = []
-  
-  Object.entries(changeHistory).forEach(([studentId, history]) => {
-    const student = students.find(s => s.id.toString() === studentId)
-    if (student && history.length > 0) {
-      history.forEach(record => {
-        allChanges.push({
-          ...record,
-          studentId,
-          student: student
-        })
-      })
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = { page, pageSize };
+      if (searchIin.trim()) {
+        params.iin = searchIin.trim();
+      }
+      const res = await authFetch.get('/comparison/change-logs', { params });
+      const data = res.data;
+
+      if (Array.isArray(data)) {
+        setLogs(data);
+        setTotalCount(data.length);
+      } else if (data.items) {
+        setLogs(data.items);
+        setTotalCount(data.totalCount || data.items.length);
+      } else {
+        setLogs([]);
+        setTotalCount(0);
+      }
+    } catch (err) {
+      console.error('Ошибка загрузки истории изменений:', err);
+      showNotification?.('Ошибка загрузки истории изменений', 'error');
+    } finally {
+      setLoading(false);
     }
-  })
-  
+  }, [page, pageSize, searchIin, showNotification]);
 
-  allChanges.sort((a, b) => {
-    const dateA = new Date(a.date.split(', ').reverse().join(' '))
-    const dateB = new Date(b.date.split(', ').reverse().join(' '))
-    return dateB - dateA
-  })
+  useEffect(() => {
+    fetchLogs();
+  }, [fetchLogs]);
 
-  const isSsoRecord = (record) => record.editor === 'Система (SSO)'
-  const isPending = (record) => !record.status || record.status === 'pending'
+  const handleSearch = (e) => {
+    e.preventDefault();
+    setPage(1);
+    fetchLogs();
+  };
+
+  const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header">
-          <h2>История всех изменений</h2>
-          <button className="close-btn" onClick={onClose}>×</button>
-        </div>
+    <div className="sync-history-container">
+      <h2>📋 История изменений полей студентов</h2>
+      <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+        Здесь отображаются все изменения, обнаруженные при сравнении данных ССО и ЕПВО.
+      </p>
 
-        <div className="history-stats">
-          <div className="stat-item">
-            <span className="stat-label">Всего изменений:</span>
-            <span className="stat-value">{allChanges.length}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Студентов затронуто:</span>
-            <span className="stat-value">{Object.keys(changeHistory).length}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Ожидают решения:</span>
-            <span className="stat-value sso-pending-count">
-              {allChanges.filter(r => isSsoRecord(r) && isPending(r)).length}
-            </span>
-          </div>
-        </div>
-
-        <div className="history-list">
-          {allChanges.map((record, index) => (
-            <div
-              key={`${record.id}-${index}`}
-              className={`history-item${isSsoRecord(record) ? ' sso-change' : ''}${record.status === 'applied' ? ' applied' : ''}${record.status === 'deferred' ? ' deferred' : ''}`}
-            >
-              <div className="student-header">
-                <h3 className="student-name">
-                  {record.student.last_name} {record.student.first_name} {record.student.patronymic}
-                </h3>
-                <div className="student-header-right">
-                  <span className="student-course">Курс {record.student.course}</span>
-                  {isSsoRecord(record) && (
-                    <span className="sso-badge">ССО</span>
-                  )}
-                </div>
-              </div>
-              
-              <div className="history-header">
-                <div className="history-meta">
-                  <span className="history-date">{record.date}</span>
-                  <span className="history-editor">{record.editor}</span>
-                </div>
-              </div>
-
-              <div className="changes-list">
-                {record.changes.map((change, idx) => (
-                  <div key={idx} className="change-item">
-                    <div className="change-field">{change.field}:</div>
-                    <div className="change-values">
-                      <div className="old-value">
-                        <span className="value-label">Было:</span>
-                        <span className="value">{change.oldValue}</span>
-                      </div>
-                      <div className="arrow">→</div>
-                      <div className="new-value">
-                        <span className="value-label">Стало:</span>
-                        <span className="value">{change.newValue}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {isSsoRecord(record) && (
-                <div className="sso-actions">
-                  {isPending(record) ? (
-                    <>
-                      <span className="sso-action-label">Изменения из ССО — применить в ЕПВО?</span>
-                      <div className="sso-action-buttons">
-                        <button
-                          className="btn-apply"
-                          onClick={() => onApplySsoChange && onApplySsoChange(record.studentId, record.id)}
-                        >
-                          ✓ Применить изменения
-                        </button>
-                        <button
-                          className="btn-defer"
-                          onClick={() => onRejectSsoChange && onRejectSsoChange(record.studentId, record.id)}
-                        >
-                          ✗ Нет, позже
-                        </button>
-                      </div>
-                    </>
-                  ) : record.status === 'applied' ? (
-                    <span className="status-applied">✓ Применено в ЕПВО</span>
-                  ) : (
-                    <span className="status-deferred">Отложено — применить вручную через «Синхр. в ЕПВО»</span>
-                  )}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {allChanges.length === 0 && (
-          <div className="no-history">
-            <p>История изменений пуста</p>
-            <p className="no-history-hint">Изменения появятся после актуализации данных</p>
-          </div>
+      <form onSubmit={handleSearch} style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
+        <input
+          type="text"
+          placeholder="Поиск по ИИН..."
+          value={searchIin}
+          onChange={(e) => setSearchIin(e.target.value)}
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '6px',
+            border: '1px solid #d1d5db',
+            fontSize: '0.9rem',
+            width: '250px'
+          }}
+        />
+        <button
+          type="submit"
+          style={{
+            padding: '0.5rem 1rem',
+            borderRadius: '6px',
+            background: '#3b82f6',
+            color: 'white',
+            border: 'none',
+            cursor: 'pointer'
+          }}
+        >
+          Найти
+        </button>
+        {searchIin && (
+          <button
+            type="button"
+            onClick={() => { setSearchIin(''); setPage(1); }}
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '6px',
+              background: '#6b7280',
+              color: 'white',
+              border: 'none',
+              cursor: 'pointer'
+            }}
+          >
+            Сбросить
+          </button>
         )}
-      </div>
+      </form>
+
+      {loading ? (
+        <div className="loading-message">Загрузка...</div>
+      ) : logs.length === 0 ? (
+        <div className="no-data-message">Нет данных об изменениях</div>
+      ) : (
+        <>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="sync-history-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th>ИИН</th>
+                  <th>Поле</th>
+                  <th>Старое значение (ЕПВО)</th>
+                  <th>Новое значение (ССО)</th>
+                  <th>Приоритет</th>
+                  <th>Дата обнаружения</th>
+                  <th>Сессия</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map((log, idx) => (
+                  <tr key={log.id || idx}>
+                    <td style={{ fontFamily: 'monospace' }}>{log.iinPlt}</td>
+                    <td><strong>{log.fieldName}</strong></td>
+                    <td style={{ color: '#ef4444' }}>{log.oldValue || '—'}</td>
+                    <td style={{ color: '#22c55e' }}>{log.newValue || '—'}</td>
+                    <td>
+                      <span style={{
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        background: log.dataSource === 'SSO' ? '#dbeafe' :
+                                   log.dataSource === 'EPVO' ? '#fef3c7' : '#f3f4f6',
+                        color: log.dataSource === 'SSO' ? '#1d4ed8' :
+                               log.dataSource === 'EPVO' ? '#92400e' : '#374151'
+                      }}>
+                        {log.dataSource}
+                      </span>
+                    </td>
+                    <td>{log.changedAt ? new Date(log.changedAt).toLocaleString('ru-RU') : '—'}</td>
+                    <td style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{log.syncSessionId || '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+            <button
+              disabled={page <= 1}
+              onClick={() => setPage(p => p - 1)}
+              style={{ padding: '0.4rem 0.8rem', borderRadius: '4px', border: '1px solid #d1d5db', cursor: 'pointer' }}
+            >
+              ← Назад
+            </button>
+            <span style={{ padding: '0.4rem 0.8rem' }}>
+              Страница {page} из {totalPages} ({totalCount} записей)
+            </span>
+            <button
+              disabled={page >= totalPages}
+              onClick={() => setPage(p => p + 1)}
+              style={{ padding: '0.4rem 0.8rem', borderRadius: '4px', border: '1px solid #d1d5db', cursor: 'pointer' }}
+            >
+              Вперёд →
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

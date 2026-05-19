@@ -166,6 +166,49 @@
   font-size: 1rem;
 }
 
+.pagination-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background: #e8f0fe;
+  border: 1px solid #1a73e8;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  margin-top: 0.5rem;
+  width: fit-content;
+}
+
+.page-btn {
+  background: #fff;
+  border: 1px solid #1a73e8;
+  border-radius: 5px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #1a73e8;
+  transition: background 0.15s;
+  line-height: 1;
+}
+
+.page-btn:hover:not(:disabled) {
+  background: #1a73e8;
+  color: #fff;
+}
+
+.page-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 0.85rem;
+  color: #174ea6;
+  white-space: nowrap;
+  padding: 0 0.4rem;
+}
+
 /* === Dual table layout === */
 .comparison-dual-tables {
   display: flex;

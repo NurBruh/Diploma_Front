@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { MdSync, MdRefresh, MdCheckCircle, MdWarning, MdError } from 'react-icons/md';
-import { API_BASE_URL } from '../services/api';
-import AuthService from '../services/AuthService';
-import './SsoEpvoComparison.css';
+import { authFetch } from '../utils/authFetch';
+import '../css/SsoEpvoComparison.css';
 
 const FIELD_LABELS = {
   firstName: 'Имя',
@@ -37,11 +36,14 @@ const TABLE_COLUMNS = [
   { key: 'isActive', label: 'Активен' },
 ];
 
+const PAGE_SIZE = 50;
+
 const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
   const [syncingIIN, setSyncingIIN] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const ssoScrollRef = useRef(null);
   const epvoScrollRef = useRef(null);
   const scrollingRef = useRef(null);
@@ -65,72 +67,101 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
     requestAnimationFrame(() => { scrollingRef.current = null; });
   }, []);
 
-  const fetchComparison = async () => {
+  const fetchComparison = useCallback(async (page, filterVal) => {
+    const p = page ?? currentPage;
+    const f = filterVal ?? filter;
     setLoading(true);
     try {
-      const token = AuthService.getToken();
-      const response = await fetch(`${API_BASE_URL}/Epvo/compare`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
+      const params = new URLSearchParams({
+        page: String(p),
+        pageSize: String(PAGE_SIZE),
+        filter: f,
       });
+      const response = await authFetch(`/Epvo/compare?${params}`);
       if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
       const json = await response.json();
-      setData(json);
-    } catch (e) {
+      // Если сервер уже поддерживает серверную пагинацию
+      if (json.page !== undefined && json.totalPages !== undefined) {
+        setData(json);
+        setCurrentPage(json.page);
+      } else {
+        // Fallback: сервер отдал всё — режем на клиенте
+        const allItems = json.items || [];
+        const totalItems = allItems.length;
+        const countDiff = allItems.filter(i => i.hasDifferences).length;
+        const countSsoOnly = allItems.filter(i => i.onlyInSso).length;
+        const countEpvoOnly = allItems.filter(i => i.onlyInEpvo).length;
+        const countOk = allItems.filter(i => !i.hasDifferences && !i.onlyInSso && !i.onlyInEpvo).length;
+
+        let filtered = allItems;
+        if (f === 'diff') filtered = allItems.filter(i => i.hasDifferences);
+        else if (f === 'sso-only') filtered = allItems.filter(i => i.onlyInSso);
+        else if (f === 'epvo-only') filtered = allItems.filter(i => i.onlyInEpvo);
+
+        filtered.sort((a, b) => {
+          const nameA = (a.ssoData?.lastName || a.epvoData?.lastName || '').trim();
+          const nameB = (b.ssoData?.lastName || b.epvoData?.lastName || '').trim();
+          return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
+        });
+
+        const filteredCount = filtered.length;
+        const tp = Math.max(1, Math.ceil(filteredCount / PAGE_SIZE));
+        const safePage = Math.min(p, tp);
+        const sliced = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+        setData({
+          items: sliced,
+          totalItems,
+          totalDifferences: countDiff,
+          onlyInSso: countSsoOnly,
+          onlyInEpvo: countEpvoOnly,
+          totalOk: countOk,
+          filteredCount,
+          page: safePage,
+          pageSize: PAGE_SIZE,
+          totalPages: tp,
+        });
+        setCurrentPage(safePage);
+      }
+    } catch {
       showNotification && showNotification('Ошибка при загрузке данных сравнения', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentPage, filter, showNotification]);
 
   const handleSyncAll = async () => {
     await onSyncToEpvo();
-    await fetchComparison();
+    await fetchComparison(1, filter);
   };
 
   const syncStudent = async (iin) => {
     setSyncingIIN(iin);
     try {
-      const token = AuthService.getToken();
-      const response = await fetch(`${API_BASE_URL}/Epvo/sync-student/${iin}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) throw new Error(`Ошибка: ${response.status}`);
-      const result = await response.json();
+      const response = await authFetch.post(`/Epvo/sync-student/${iin}`);
+      const result = response.data;
       showNotification && showNotification(`${result.message}`, 'success');
-      await fetchComparison();
-    } catch (e) {
-      showNotification && showNotification(' Ошибка при синхронизации студента', 'error');
+      await fetchComparison(currentPage, filter);
+    } catch {
+      showNotification && showNotification('Ошибка при синхронизации студента', 'error');
     } finally {
       setSyncingIIN(null);
     }
   };
 
   useEffect(() => {
-    fetchComparison();
+    fetchComparison(1, 'all');
   }, []);
 
-  const sortByLastName = (arr) =>
-    [...arr].sort((a, b) => {
-      const nameA = (a.ssoData?.lastName || a.epvoData?.lastName || '').trim();
-      const nameB = (b.ssoData?.lastName || b.epvoData?.lastName || '').trim();
-      return nameA.localeCompare(nameB, ['kk', 'ru'], { sensitivity: 'base' });
-    });
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
+    setCurrentPage(1);
+    fetchComparison(1, newFilter);
+  };
 
-  const getFilteredItems = () => {
-    if (!data) return [];
-    switch (filter) {
-      case 'diff': return sortByLastName(data.items.filter(i => i.hasDifferences));
-      case 'sso-only': return sortByLastName(data.items.filter(i => i.onlyInSso));
-      case 'epvo-only': return sortByLastName(data.items.filter(i => i.onlyInEpvo));
-      default: return sortByLastName(data.items);
-    }
+  const handlePageChange = (newPage) => {
+    setCurrentPage(newPage);
+    fetchComparison(newPage, filter);
   };
 
   const isDiffField = (item, field) =>
@@ -145,7 +176,24 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
     return String(val);
   };
 
-  const items = getFilteredItems();
+  const pageItems = data?.items ?? [];
+  const totalPages = data?.totalPages ?? 1;
+  const safePage = data?.page ?? 1;
+  const filteredCount = data?.filteredCount ?? 0;
+
+  const Pagination = () => (
+    <div className="pagination-row">
+      <button className="page-btn" onClick={() => handlePageChange(1)} disabled={safePage === 1}>«</button>
+      <button className="page-btn" onClick={() => handlePageChange(Math.max(1, safePage - 1))} disabled={safePage === 1}>‹</button>
+      <span className="page-info">
+        Стр. <strong>{safePage}</strong> / <strong>{totalPages}</strong>
+        &nbsp;·&nbsp;
+        Показано {(safePage - 1) * PAGE_SIZE + 1}–{Math.min(safePage * PAGE_SIZE, filteredCount)} из <strong>{filteredCount}</strong>
+      </span>
+      <button className="page-btn" onClick={() => handlePageChange(Math.min(totalPages, safePage + 1))} disabled={safePage === totalPages}>›</button>
+      <button className="page-btn" onClick={() => handlePageChange(totalPages)} disabled={safePage === totalPages}>»</button>
+    </div>
+  );
 
   return (
     <div className="comparison-page">
@@ -153,7 +201,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
         <div className="comparison-title-row">
           <h2 className="comparison-title">Сравнение данных: ССО vs ЕПВО</h2>
           <div className="comparison-actions">
-            <button className="icon-btn-sm" onClick={fetchComparison} disabled={loading}>
+            <button className="icon-btn-sm" onClick={() => fetchComparison(currentPage, filter)} disabled={loading}>
               <MdRefresh size={18} />
               Обновить
             </button>
@@ -171,29 +219,27 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
         {data && (
           <div className="comparison-stats">
             <div className="cstat cstat-total">
-              <span className="cstat-num">{data.items.length}</span>
+              <span className="cstat-num">{data.totalItems}</span>
               <span className="cstat-label">Всего студентов</span>
             </div>
             <div className="cstat cstat-diff">
               <MdWarning size={16} />
-              <span className="cstat-num">{data.items.filter(i => i.hasDifferences).length}</span>
+              <span className="cstat-num">{data.totalDifferences}</span>
               <span className="cstat-label">С различиями</span>
             </div>
             <div className="cstat cstat-sso">
               <MdError size={16} />
-              <span className="cstat-num">{data.items.filter(i => i.onlyInSso).length}</span>
+              <span className="cstat-num">{data.onlyInSso}</span>
               <span className="cstat-label">Новые записи в SSO</span>
             </div>
             {/* <div className="cstat cstat-epvo">
               <MdError size={16} />
-              <span className="cstat-num">{data.items.filter(i => i.onlyInEpvo).length}</span>
+              <span className="cstat-num">{data.onlyInEpvo}</span>
               <span className="cstat-label">Только в ЕПВО</span>
             </div> */}
             <div className="cstat cstat-ok">
               <MdCheckCircle size={16} />
-              <span className="cstat-num">
-                {data.items.filter(i => !i.hasDifferences && !i.onlyInSso && !i.onlyInEpvo).length}
-              </span>
+              <span className="cstat-num">{data.totalOk}</span>
               <span className="cstat-label">Совпадают</span>
             </div>
           </div>
@@ -209,7 +255,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
             <button
               key={f.key}
               className={`filter-tab${filter === f.key ? ' active' : ''}`}
-              onClick={() => setFilter(f.key)}
+              onClick={() => handleFilterChange(f.key)}
             >
               {f.label}
             </button>
@@ -219,18 +265,20 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
 
       {loading ? (
         <div className="comparison-loading">Загрузка данных...</div>
-      ) : items.length === 0 ? (
+      ) : pageItems.length === 0 ? (
         <div className="comparison-empty">
           <MdCheckCircle size={48} color="var(--success-color)" />
           <p>Нет записей для отображения</p>
         </div>
       ) : (
-        <div className="comparison-dual-tables">
+        <>
+          <Pagination />
+          <div className="comparison-dual-tables">
           {/* Таблица ССО (Посредник) */}
           <div className="comparison-table-block">
             <div className="table-block-header sso-header">
               <h3>ССО (Посредник)</h3>
-              <span className="table-count">{items.filter(i => i.ssoData).length} записей</span>
+              <span className="table-count">{pageItems.filter(i => i.ssoData).length} / {filteredCount} записей</span>
             </div>
             <div className="table-scroll-wrapper" ref={ssoScrollRef} onScroll={handleSsoScroll}>
               <table className="comparison-data-table">
@@ -244,7 +292,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => {
+                  {pageItems.map((item) => {
                     const hasDiff = item.hasDifferences;
                     const onlyInSso = item.onlyInSso;
                     const onlyInEpvo = item.onlyInEpvo;
@@ -301,7 +349,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
           <div className="comparison-table-block">
             <div className="table-block-header epvo-header-block">
               <h3>ЕПВО</h3>
-              <span className="table-count">{items.filter(i => i.epvoData).length} записей</span>
+              <span className="table-count">{pageItems.filter(i => i.epvoData).length} / {filteredCount} записей</span>
             </div>
             <div className="table-scroll-wrapper" ref={epvoScrollRef} onScroll={handleEpvoScroll}>
               <table className="comparison-data-table">
@@ -314,7 +362,7 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {items.map((item) => {
+                  {pageItems.map((item) => {
                     const hasDiff = item.hasDifferences;
                     const onlyInSso = item.onlyInSso;
                     const onlyInEpvo = item.onlyInEpvo;
@@ -354,7 +402,9 @@ const SsoEpvoComparison = ({ onSyncToEpvo, syncLoading, showNotification }) => {
               </table>
             </div>
           </div>
-        </div>
+          </div>
+          <Pagination />
+        </>
       )}
     </div>
   );

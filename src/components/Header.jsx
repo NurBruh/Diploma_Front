@@ -1,58 +1,90 @@
 import React from 'react';
-import { MdHome, MdRefresh, MdSync, MdVisibility, MdPerson, MdExitToApp, MdCompareArrows } from 'react-icons/md';
-import './Header.css';
+import { MdHome, MdVisibility, MdPerson, MdExitToApp, MdFactCheck, MdPreview, MdHistory, MdDashboard } from 'react-icons/md';
+import { NavLink, Link } from 'react-router-dom';
+import '../css/Header.css';
 
-const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, currentPage, onNavigate }) => {
+const Header = ({ onLogout, currentUser }) => {
   const role = currentUser?.role;
-  const isManager = role === 'manager_or';
+  const isRegistrar = role === 'registrar';
+  const isAdvisor = role === 'advisor';
+  const isDepartmentHead = role === 'department_head';
+  const canViewDashboard = role === 'institute_director' || role === 'department_head';
 
-  const getRoleLabel = (role) => {
-    switch (role) {
-      case 'manager_or': return 'Менеджер ОР';
-      case 'department_head': return 'Заведующий кафедры';
-      case 'institute_director': return 'Директор института';
-      default: return role || 'Пользователь';
-    }
+  const getRoleLabel = () => {
+    return currentUser?.roleDisplayName || role || 'Пользователь';
   };
 
   return (
     <header className="header">
       <div className="header-content">
         <nav className="breadcrumb">
-          <button className="nav-btn home-btn" onClick={() => onNavigate && onNavigate('main')}>
+          <Link className="nav-btn home-btn" to="/">
             <MdHome size={20} />
-          </button>
+          </Link>
           <span className="separator">›</span>
-          <button
-            className={`nav-btn${currentPage !== 'comparison' ? ' active' : ''}`}
-            onClick={() => onNavigate && onNavigate('main')}
+          <NavLink
+            to="/"
+            end
+            className={({ isActive }) => `nav-btn${isActive ? ' active' : ''}`}
           >
-            Стипендии ЕПВО
-          </button>
+            {isAdvisor ? 'Мои студенты' : isDepartmentHead ? 'Студенты кафедры' : isRegistrar ? 'Стипендии ЕПВО' : 'Студенты института'}
+          </NavLink>
         </nav>
 
         <div className="header-actions">
-          {isManager && (
-            <button
-              className={`icon-btn sync-epvo-btn${syncLoading ? ' syncing' : ''}`}
-              title="Синхронизировать данные в ЕПВО"
-              onClick={onSyncToEpvo}
-              disabled={syncLoading}
+          {canViewDashboard && (
+            <NavLink
+              to="/dashboard"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
+              title="Дашборд"
             >
-              <MdSync size={20} className={syncLoading ? 'spin' : ''} />
-              {syncLoading ? 'Синхронизация...' : 'Синхр. в ЕПВО'}
-            </button>
+              <MdDashboard size={20} />
+              Дашборд
+            </NavLink>
           )}
 
-          {isManager && (
-            <button
-              className={`icon-btn compare-btn${currentPage === 'comparison' ? ' active-page' : ''}`}
-              title="Сравнение ССО и ЕПВО"
-              onClick={() => onNavigate && onNavigate(currentPage === 'comparison' ? 'main' : 'comparison')}
+          {isRegistrar && (
+            <NavLink
+              to="/data-comparison"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
+              title="Сравнение данных ССО ↔ ЕПВО"
             >
-              <MdCompareArrows size={20} />
-              SSO vs ЕПВО
-            </button>
+              <MdFactCheck size={20} />
+              Сравнение данных
+            </NavLink>
+          )}
+
+          {isRegistrar && (
+            <NavLink
+              to="/sync-preview"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
+              title="Предпросмотр синхронизации"
+            >
+              <MdPreview size={20} />
+              Предпросмотр
+            </NavLink>
+          )}
+
+          {isRegistrar && (
+            <NavLink
+              to="/sync-history"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
+              title="История синхронизации"
+            >
+              <MdHistory size={20} />
+              История синхронизации
+            </NavLink>
+          )}
+
+          {isRegistrar && (
+            <NavLink
+              to="/change-history"
+              className={({ isActive }) => `icon-btn compare-btn${isActive ? ' active-page' : ''}`}
+              title="История изменений полей"
+            >
+              <MdHistory size={20} />
+              История изменений
+            </NavLink>
           )}
 
           <button
@@ -69,8 +101,8 @@ const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, c
 
           <div className="profile">
             <div className="profile-info">
-              <span className="profile-name">{currentUser?.username || 'Пользователь'}</span>
-              <span className="profile-role">{getRoleLabel(currentUser?.role)}</span>
+              <span className="profile-name">{currentUser?.fullName || 'Пользователь'}</span>
+              <span className="profile-role">{getRoleLabel()}</span>
               {currentUser?.scopeName && (
                 <span className="profile-scope" style={{ fontSize: '0.7rem', color: '#6b7280' }}>{currentUser.scopeName}</span>
               )}
@@ -82,8 +114,8 @@ const Header = ({ onRefresh, onLogout, onSyncToEpvo, syncLoading, currentUser, c
               <div className="dropdown-menu">
                 <div className="dropdown-header">
                   <div className="dropdown-user-info">
-                    <div className="dropdown-username">{currentUser?.username}</div>
-                    <div className="dropdown-email">{getRoleLabel(currentUser?.role)}</div>
+                    <div className="dropdown-username">{currentUser?.fullName}</div>
+                    <div className="dropdown-email">{getRoleLabel()}</div>
                     {currentUser?.scopeName && (
                       <div className="dropdown-scope" style={{ fontSize: '0.75rem', color: '#9ca3af' }}>{currentUser.scopeName}</div>
                     )}
