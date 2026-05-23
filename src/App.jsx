@@ -134,6 +134,7 @@ function App() {
           changesCount={getTotalChangesCount()}
           currentUser={currentUser}
           referenceData={referenceData}
+          showDepartment={false}
         />
 
         <StudentsTable
@@ -144,6 +145,7 @@ function App() {
           syncLoading={syncLoading}
           selectionKey={selectionKey}
           readOnly={isReadOnly}
+          showDepartment={false}
           showBankColumns
         />
       </>
