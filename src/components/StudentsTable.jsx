@@ -3,6 +3,7 @@ import { BsFillPencilFill } from 'react-icons/bs';
 import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
 import TableScrollSync from './TableScrollSync';
+import Pagination from './Pagination';
 import '../css/StudentsTable.css';
 
 const PAGE_SIZE = 50;
@@ -224,27 +225,11 @@ const StudentsTable = ({
           </div>
         )}
         <div className="pagination-row">
-          <button
-            className="page-btn"
-            onClick={() => setCurrentPage(1)}
-            disabled={safePage === 1}
-          >«</button>
-          <button
-            className="page-btn"
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={safePage === 1}
-          >‹</button>
-          <span className="page-info">Стр. {safePage} / {totalPages}</span>
-          <button
-            className="page-btn"
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={safePage === totalPages}
-          >›</button>
-          <button
-            className="page-btn"
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={safePage === totalPages}
-          >»</button>
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
         <p>Всего студентов: <strong>{students.length}</strong></p>
       </div>

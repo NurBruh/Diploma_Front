@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { authFetch } from '../utils/authFetch';
-import '../css/SyncHistory.css';
+import '../css/ChangeHistory.css';
 
 const ChangeHistory = ({ showNotification }) => {
   const [logs, setLogs] = useState([]);
@@ -50,52 +50,35 @@ const ChangeHistory = ({ showNotification }) => {
 
   const totalPages = Math.ceil(totalCount / pageSize) || 1;
 
+  const getSourceBadgeClass = (source) => {
+    if (source === 'SSO') return 'change-history__source-badge change-history__source-badge--sso';
+    if (source === 'EPVO') return 'change-history__source-badge change-history__source-badge--epvo';
+    return 'change-history__source-badge change-history__source-badge--default';
+  };
+
   return (
-    <div className="sync-history-container">
-      <h2>📋 История изменений полей студентов</h2>
-      <p style={{ color: '#6b7280', marginBottom: '1rem' }}>
+    <div className="change-history">
+      <h2 className="change-history__title">История изменений полей студентов</h2>
+      <p className="change-history__subtitle">
         Здесь отображаются все изменения, обнаруженные при сравнении данных ССО и ЕПВО.
       </p>
 
-      <form onSubmit={handleSearch} style={{ marginBottom: '1rem', display: 'flex', gap: '0.5rem' }}>
+      <form onSubmit={handleSearch} className="change-history__search-form">
         <input
           type="text"
           placeholder="Поиск по ИИН..."
           value={searchIin}
           onChange={(e) => setSearchIin(e.target.value)}
-          style={{
-            padding: '0.5rem 1rem',
-            borderRadius: '6px',
-            border: '1px solid #d1d5db',
-            fontSize: '0.9rem',
-            width: '250px'
-          }}
+          className="change-history__search-input"
         />
-        <button
-          type="submit"
-          style={{
-            padding: '0.5rem 1rem',
-            borderRadius: '6px',
-            background: '#3b82f6',
-            color: 'white',
-            border: 'none',
-            cursor: 'pointer'
-          }}
-        >
+        <button type="submit" className="change-history__search-btn">
           Найти
         </button>
         {searchIin && (
           <button
             type="button"
             onClick={() => { setSearchIin(''); setPage(1); }}
-            style={{
-              padding: '0.5rem 1rem',
-              borderRadius: '6px',
-              background: '#6b7280',
-              color: 'white',
-              border: 'none',
-              cursor: 'pointer'
-            }}
+            className="change-history__reset-btn"
           >
             Сбросить
           </button>
@@ -108,8 +91,8 @@ const ChangeHistory = ({ showNotification }) => {
         <div className="no-data-message">Нет данных об изменениях</div>
       ) : (
         <>
-          <div style={{ overflowX: 'auto' }}>
-            <table className="sync-history-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <div className="change-history__table-wrap">
+            <table className="change-history__table">
               <thead>
                 <tr>
                   <th>ИИН</th>
@@ -124,47 +107,38 @@ const ChangeHistory = ({ showNotification }) => {
               <tbody>
                 {logs.map((log, idx) => (
                   <tr key={log.id || idx}>
-                    <td style={{ fontFamily: 'monospace' }}>{log.iinPlt}</td>
+                    <td className="change-history__iin">{log.iinPlt}</td>
                     <td><strong>{log.fieldName}</strong></td>
-                    <td style={{ color: '#ef4444' }}>{log.oldValue || '—'}</td>
-                    <td style={{ color: '#22c55e' }}>{log.newValue || '—'}</td>
+                    <td className="change-history__old-value">{log.oldValue || '—'}</td>
+                    <td className="change-history__new-value">{log.newValue || '—'}</td>
                     <td>
-                      <span style={{
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        fontSize: '0.8rem',
-                        fontWeight: 600,
-                        background: log.dataSource === 'SSO' ? '#dbeafe' :
-                                   log.dataSource === 'EPVO' ? '#fef3c7' : '#f3f4f6',
-                        color: log.dataSource === 'SSO' ? '#1d4ed8' :
-                               log.dataSource === 'EPVO' ? '#92400e' : '#374151'
-                      }}>
+                      <span className={getSourceBadgeClass(log.dataSource)}>
                         {log.dataSource}
                       </span>
                     </td>
                     <td>{log.changedAt ? new Date(log.changedAt).toLocaleString('ru-RU') : '—'}</td>
-                    <td style={{ fontFamily: 'monospace', fontSize: '0.75rem' }}>{log.syncSessionId || '—'}</td>
+                    <td className="change-history__session-id">{log.syncSessionId || '—'}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1rem' }}>
+          <div className="change-history__pagination">
             <button
               disabled={page <= 1}
               onClick={() => setPage(p => p - 1)}
-              style={{ padding: '0.4rem 0.8rem', borderRadius: '4px', border: '1px solid #d1d5db', cursor: 'pointer' }}
+              className="change-history__page-btn"
             >
               ← Назад
             </button>
-            <span style={{ padding: '0.4rem 0.8rem' }}>
+            <span className="change-history__page-info">
               Страница {page} из {totalPages} ({totalCount} записей)
             </span>
             <button
               disabled={page >= totalPages}
               onClick={() => setPage(p => p + 1)}
-              style={{ padding: '0.4rem 0.8rem', borderRadius: '4px', border: '1px solid #d1d5db', cursor: 'pointer' }}
+              className="change-history__page-btn"
             >
               Вперёд →
             </button>
