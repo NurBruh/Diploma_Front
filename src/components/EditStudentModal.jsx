@@ -219,7 +219,6 @@ const EditStudentModal = ({ item, onSave, onClose }) => {
                   <Field label="Специальность ID" name="professionId" type="number" />
                   <Field label="Форма обучения ID" name="studyFormId" type="number" />
                   <Field label="Форма оплаты" name="paymentFormId" type="select" options={[
-                    { value: 1, label: 'Платник' },
                     { value: 2, label: 'Стипендия' },
                   ]} />
                   <Field label="Тип гранта" name="grantType" type="select" options={[
