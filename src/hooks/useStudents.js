@@ -251,7 +251,7 @@ export const useStudents = (showNotification, currentUser) => {
     const updateList = (list) => list.map(s => s.iin === iin ? { ...s, bank_account: newIban } : s);
     setStudents(prev => updateList(prev));
     setFilteredStudents(prev => updateList(prev));
-    if (showNotification) showNotification('Расчётный счёт обновлён в ССО. Актуализируйте данные в «ССО vs ЕПВО»', 'info');
+    if (showNotification) showNotification('Расчётный счёт сохранён в STUDENT_TEMP. Для отправки используйте предпросмотр синхронизации.', 'info');
   };
 
   return {
