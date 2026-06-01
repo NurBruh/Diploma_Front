@@ -22,7 +22,6 @@ const AuthService = {
       localStorage.setItem('roleDisplayName', data.roleDisplayName);
       if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
       if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
-      console.log('Login successful:', data);
 
       return { success: true, data };
     } catch (error) {
@@ -43,7 +42,6 @@ const AuthService = {
     localStorage.removeItem('roleDisplayName');
     localStorage.removeItem('scopeId');
     localStorage.removeItem('scopeName');
-    console.log('Logout successful');
   },
 
   // Получение текущего пользователя

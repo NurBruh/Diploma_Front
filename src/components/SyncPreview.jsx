@@ -15,6 +15,7 @@ import {
 import { authFetch } from '../utils/authFetch';
 import EditStudentModal from './EditStudentModal';
 import TableScrollSync from './TableScrollSync';
+import Pagination from './Pagination';
 import '../css/SyncPreview.css';
 
 const FILTER_OPTIONS = [
@@ -177,20 +178,9 @@ const SyncPreview = ({ showNotification }) => {
   const safePage = data?.page ?? 1;
   const filteredCount = data?.filteredCount ?? 0;
 
-  const Pagination = () => (
-    <div className="sp-pagination">
-      <button className="sp-page-btn" onClick={() => handlePageChange(1)} disabled={safePage === 1}>«</button>
-      <button className="sp-page-btn" onClick={() => handlePageChange(Math.max(1, safePage - 1))} disabled={safePage === 1}>‹</button>
-      <span className="sp-page-info">
-        Стр. <strong>{safePage}</strong> / <strong>{totalPages}</strong>
-        &nbsp;·&nbsp;
-        {filteredCount > 0 ? `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filteredCount)} из ` : ''}
-        <strong>{filteredCount}</strong>
-      </span>
-      <button className="sp-page-btn" onClick={() => handlePageChange(Math.min(totalPages, safePage + 1))} disabled={safePage === totalPages}>›</button>
-      <button className="sp-page-btn" onClick={() => handlePageChange(totalPages)} disabled={safePage === totalPages}>»</button>
-    </div>
-  );
+  const paginationInfo = filteredCount > 0
+    ? `Стр. ${safePage} / ${totalPages} · ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filteredCount)} из ${filteredCount}`
+    : `Стр. ${safePage} / ${totalPages}`;
 
   return (
     <div className="sync-preview">
@@ -267,7 +257,13 @@ const SyncPreview = ({ showNotification }) => {
 
       {!loading && data && (
         <>
-          <Pagination />
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className="sp-pagination"
+            infoText={paginationInfo}
+          />
           <TableScrollSync bodyClassName="sync-preview__table-wrap">
             <table className="sp-table">
               <thead>
@@ -380,7 +376,13 @@ const SyncPreview = ({ showNotification }) => {
               </tbody>
             </table>
           </TableScrollSync>
-          <Pagination />
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className="sp-pagination"
+            infoText={paginationInfo}
+          />
         </>
       )}
 

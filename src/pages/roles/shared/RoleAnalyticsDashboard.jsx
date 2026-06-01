@@ -41,12 +41,10 @@ const buildDepartments = (students) => {
 
 const PaymentSplit = ({ students }) => {
   const scholarship = students.filter((student) => student.payment_type === 'Стипендия').length;
-  const paid = students.filter((student) => student.payment_type === 'Платник').length;
 
   return (
     <div className="analytics-split">
       <span>Грант {percent(scholarship, students.length)}%</span>
-      <span>Платник {percent(paid, students.length)}%</span>
     </div>
   );
 };
@@ -153,10 +151,6 @@ const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
         <div className="role-stat-card">
           <span>Грантники</span>
           <strong>{students.filter((student) => student.payment_type === 'Стипендия').length}</strong>
-        </div>
-        <div className="role-stat-card">
-          <span>Платники</span>
-          <strong>{students.filter((student) => student.payment_type === 'Платник').length}</strong>
         </div>
       </section>
 

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { MdRefresh, MdCheckCircle, MdWarning, MdError, MdFilterList, MdSearch } from 'react-icons/md';
 import { authFetch } from '../utils/authFetch';
 import TableScrollSync from './TableScrollSync';
+import Pagination from './Pagination';
 import '../css/StudentComparison.css';
 
 const COMPARE_FIELDS = [
@@ -9,10 +10,7 @@ const COMPARE_FIELDS = [
   { key: 'course', label: 'Курс', sso: 'sso_CourseNumber', epvo: 'epvo_CourseNumber', diffLabel: 'Курс' },
   { key: 'studyForm', label: 'Форма обучения', sso: 'sso_StudyForm', epvo: 'epvo_StudyForm', diffLabel: 'Форма обучения' },
   { key: 'institute', label: 'Институт', sso: 'sso_Institute', epvo: 'epvo_FacultyName', diffLabel: 'Институт' },
-  // { key: 'institute', label: 'Институт', sso: 'sso_Institute', epvo: 'epvo_FacultyName', diffLabel: 'Институт/Факультет' },
-  // { key: 'cafedra', label: 'Кафедра / Спец.', sso: 'sso_Cafedra', epvo: 'epvo_Specialization', diffLabel: 'Кафедра/Специализация' },
   { key: 'specialization', label: 'Специализация', sso: 'sso_Speciality', epvo: 'epvo_Specialization', diffLabel: 'Специализация' },
-  // { key: 'speciality', label: 'Специальность (ССО)', sso: 'sso_Speciality', epvo: null, diffLabel: null },
   { key: 'payment', label: 'Тип оплаты', sso: 'sso_PaymentType', epvo: 'epvo_PaymentType', diffLabel: 'Тип оплаты' },
   { key: 'grant', label: 'Тип гранта', sso: 'sso_GrantType', epvo: 'epvo_GrantType', diffLabel: 'Тип гранта' },
   { key: 'iic', label: 'ИИК (Р/С)', sso: 'sso_Iic', epvo: 'epvo_Iic', diffLabel: 'ИИК (Р/С)' },
@@ -163,24 +161,12 @@ const StudentComparison = ({ showNotification }) => {
     }
   };
 
-  const Pagination = () => (
-    <div className="sc-pagination">
-      <button className="sc-page-btn" onClick={() => handlePageChange(1)} disabled={safePage === 1}>«</button>
-      <button className="sc-page-btn" onClick={() => handlePageChange(Math.max(1, safePage - 1))} disabled={safePage === 1}>‹</button>
-      <span className="sc-page-info">
-        Стр. <strong>{safePage}</strong> / <strong>{totalPages}</strong>
-        &nbsp;·&nbsp;
-        {filteredCount > 0 ? `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filteredCount)} из ` : ''}
-        <strong>{filteredCount}</strong>
-      </span>
-      <button className="sc-page-btn" onClick={() => handlePageChange(Math.min(totalPages, safePage + 1))} disabled={safePage === totalPages}>›</button>
-      <button className="sc-page-btn" onClick={() => handlePageChange(totalPages)} disabled={safePage === totalPages}>»</button>
-    </div>
-  );
+  const paginationInfo = filteredCount > 0
+    ? `Стр. ${safePage} / ${totalPages} · ${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, filteredCount)} из ${filteredCount}`
+    : `Стр. ${safePage} / ${totalPages}`;
 
   return (
     <div className="sc-page">
-      {/* Header */}
       <div className="sc-header">
         <div className="sc-title-row">
           <h2 className="sc-title">Сравнение данных: ССО ↔ ЕПВО</h2>
@@ -190,7 +176,6 @@ const StudentComparison = ({ showNotification }) => {
           </button>
         </div>
 
-        {/* Статистика */}
         <div className="sc-stats">
           <div className="sc-stat" onClick={() => handleFilterChange('all')}>
             <span className="sc-stat-num">{stats.total}</span>
@@ -218,7 +203,6 @@ const StudentComparison = ({ showNotification }) => {
           </div>
         </div>
 
-        {/* Фильтры + поиск */}
         <div className="sc-toolbar">
           <div className="sc-filters">
             {[
@@ -245,7 +229,6 @@ const StudentComparison = ({ showNotification }) => {
         </div>
       </div>
 
-      {/* Таблица */}
       {loading && !data ? (
         <div className="sc-loading">Загрузка данных сравнения...</div>
       ) : pageItems.length === 0 ? (
@@ -255,7 +238,13 @@ const StudentComparison = ({ showNotification }) => {
         </div>
       ) : (
         <>
-          <Pagination />
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className="sc-pagination"
+            infoText={paginationInfo}
+          />
           <TableScrollSync bodyClassName="sc-table-wrapper">
             <table className="sc-table">
               <thead>
@@ -363,7 +352,6 @@ const StudentComparison = ({ showNotification }) => {
                         </td>
                       </tr>
 
-                      {/* Развёрнутая строка с деталями различий */}
                       {isExpanded && item.hasDifference && (
                         <tr className="sc-row-detail">
                           <td colSpan={COMPARE_FIELDS.length + 5}>
@@ -388,7 +376,13 @@ const StudentComparison = ({ showNotification }) => {
             </tbody>
             </table>
           </TableScrollSync>
-          <Pagination />
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            className="sc-pagination"
+            infoText={paginationInfo}
+          />
         </>
       )}
 
@@ -420,7 +414,6 @@ const StudentComparison = ({ showNotification }) => {
         Показано {pageItems.length} из {filteredCount} записей (всего: {stats.total})
       </div>
 
-      {/* Модальное окно подробного сравнения */}
       {detailModalItem && (
         <div className="sc-modal-overlay" onClick={() => setDetailModalItem(null)}>
           <div className="sc-modal" onClick={(e) => e.stopPropagation()}>

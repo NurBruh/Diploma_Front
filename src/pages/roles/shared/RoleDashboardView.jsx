@@ -15,6 +15,7 @@ const RoleDashboardView = ({
   onSearch,
   referenceData,
   selectionKey,
+  showDepartment = true,
   showBankColumns
 }) => {
   return (
@@ -33,6 +34,7 @@ const RoleDashboardView = ({
         students={students}
         currentUser={currentUser}
         referenceData={referenceData}
+        showDepartment={showDepartment}
       />
 
       <StudentsTable
@@ -43,6 +45,7 @@ const RoleDashboardView = ({
         syncLoading={false}
         selectionKey={selectionKey}
         readOnly
+        showDepartment={showDepartment}
         showBankColumns={showBankColumns}
       />
     </div>

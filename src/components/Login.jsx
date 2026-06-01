@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { MdError } from 'react-icons/md';
-import { API_BASE_URL } from '../services';
-import axios from 'axios';
+import AuthService from '../services/AuthService';
 import '../css/Auth.css';
 
 const Login = ({ onLogin }) => {
@@ -25,34 +24,15 @@ const Login = ({ onLogin }) => {
     setError('');
     setLoading(true);
 
-    try {
-      const response = await axios.post(`${API_BASE_URL}/Auth/login`, {
-        userId: formData.userId,
-        password: formData.password
-      });
+    const result = await AuthService.login(formData.userId, formData.password);
 
-      const data = response.data;
-
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userId', data.userId.toString());
-      localStorage.setItem('fullName', data.fullName);
-      localStorage.setItem('role', data.role);
-      localStorage.setItem('roleDisplayName', data.roleDisplayName);
-      if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
-      if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
-      console.log('Logged in:', data);
-      onLogin(data);
-    } catch (err) {
-      if (err.response) {
-        setError(err.response.data.message || 'Ошибка авторизации');
-        console.error('Login error:', err.response.data.message);
-      } else {
-        setError('Ошибка подключения к серверу');
-        console.error('Network error:', err);
-      }
-    } finally {
-      setLoading(false);
+    if (result.success) {
+      onLogin(result.data);
+    } else {
+      setError(result.error);
     }
+
+    setLoading(false);
   };
 
   return (

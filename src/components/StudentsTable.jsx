@@ -3,9 +3,34 @@ import { BsFillPencilFill } from 'react-icons/bs';
 import { MdSend } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
 import TableScrollSync from './TableScrollSync';
+import Pagination from './Pagination';
 import '../css/StudentsTable.css';
 
 const PAGE_SIZE = 50;
+
+const nameCollator = new Intl.Collator(['kk-KZ', 'ru-RU'], {
+  sensitivity: 'base',
+  numeric: true,
+  ignorePunctuation: true
+});
+
+const normalizeSortText = (value) => (value || '').replace(/\s+/g, ' ').trim();
+
+const compareStudentsByName = (a, b) => {
+  const nameA = normalizeSortText(a.full_name);
+  const nameB = normalizeSortText(b.full_name);
+
+  if (nameA && !nameB) return -1;
+  if (!nameA && nameB) return 1;
+
+  const byName = nameCollator.compare(nameA, nameB);
+  if (byName !== 0) return byName;
+
+  const byIin = nameCollator.compare(normalizeSortText(a.iin), normalizeSortText(b.iin));
+  if (byIin !== 0) return byIin;
+
+  return String(a.id ?? '').localeCompare(String(b.id ?? ''), undefined, { numeric: true });
+};
 
 const StudentsTable = ({
   students,
@@ -15,6 +40,7 @@ const StudentsTable = ({
   syncLoading,
   selectionKey,
   readOnly,
+  showDepartment = true,
   showBankColumns = true
 }) => {
   const [editingStudent, setEditingStudent] = useState(null);
@@ -34,11 +60,7 @@ const StudentsTable = ({
 
   const sortedStudents = useMemo(() => {
     if (!students || students.length === 0) return [];
-    return [...students].sort((a, b) => {
-      const nameA = (a.full_name || '').trim();
-      const nameB = (b.full_name || '').trim();
-      return nameA < nameB ? -1 : (nameA > nameB ? 1 : 0);
-    });
+    return [...students].sort(compareStudentsByName);
   }, [students]);
 
   const totalPages = Math.max(1, Math.ceil(sortedStudents.length / PAGE_SIZE));
@@ -103,7 +125,7 @@ const StudentsTable = ({
               <th>Курс</th>
               <th>Форма обучения</th>
               <th>Факультет</th>
-              <th>Кафедра</th>
+              {showDepartment && <th>Кафедра</th>}
               <th>Профессия</th>
               <th>Тип оплаты</th>
               <th>Тип гранта</th>
@@ -135,7 +157,7 @@ const StudentsTable = ({
                 <td>{student.course || '—'}</td>
                 <td>{student.study_form || '—'}</td>
                 <td>{student.faculty || '—'}</td>
-                <td>{student.department || '—'}</td>
+                {showDepartment && <td>{student.department || '—'}</td>}
                 <td>{student.profession || '—'}</td>
                 <td>
                   <span className={`status-badge ${student.payment_type === 'Стипендия' ? 'active' : 'inactive'}`}>
@@ -203,27 +225,11 @@ const StudentsTable = ({
           </div>
         )}
         <div className="pagination-row">
-          <button
-            className="page-btn"
-            onClick={() => setCurrentPage(1)}
-            disabled={safePage === 1}
-          >«</button>
-          <button
-            className="page-btn"
-            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-            disabled={safePage === 1}
-          >‹</button>
-          <span className="page-info">Стр. {safePage} / {totalPages}</span>
-          <button
-            className="page-btn"
-            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-            disabled={safePage === totalPages}
-          >›</button>
-          <button
-            className="page-btn"
-            onClick={() => setCurrentPage(totalPages)}
-            disabled={safePage === totalPages}
-          >»</button>
+          <Pagination
+            currentPage={safePage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
         </div>
         <p>Всего студентов: <strong>{students.length}</strong></p>
       </div>

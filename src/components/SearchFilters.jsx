@@ -2,7 +2,7 @@ import React from 'react';
 import { MdSearch } from 'react-icons/md';
 import '../css/SearchFilters.css';
 
-const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUser }) => {
+const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUser, showDepartment = true }) => {
   const role = currentUser?.role;
   const isDepartmentHead = role === 'department_head';
   const isInstituteDirector = role === 'institute_director';
@@ -99,7 +99,7 @@ const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUs
         )}
 
         {/* Кафедра: скрыта для зав.кафедры, показана для директора и менеджера */}
-        {!isDepartmentHead && (
+        {showDepartment && !isDepartmentHead && (
           <div className="filter-group">
             <label>Кафедра</label>
             <select

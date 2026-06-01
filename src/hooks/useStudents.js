@@ -21,6 +21,14 @@ const mapStudentFromBackend = (student) => ({
   update_date: student.updateDate || '',
   university_id: student.universityId,
 });
+
+const isValidKazakhstanIin = (iin) => /^\d{12}$/.test((iin || '').trim());
+
+const isSupportedGrantStudent = (student) => (
+  student.payment_type === 'Стипендия'
+  && isValidKazakhstanIin(student.iin)
+);
+
 const FIELDS_TO_CHECK = {
   full_name: 'ФИО',
   iin: 'ИИН',
@@ -96,7 +104,9 @@ export const useStudents = (showNotification, currentUser) => {
       const response = await authFetch.get(path);
 
       const backendData = response.data;
-      const ssoDataArray = backendData.map(mapStudentFromBackend);
+      const ssoDataArray = backendData
+        .map(mapStudentFromBackend)
+        .filter(isSupportedGrantStudent);
 
       if (localDataArray.length === 0) {
         try { localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray)); } catch { /* localStorage may be unavailable */ }
@@ -241,7 +251,7 @@ export const useStudents = (showNotification, currentUser) => {
     const updateList = (list) => list.map(s => s.iin === iin ? { ...s, bank_account: newIban } : s);
     setStudents(prev => updateList(prev));
     setFilteredStudents(prev => updateList(prev));
-    if (showNotification) showNotification('Расчётный счёт обновлён в ССО. Актуализируйте данные в «ССО vs ЕПВО»', 'info');
+    if (showNotification) showNotification('Расчётный счёт сохранён в STUDENT_TEMP. Для отправки используйте предпросмотр синхронизации.', 'info');
   };
 
   return {
