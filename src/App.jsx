@@ -36,6 +36,7 @@ function App() {
     syncLoading,
     changeHistory,
     selectionKey,
+    studentPagination,
     filters,
     setFilters,
     loadHistoryFromStorage,
@@ -43,6 +44,7 @@ function App() {
     handleSearch,
     handleSyncToEpvo,
     handleClearHistory,
+    handleStudentPageChange,
     getTotalChangesCount,
     handleSendSelectedToEpvo,
     handleUpdateIban,
@@ -68,7 +70,7 @@ function App() {
   };
 
   const handleRefresh = () => {
-    fetchStudents(currentUser);
+    fetchStudents(currentUser, { page: isRegistrar ? studentPagination.page : 1 });
   };
 
   const isRegistrar = currentUser?.role === 'registrar';
@@ -144,6 +146,8 @@ function App() {
           onSendSelectedToEpvo={isReadOnly ? null : handleSendSelectedToEpvo}
           syncLoading={syncLoading}
           selectionKey={selectionKey}
+          serverPagination={studentPagination}
+          onPageChange={handleStudentPageChange}
           readOnly={isReadOnly}
           showDepartment={false}
           showBankColumns

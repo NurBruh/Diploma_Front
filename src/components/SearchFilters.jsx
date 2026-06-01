@@ -4,6 +4,7 @@ import '../css/SearchFilters.css';
 
 const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUser, showDepartment = true }) => {
   const role = currentUser?.role;
+  const isRegistrar = role === 'registrar';
   const isDepartmentHead = role === 'department_head';
   const isInstituteDirector = role === 'institute_director';
 
@@ -65,36 +66,56 @@ const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUs
 
         <div className="filter-group">
           <label>Форма обучения</label>
-          <select
-            value={filters.studyForm}
-            onChange={(e) => handleInputChange('studyForm', e.target.value)}
-            className="filter-select"
-          >
-            <option value="">Все</option>
-            {referenceData?.studyForms?.map(sf => (
-              <option key={sf.id} value={sf.studyFormName}>{sf.studyFormName}</option>
-            ))}
-          </select>
+          {isRegistrar ? (
+            <input
+              type="text"
+              placeholder="Поиск..."
+              value={filters.studyForm}
+              onChange={(e) => handleInputChange('studyForm', e.target.value)}
+              className="filter-input"
+            />
+          ) : (
+            <select
+              value={filters.studyForm}
+              onChange={(e) => handleInputChange('studyForm', e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Все</option>
+              {referenceData?.studyForms?.map(sf => (
+                <option key={sf.id} value={sf.studyFormName}>{sf.studyFormName}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         {/* Институт: скрыт для зав.кафедры, зафиксирован для директора, свободен для менеджера */}
         {!isDepartmentHead && (
           <div className="filter-group">
             <label>Институт</label>
-            <select
-              value={filters.institute}
-              onChange={(e) => {
-                handleInputChange('institute', e.target.value);
-                handleInputChange('department', '');
-              }}
-              className="filter-select"
-              disabled={isInstituteDirector}
-            >
-              <option value="">Все</option>
-              {referenceData?.institutes?.map(inst => (
-                <option key={inst.id} value={inst.instituteName}>{inst.instituteName}</option>
-              ))}
-            </select>
+            {isRegistrar ? (
+              <input
+                type="text"
+                placeholder="Поиск..."
+                value={filters.institute}
+                onChange={(e) => handleInputChange('institute', e.target.value)}
+                className="filter-input"
+              />
+            ) : (
+              <select
+                value={filters.institute}
+                onChange={(e) => {
+                  handleInputChange('institute', e.target.value);
+                  handleInputChange('department', '');
+                }}
+                className="filter-select"
+                disabled={isInstituteDirector}
+              >
+                <option value="">Все</option>
+                {referenceData?.institutes?.map(inst => (
+                  <option key={inst.id} value={inst.instituteName}>{inst.instituteName}</option>
+                ))}
+              </select>
+            )}
           </div>
         )}
 
@@ -117,16 +138,26 @@ const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUs
 
         <div className="filter-group">
           <label>Профессия</label>
-          <select
-            value={filters.profession}
-            onChange={(e) => handleInputChange('profession', e.target.value)}
-            className="filter-select"
-          >
-            <option value="">Все</option>
-            {referenceData?.professions?.map(p => (
-              <option key={p.id} value={p.professionName}>{p.professionName}</option>
-            ))}
-          </select>
+          {isRegistrar ? (
+            <input
+              type="text"
+              placeholder="Поиск..."
+              value={filters.profession}
+              onChange={(e) => handleInputChange('profession', e.target.value)}
+              className="filter-input"
+            />
+          ) : (
+            <select
+              value={filters.profession}
+              onChange={(e) => handleInputChange('profession', e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Все</option>
+              {referenceData?.professions?.map(p => (
+                <option key={p.id} value={p.professionName}>{p.professionName}</option>
+              ))}
+            </select>
+          )}
         </div>
 
         <div className="filter-group">

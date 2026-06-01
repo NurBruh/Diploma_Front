@@ -44,10 +44,20 @@ const FIELDS_TO_CHECK = {
   study_language: 'Язык обучения'
 };
 const FIELDS_KEYS = Object.keys(FIELDS_TO_CHECK);
+const REGISTRAR_PAGE_SIZE = 50;
+
+const emptyPagination = {
+  enabled: false,
+  page: 1,
+  pageSize: REGISTRAR_PAGE_SIZE,
+  totalItems: 0,
+  totalPages: 1
+};
 
 export const useStudents = (showNotification, currentUser) => {
   const [students, setStudents] = useState([]);
   const [filteredStudents, setFilteredStudents] = useState([]);
+  const [studentPagination, setStudentPagination] = useState(emptyPagination);
   const [loading, setLoading] = useState(false);
   const [syncLoading, setSyncLoading] = useState(false);
   const [changeHistory, setChangeHistory] = useState({});
@@ -83,7 +93,7 @@ export const useStudents = (showNotification, currentUser) => {
     return changes;
   };
 
-  const fetchStudents = async (user = currentUser) => {
+  const fetchStudents = async (user = currentUser, options = {}) => {
     if (!user) return;
     setLoading(true);
     try {
@@ -91,6 +101,8 @@ export const useStudents = (showNotification, currentUser) => {
       let localDataArray = savedData ? JSON.parse(savedData) : [];
 
       let path;
+      let requestConfig;
+      const isRegistrar = user.role === 'registrar';
       if (user.role === 'advisor') {
         path = `/Auth/advisor/${user.userId}/students`;
       } else if (user.role === 'institute_director') {
@@ -99,14 +111,44 @@ export const useStudents = (showNotification, currentUser) => {
         path = `/Auth/department-head/${user.userId}/students`;
       } else {
         path = '/Epvo/students';
+        requestConfig = {
+          params: {
+            page: options.page ?? studentPagination.page ?? 1,
+            pageSize: REGISTRAR_PAGE_SIZE,
+            fullName: filters.fullName || undefined,
+            iin: filters.iin || undefined,
+            course: filters.course || undefined,
+            studyForm: filters.studyForm || undefined,
+            institute: filters.institute || undefined,
+            department: filters.department || undefined,
+            profession: filters.profession || undefined,
+            grantType: filters.grantType || undefined
+          }
+        };
       }
 
-      const response = await authFetch.get(path);
+      const response = await authFetch.get(path, requestConfig);
 
       const backendData = response.data;
-      const ssoDataArray = backendData
+      const backendItems = Array.isArray(backendData)
+        ? backendData
+        : (backendData?.items ?? []);
+
+      const ssoDataArray = backendItems
         .map(mapStudentFromBackend)
         .filter(isSupportedGrantStudent);
+
+      if (isRegistrar && !Array.isArray(backendData)) {
+        setStudentPagination({
+          enabled: true,
+          page: backendData.page || 1,
+          pageSize: backendData.pageSize || REGISTRAR_PAGE_SIZE,
+          totalItems: backendData.totalItems || 0,
+          totalPages: backendData.totalPages || 1
+        });
+      } else {
+        setStudentPagination(emptyPagination);
+      }
 
       if (localDataArray.length === 0) {
         try { localStorage.setItem('previousStudentData', JSON.stringify(ssoDataArray)); } catch { /* localStorage may be unavailable */ }
@@ -165,6 +207,12 @@ export const useStudents = (showNotification, currentUser) => {
   };
 
   const handleSearch = () => {
+    if (currentUser?.role === 'registrar') {
+      fetchStudents(currentUser, { page: 1 });
+      setSelectionKey(prev => prev + 1);
+      return;
+    }
+
     let filtered = [...students];
     if (filters.fullName) {
       filtered = filtered.filter(student => (student.full_name || '').toLowerCase().includes(filters.fullName.toLowerCase()));
@@ -197,6 +245,13 @@ export const useStudents = (showNotification, currentUser) => {
   const clearStudents = () => {
     setStudents([]);
     setFilteredStudents([]);
+    setStudentPagination(emptyPagination);
+  };
+
+  const handleStudentPageChange = (page) => {
+    if (currentUser?.role === 'registrar') {
+      fetchStudents(currentUser, { page });
+    }
   };
 
   const handleSyncToEpvo = async () => {
@@ -261,6 +316,7 @@ export const useStudents = (showNotification, currentUser) => {
     syncLoading,
     changeHistory,
     selectionKey,
+    studentPagination,
     filters,
     setFilters,
     loadHistoryFromStorage,
@@ -268,6 +324,7 @@ export const useStudents = (showNotification, currentUser) => {
     handleSearch,
     handleSyncToEpvo,
     handleClearHistory,
+    handleStudentPageChange,
     getTotalChangesCount,
     handleSendSelectedToEpvo,
     handleUpdateIban,

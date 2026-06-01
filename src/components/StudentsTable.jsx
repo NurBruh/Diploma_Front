@@ -39,10 +39,13 @@ const StudentsTable = ({
   onSendSelectedToEpvo,
   syncLoading,
   selectionKey,
+  serverPagination,
+  onPageChange,
   readOnly,
   showDepartment = true,
   showBankColumns = true
 }) => {
+  const usesServerPagination = Boolean(serverPagination?.enabled);
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
@@ -55,20 +58,32 @@ const StudentsTable = ({
   }, [selectionKey]);
 
   useEffect(() => {
-    setCurrentPage(1);
+    if (!usesServerPagination) {
+      setCurrentPage(1);
+    }
   }, [students]);
 
   const sortedStudents = useMemo(() => {
     if (!students || students.length === 0) return [];
-    return [...students].sort(compareStudentsByName);
-  }, [students]);
+    return usesServerPagination ? [...students] : [...students].sort(compareStudentsByName);
+  }, [students, usesServerPagination]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedStudents.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const pageStart = (safePage - 1) * PAGE_SIZE;
-  const pageStudents = sortedStudents.slice(pageStart, pageStart + PAGE_SIZE);
+  const totalPages = usesServerPagination
+    ? Math.max(1, serverPagination.totalPages || 1)
+    : Math.max(1, Math.ceil(sortedStudents.length / PAGE_SIZE));
+  const safePage = usesServerPagination
+    ? Math.min(serverPagination.page || 1, totalPages)
+    : Math.min(currentPage, totalPages);
+  const pageSize = usesServerPagination ? (serverPagination.pageSize || PAGE_SIZE) : PAGE_SIZE;
+  const pageStart = (safePage - 1) * pageSize;
+  const pageStudents = usesServerPagination
+    ? sortedStudents
+    : sortedStudents.slice(pageStart, pageStart + pageSize);
+  const totalItems = usesServerPagination
+    ? (serverPagination.totalItems || 0)
+    : students.length;
 
-  const allIds = sortedStudents.map((s) => s.id);
+  const allIds = pageStudents.map((s) => s.id);
   const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
   const someSelected = allIds.some((id) => selectedIds.has(id)) && !allSelected;
 
@@ -228,10 +243,10 @@ const StudentsTable = ({
           <Pagination
             currentPage={safePage}
             totalPages={totalPages}
-            onPageChange={setCurrentPage}
+            onPageChange={usesServerPagination ? onPageChange : setCurrentPage}
           />
         </div>
-        <p>Всего студентов: <strong>{students.length}</strong></p>
+        <p>Всего студентов: <strong>{totalItems}</strong></p>
       </div>
 
       {!readOnly && editingStudent && (
