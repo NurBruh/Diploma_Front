@@ -6,6 +6,7 @@ const DepartmentHeadDashboard = (props) => (
     {...props}
     title="Студенты кафедры"
     subtitle={props.currentUser?.scopeName}
+    showDepartment={false}
     showBankColumns
   />
 );

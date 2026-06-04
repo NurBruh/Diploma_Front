@@ -1,4 +1,5 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { authFetch } from '../../../utils/authFetch';
 import '../../../css/RoleDashboard.css';
 
 const labelOrEmpty = (value) => value || 'Не указано';
@@ -6,6 +7,27 @@ const labelOrEmpty = (value) => value || 'Не указано';
 const percent = (part, total) => {
   if (!total) return 0;
   return Math.round((part / total) * 100);
+};
+
+const mapStudentFromBackend = (student) => ({
+  id: student.studentId,
+  full_name: student.fullName || '',
+  iin: student.iinPlt || '',
+  course: student.courseNumber,
+  study_form: student.studyForm || '',
+  faculty: student.facultyName || '',
+  department: student.departmentName || '',
+  profession: student.professionName || '',
+  specialization: student.specialization || '',
+  payment_type: student.paymentType || '',
+  grant_type: student.grantType || '',
+  gpa: student.gpa ?? null
+});
+
+const getDashboardPath = (user) => {
+  if (user?.role === 'institute_director') return `/Auth/director/${user.userId}/students`;
+  if (user?.role === 'department_head') return `/Auth/department-head/${user.userId}/students`;
+  return null;
 };
 
 const buildSpecialities = (students) => {
@@ -41,10 +63,12 @@ const buildDepartments = (students) => {
 
 const PaymentSplit = ({ students }) => {
   const scholarship = students.filter((student) => student.payment_type === 'Стипендия').length;
+  const paid = Math.max(0, students.length - scholarship);
 
   return (
     <div className="analytics-split">
       <span>Грант {percent(scholarship, students.length)}%</span>
+      <span>Платное {percent(paid, students.length)}%</span>
     </div>
   );
 };
@@ -123,13 +147,48 @@ const DepartmentBlock = ({ department, total }) => {
 };
 
 const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
-  const data = useMemo(() => {
-    if (mode === 'department') {
-      return { specialities: buildSpecialities(students) };
+  const [dashboardStudents, setDashboardStudents] = useState(students || []);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const path = getDashboardPath(currentUser);
+    if (!path) {
+      setDashboardStudents(students || []);
+      return;
     }
 
-    return { departments: buildDepartments(students) };
-  }, [mode, students]);
+    let cancelled = false;
+    setLoading(true);
+
+    authFetch.get(path, { params: { page: 1, pageSize: 5000 } })
+      .then((response) => {
+        if (cancelled) return;
+        const data = response.data;
+        const items = Array.isArray(data) ? data : (data?.items ?? []);
+        setDashboardStudents(items.map(mapStudentFromBackend));
+      })
+      .catch((error) => {
+        console.error('Ошибка загрузки dashboard:', error);
+        if (!cancelled) setDashboardStudents(students || []);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser, students]);
+
+  const sourceStudents = dashboardStudents || [];
+
+  const data = useMemo(() => {
+    if (mode === 'department') {
+      return { specialities: buildSpecialities(sourceStudents) };
+    }
+
+    return { departments: buildDepartments(sourceStudents) };
+  }, [mode, sourceStudents]);
 
   const title = mode === 'department' ? 'Дашборд кафедры' : 'Дашборд института';
   const subtitle = currentUser?.scopeName || currentUser?.fullName;
@@ -146,15 +205,15 @@ const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
       <section className="analytics-summary">
         <div className="role-stat-card">
           <span>Всего студентов</span>
-          <strong>{students.length}</strong>
+          <strong>{loading ? '...' : sourceStudents.length}</strong>
         </div>
         <div className="role-stat-card">
           <span>Грантники</span>
-          <strong>{students.filter((student) => student.payment_type === 'Стипендия').length}</strong>
+          <strong>{loading ? '...' : sourceStudents.filter((student) => student.payment_type === 'Стипендия').length}</strong>
         </div>
       </section>
 
-      {students.length === 0 && (
+      {sourceStudents.length === 0 && !loading && (
         <div className="analytics-empty">Нет студентов для отображения</div>
       )}
 
@@ -164,7 +223,7 @@ const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
             <SpecialityBlock
               key={speciality.name}
               speciality={speciality}
-              total={students.length}
+              total={sourceStudents.length}
             />
           ))}
         </section>
@@ -174,7 +233,7 @@ const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
             <DepartmentBlock
               key={department.name}
               department={department}
-              total={students.length}
+              total={sourceStudents.length}
             />
           ))}
         </section>

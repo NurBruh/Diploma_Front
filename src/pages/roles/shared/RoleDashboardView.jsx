@@ -15,6 +15,8 @@ const RoleDashboardView = ({
   onSearch,
   referenceData,
   selectionKey,
+  studentPagination,
+  onPageChange,
   showDepartment = true,
   showBankColumns
 }) => {
@@ -44,6 +46,8 @@ const RoleDashboardView = ({
         onSendSelectedToEpvo={null}
         syncLoading={false}
         selectionKey={selectionKey}
+        serverPagination={studentPagination}
+        onPageChange={onPageChange}
         readOnly
         showDepartment={showDepartment}
         showBankColumns={showBankColumns}

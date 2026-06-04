@@ -4,9 +4,15 @@ import '../css/SearchFilters.css';
 
 const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUser, showDepartment = true }) => {
   const role = currentUser?.role;
-  const isRegistrar = role === 'registrar';
   const isDepartmentHead = role === 'department_head';
   const isInstituteDirector = role === 'institute_director';
+  const isRoleScoped = role === 'advisor' || isDepartmentHead || isInstituteDirector;
+  const courseOptions = referenceData?.courses?.length
+    ? referenceData.courses.map((c) => c.courseNumber ?? c.id ?? c)
+    : [1, 2, 3, 4, 5];
+  const grantTypeOptions = referenceData?.grantTypes?.length
+    ? referenceData.grantTypes.map((g) => g.grantTypeName ?? g.name ?? g)
+    : ['Государственный грант', 'Из собственных средств', 'Трехсторонняя форма обучения'];
 
   const handleInputChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
@@ -56,76 +62,57 @@ const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUs
             className="filter-select"
           >
             <option value="">Все</option>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-            <option value="5">5</option>
+            {courseOptions.map((course) => (
+              <option key={course} value={course}>{course}</option>
+            ))}
           </select>
         </div>
 
         <div className="filter-group">
           <label>Форма обучения</label>
-          {isRegistrar ? (
-            <input
-              type="text"
-              placeholder="Поиск..."
-              value={filters.studyForm}
-              onChange={(e) => handleInputChange('studyForm', e.target.value)}
-              className="filter-input"
-            />
-          ) : (
+          <select
+            value={filters.studyForm}
+            onChange={(e) => handleInputChange('studyForm', e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Все</option>
+            {referenceData?.studyForms?.map(sf => (
+              <option key={sf.id} value={sf.studyFormName}>{sf.studyFormName}</option>
+            ))}
+          </select>
+        </div>
+
+        {/* Институт: для директора и зав.кафедры область уже выбрана ролью */}
+        {!isDepartmentHead && !isInstituteDirector && (
+          <div className="filter-group">
+            <label>Институт</label>
             <select
-              value={filters.studyForm}
-              onChange={(e) => handleInputChange('studyForm', e.target.value)}
+              value={filters.institute}
+              onChange={(e) => {
+                handleInputChange('institute', e.target.value);
+                handleInputChange('department', '');
+                handleInputChange('profession', '');
+              }}
               className="filter-select"
             >
               <option value="">Все</option>
-              {referenceData?.studyForms?.map(sf => (
-                <option key={sf.id} value={sf.studyFormName}>{sf.studyFormName}</option>
+              {referenceData?.institutes?.map(inst => (
+                <option key={inst.id} value={inst.instituteName}>{inst.instituteName}</option>
               ))}
             </select>
-          )}
-        </div>
-
-        {/* Институт: скрыт для зав.кафедры, зафиксирован для директора, свободен для менеджера */}
-        {!isDepartmentHead && (
-          <div className="filter-group">
-            <label>Институт</label>
-            {isRegistrar ? (
-              <input
-                type="text"
-                placeholder="Поиск..."
-                value={filters.institute}
-                onChange={(e) => handleInputChange('institute', e.target.value)}
-                className="filter-input"
-              />
-            ) : (
-              <select
-                value={filters.institute}
-                onChange={(e) => {
-                  handleInputChange('institute', e.target.value);
-                  handleInputChange('department', '');
-                }}
-                className="filter-select"
-                disabled={isInstituteDirector}
-              >
-                <option value="">Все</option>
-                {referenceData?.institutes?.map(inst => (
-                  <option key={inst.id} value={inst.instituteName}>{inst.instituteName}</option>
-                ))}
-              </select>
-            )}
           </div>
         )}
 
-        {/* Кафедра: скрыта для зав.кафедры, показана для директора и менеджера */}
+        {/* Кафедра: скрыта для зав.кафедры, показана для директора/эдвайзера */}
         {showDepartment && !isDepartmentHead && (
           <div className="filter-group">
             <label>Кафедра</label>
             <select
               value={filters.department}
-              onChange={(e) => handleInputChange('department', e.target.value)}
+              onChange={(e) => {
+                handleInputChange('department', e.target.value);
+                handleInputChange('profession', '');
+              }}
               className="filter-select"
             >
               <option value="">Все</option>
@@ -138,26 +125,16 @@ const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUs
 
         <div className="filter-group">
           <label>Профессия</label>
-          {isRegistrar ? (
-            <input
-              type="text"
-              placeholder="Поиск..."
-              value={filters.profession}
-              onChange={(e) => handleInputChange('profession', e.target.value)}
-              className="filter-input"
-            />
-          ) : (
-            <select
-              value={filters.profession}
-              onChange={(e) => handleInputChange('profession', e.target.value)}
-              className="filter-select"
-            >
-              <option value="">Все</option>
-              {referenceData?.professions?.map(p => (
-                <option key={p.id} value={p.professionName}>{p.professionName}</option>
-              ))}
-            </select>
-          )}
+          <select
+            value={filters.profession}
+            onChange={(e) => handleInputChange('profession', e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Все</option>
+            {referenceData?.professions?.map(p => (
+              <option key={p.id} value={p.professionName}>{p.professionName}</option>
+            ))}
+          </select>
         </div>
 
         <div className="filter-group">
@@ -168,9 +145,9 @@ const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUs
             className="filter-select"
           >
             <option value="">Все</option>
-            <option value="Государственный грант">Государственный грант</option>
-            <option value="Из собственных средств">Из собственных средств</option>
-            <option value="Трехсторонняя форма обучения">Трехсторонняя форма обучения</option>
+            {grantTypeOptions.map((grantType) => (
+              <option key={grantType} value={grantType}>{grantType}</option>
+            ))}
           </select>
         </div>
 

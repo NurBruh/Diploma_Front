@@ -37,6 +37,7 @@ function App() {
     changeHistory,
     selectionKey,
     studentPagination,
+    filterOptions,
     filters,
     setFilters,
     loadHistoryFromStorage,
@@ -78,7 +79,7 @@ function App() {
   const canViewRoleDashboard = currentUser?.role === 'institute_director'
     || currentUser?.role === 'department_head';
 
-  const referenceData = useMemo(() => {
+  const fallbackReferenceData = useMemo(() => {
     const studyFormsSet = new Set();
     const institutesSet = new Set();
     const departmentsSet = new Set();
@@ -100,6 +101,8 @@ function App() {
     };
   }, [students]);
 
+  const referenceData = filterOptions || fallbackReferenceData;
+
   const rolePageProps = {
     currentUser,
     students,
@@ -109,7 +112,9 @@ function App() {
     setFilters,
     onSearch: handleSearch,
     referenceData,
-    selectionKey
+    selectionKey,
+    studentPagination,
+    onPageChange: handleStudentPageChange
   };
 
   const renderHome = () => {
