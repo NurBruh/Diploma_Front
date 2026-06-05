@@ -64,7 +64,25 @@
 }
 
 @media (max-width: 968px) {
+  .main-content {
+    padding: 1rem 0;
+  }
+
   .container {
     padding: 0 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 0 0.75rem;
+  }
+
+  .notification {
+    top: 12px;
+    right: 12px;
+    left: 12px;
+    max-width: none;
+    padding: 0.85rem 1rem;
   }
 }

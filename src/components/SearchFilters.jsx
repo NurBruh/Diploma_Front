@@ -6,7 +6,6 @@ const SearchFilters = ({ filters, setFilters, onSearch, referenceData, currentUs
   const role = currentUser?.role;
   const isDepartmentHead = role === 'department_head';
   const isInstituteDirector = role === 'institute_director';
-  const isRoleScoped = role === 'advisor' || isDepartmentHead || isInstituteDirector;
   const courseOptions = referenceData?.courses?.length
     ? referenceData.courses.map((c) => c.courseNumber ?? c.id ?? c)
     : [1, 2, 3, 4, 5];

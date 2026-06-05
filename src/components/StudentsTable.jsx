@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { BsFillPencilFill } from 'react-icons/bs';
-import { MdSend } from 'react-icons/md';
+import { MdSend, MdSortByAlpha } from 'react-icons/md';
 import EditBankAccountModal from './EditBankAccountModal';
 import TableScrollSync from './TableScrollSync';
 import Pagination from './Pagination';
@@ -49,6 +49,7 @@ const StudentsTable = ({
   const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
+  const [nameSortDirection, setNameSortDirection] = useState('asc');
   const selectAllRef = useRef(null);
 
   // Сбрасываем чекбоксы и страницу при фильтрации
@@ -61,12 +62,13 @@ const StudentsTable = ({
     if (!usesServerPagination) {
       setCurrentPage(1);
     }
-  }, [students]);
+  }, [students, usesServerPagination]);
 
   const sortedStudents = useMemo(() => {
     if (!students || students.length === 0) return [];
-    return usesServerPagination ? [...students] : [...students].sort(compareStudentsByName);
-  }, [students, usesServerPagination]);
+    const sorted = [...students].sort(compareStudentsByName);
+    return nameSortDirection === 'desc' ? sorted.reverse() : sorted;
+  }, [students, nameSortDirection]);
 
   const totalPages = usesServerPagination
     ? Math.max(1, serverPagination.totalPages || 1)
@@ -130,6 +132,19 @@ const StudentsTable = ({
   // Таблица колонок под новый DTO (StudentSsoDetailDto)
   return (
     <div className="table-container">
+      <div className="table-toolbar">
+        <div className="table-toolbar__title">Список студентов</div>
+        <button
+          type="button"
+          className="table-sort-btn"
+          onClick={() => setNameSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+          title={nameSortDirection === 'asc' ? 'Сортировка по ФИО: А-Я' : 'Сортировка по ФИО: Я-А'}
+        >
+          <MdSortByAlpha size={17} />
+          <span>{nameSortDirection === 'asc' ? 'А-Я' : 'Я-А'}</span>
+        </button>
+      </div>
+
       <TableScrollSync bodyClassName="table-wrapper">
         <table className="students-table">
           <thead>

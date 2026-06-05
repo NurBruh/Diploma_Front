@@ -251,6 +251,7 @@
 
 .analytics-students table {
   width: 100%;
+  min-width: 720px;
   border-collapse: collapse;
   font-size: 0.84rem;
 }
@@ -279,5 +280,29 @@
   .analytics-department > summary,
   .analytics-speciality > summary {
     grid-template-columns: 1fr;
+  }
+
+  .analytics-split {
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .role-dashboard {
+    gap: 1rem;
+  }
+
+  .role-dashboard__header h1 {
+    font-size: 1.25rem;
+  }
+
+  .role-stat-card {
+    min-height: 84px;
+  }
+
+  .analytics-department > summary,
+  .analytics-speciality > summary {
+    padding: 0.85rem;
   }
 }

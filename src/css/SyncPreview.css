@@ -84,6 +84,37 @@
   border-color: #3b82f6;
 }
 
+@media (max-width: 760px) {
+  .sync-preview {
+    padding: 12px 0;
+  }
+
+  .sync-preview__header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sync-preview__actions,
+  .sync-preview__stats {
+    width: 100%;
+  }
+
+  .sync-preview__actions .sp-btn,
+  .sp-stat {
+    flex: 1 1 180px;
+    justify-content: center;
+  }
+
+  .sync-preview__filters {
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .sp-filter-btn {
+    white-space: nowrap;
+  }
+}
+
 /* Loading / empty */
 .sync-preview__loading,
 .sync-preview__empty {
