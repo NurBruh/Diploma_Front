@@ -1,7 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { BsFillPencilFill } from 'react-icons/bs';
 import { MdSend, MdSortByAlpha } from 'react-icons/md';
-import EditBankAccountModal from './EditBankAccountModal';
 import TableScrollSync from './TableScrollSync';
 import Pagination from './Pagination';
 import '../css/StudentsTable.css';
@@ -35,7 +33,6 @@ const compareStudentsByName = (a, b) => {
 const StudentsTable = ({
   students,
   loading,
-  onUpdateIban,
   onSendSelectedToEpvo,
   syncLoading,
   selectionKey,
@@ -46,7 +43,6 @@ const StudentsTable = ({
   showBankColumns = true
 }) => {
   const usesServerPagination = Boolean(serverPagination?.enabled);
-  const [editingStudent, setEditingStudent] = useState(null);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [nameSortDirection, setNameSortDirection] = useState('asc');
@@ -203,15 +199,7 @@ const StudentsTable = ({
                   <td className="bank-account">
                     <div className="bank-account-cell">
                       <span className="bank-account-text">{student.bank_account || '—'}</span>
-                      {!readOnly && (
-                        <button
-                          className="edit-iban-btn"
-                          title="Редактировать расчётный счёт"
-                          onClick={() => setEditingStudent(student)}
-                        >
-                          <BsFillPencilFill size={14} />
-                        </button>
-                      )}
+                      {/* Bank editing is hidden until bank/BIC/bankId selection is implemented. */}
                     </div>
                   </td>
                 )}
@@ -264,16 +252,6 @@ const StudentsTable = ({
         <p>Всего студентов: <strong>{totalItems}</strong></p>
       </div>
 
-      {!readOnly && editingStudent && (
-        <EditBankAccountModal
-          student={editingStudent}
-          onClose={() => setEditingStudent(null)}
-          onSave={async (iin, newIban) => {
-            await onUpdateIban(iin, newIban);
-            setEditingStudent(null);
-          }}
-        />
-      )}
     </div>
   );
 };

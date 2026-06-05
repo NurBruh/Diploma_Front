@@ -4,6 +4,18 @@ import { API_BASE_URL } from '../services';
 // API endpoint авторизации
 const AUTH_URL = `${API_BASE_URL}/Auth`;
 
+const storeAuthData = (data) => {
+  localStorage.setItem('token', data.token);
+  localStorage.setItem('userId', data.userId.toString());
+  localStorage.setItem('fullName', data.fullName);
+  localStorage.setItem('role', data.role);
+  localStorage.setItem('roleDisplayName', data.roleDisplayName);
+  if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
+  else localStorage.removeItem('scopeId');
+  if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
+  else localStorage.removeItem('scopeName');
+};
+
 const AuthService = {
   // Авторизация через SSO (userId = password для теста)
   login: async (userId, password) => {
@@ -14,14 +26,7 @@ const AuthService = {
       });
 
       const data = response.data;
-
-      localStorage.setItem('token', data.token);
-      localStorage.setItem('userId', data.userId.toString());
-      localStorage.setItem('fullName', data.fullName);
-      localStorage.setItem('role', data.role);
-      localStorage.setItem('roleDisplayName', data.roleDisplayName);
-      if (data.scopeId) localStorage.setItem('scopeId', data.scopeId.toString());
-      if (data.scopeName) localStorage.setItem('scopeName', data.scopeName);
+      storeAuthData(data);
 
       return { success: true, data };
     } catch (error) {
@@ -30,6 +35,25 @@ const AuthService = {
         return { success: false, error: error.response.data.message || 'Ошибка авторизации' };
       }
       return { success: false, error: 'Ошибка подключения к серверу' };
+    }
+  },
+
+  // Авторизация через cookie портала Satbayev/KazNITU
+  portalLogin: async () => {
+    try {
+      const response = await axios.get(`${AUTH_URL}/portal-login`, {
+        withCredentials: true
+      });
+
+      const data = response.data;
+      storeAuthData(data);
+
+      return { success: true, data };
+    } catch (error) {
+      if (error.response) {
+        return { success: false, error: error.response.data.message || 'Портальный вход недоступен' };
+      }
+      return { success: false, error: 'Портальный вход недоступен' };
     }
   },
 
