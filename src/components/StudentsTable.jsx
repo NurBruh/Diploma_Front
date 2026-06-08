@@ -159,7 +159,7 @@ const StudentsTable = ({
               {showGpaColumn && <th>GPA</th>}
               {showBankColumns && <th>Расчетный счёт</th>}
               {showBankColumns && <th>Дата обновления</th>}
-              {!readOnly && (
+              {/* {!readOnly && (
                 <th className="th-select">
                   Все
                   <label className="checkbox-label">
@@ -173,7 +173,7 @@ const StudentsTable = ({
                     
                   </label>
                 </th>
-              )}
+              )} */}
             </tr>
           </thead>
           <tbody>
@@ -211,7 +211,7 @@ const StudentsTable = ({
                   </td>
                 )}
                 {showBankColumns && <td className="update-date">{student.update_date || '—'}</td>}
-                {!readOnly && (
+                {/* {!readOnly && (
                   <td className="td-select">
                     <input
                       type="checkbox"
@@ -220,7 +220,7 @@ const StudentsTable = ({
                       onChange={() => handleSelectRow(student.id)}
                     />
                   </td>
-                )}
+                )} */}
               </tr>
             ))}
           </tbody>
