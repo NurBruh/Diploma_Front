@@ -20,6 +20,8 @@ export const useAuth = (showNotification, onLoginSuccess) => {
       };
     }
 
+    // Если пользователь пришел из портала Satbayev, backend увидит portal-cookie
+    // и вернет наш JWT без ручного ввода логина/пароля.
     AuthService.portalLogin().then((result) => {
       if (cancelled || !result.success) return;
 
