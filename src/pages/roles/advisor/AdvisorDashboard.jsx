@@ -7,6 +7,7 @@ const AdvisorDashboard = (props) => (
     title="Мои студенты"
     subtitle={props.currentUser?.fullName}
     showBankColumns={false}
+    showGpaColumn
   />
 );
 

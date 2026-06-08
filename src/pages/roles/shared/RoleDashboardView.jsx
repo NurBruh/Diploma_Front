@@ -18,7 +18,8 @@ const RoleDashboardView = ({
   studentPagination,
   onPageChange,
   showDepartment = true,
-  showBankColumns
+  showBankColumns,
+  showGpaColumn = false
 }) => {
   return (
     <div className="role-dashboard">
@@ -51,6 +52,7 @@ const RoleDashboardView = ({
         readOnly
         showDepartment={showDepartment}
         showBankColumns={showBankColumns}
+        showGpaColumn={showGpaColumn}
       />
     </div>
   );

@@ -115,6 +115,14 @@
   font-size: 0.85rem;
 }
 
+.gpa-cell {
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: var(--text-primary);
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .deprivation-reasons {
   color: var(--danger-color);
   font-size: 0.85rem;

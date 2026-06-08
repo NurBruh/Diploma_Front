@@ -6,7 +6,8 @@ const InstituteDirectorDashboard = (props) => (
     {...props}
     title="Студенты института"
     subtitle={props.currentUser?.scopeName}
-    showBankColumns
+    showBankColumns={false}
+    showGpaColumn
   />
 );
 

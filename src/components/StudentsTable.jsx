@@ -40,7 +40,8 @@ const StudentsTable = ({
   onPageChange,
   readOnly,
   showDepartment = true,
-  showBankColumns = true
+  showBankColumns = true,
+  showGpaColumn = false
 }) => {
   const usesServerPagination = Boolean(serverPagination?.enabled);
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -155,6 +156,7 @@ const StudentsTable = ({
               <th>Профессия</th>
               <th>Тип оплаты</th>
               <th>Тип гранта</th>
+              {showGpaColumn && <th>GPA</th>}
               {showBankColumns && <th>Расчетный счёт</th>}
               {showBankColumns && <th>Дата обновления</th>}
               {!readOnly && (
@@ -195,6 +197,11 @@ const StudentsTable = ({
                     {student.grant_type || '—'}
                   </span>
                 </td>
+                {showGpaColumn && (
+                  <td className="gpa-cell">
+                    {student.gpa ?? '—'}
+                  </td>
+                )}
                 {showBankColumns && (
                   <td className="bank-account">
                     <div className="bank-account-cell">

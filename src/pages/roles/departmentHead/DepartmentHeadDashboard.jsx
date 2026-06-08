@@ -7,7 +7,8 @@ const DepartmentHeadDashboard = (props) => (
     title="Студенты кафедры"
     subtitle={props.currentUser?.scopeName}
     showDepartment={false}
-    showBankColumns
+    showBankColumns={false}
+    showGpaColumn
   />
 );
 
