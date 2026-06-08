@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { MdSend, MdSortByAlpha } from 'react-icons/md';
 import TableScrollSync from './TableScrollSync';
 import Pagination from './Pagination';
@@ -47,7 +47,6 @@ const StudentsTable = ({
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
   const [nameSortDirection, setNameSortDirection] = useState('asc');
-  const selectAllRef = useRef(null);
 
   // Сбрасываем чекбоксы и страницу при фильтрации
   useEffect(() => {
@@ -81,33 +80,6 @@ const StudentsTable = ({
   const totalItems = usesServerPagination
     ? (serverPagination.totalItems || 0)
     : students.length;
-
-  const allIds = pageStudents.map((s) => s.id);
-  const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
-  const someSelected = allIds.some((id) => selectedIds.has(id)) && !allSelected;
-
-  useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = someSelected;
-    }
-  }, [someSelected]);
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedIds(new Set(allIds));
-    } else {
-      setSelectedIds(new Set());
-    }
-  };
-
-  const handleSelectRow = (id) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
 
   if (loading) {
     return (

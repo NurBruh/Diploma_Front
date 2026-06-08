@@ -204,6 +204,10 @@ const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
           <span>Грантники</span>
           <strong>{loading ? '...' : data.grantStudents}</strong>
         </div>
+        <div className="role-stat-card">
+          <span>Платное</span>
+          <strong>{loading ? '...' : data.paidStudents}</strong>
+        </div>
       </section>
 
       {data.totalStudents === 0 && !loading && (
