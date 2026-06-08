@@ -211,6 +211,9 @@ const RoleAnalyticsDashboard = ({
 }) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(false);
+
+  // Основной источник dashboard - быстрый агрегированный API.
+  // Fallback нужен только если API временно не ответил: тогда строим картину из уже загруженной таблицы.
   const fallbackDashboard = useMemo(
     () => buildDashboardFromStudents(students || [], mode),
     [students, mode]
