@@ -1,11 +1,25 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { authFetch } from '../../../utils/authFetch';
 import '../../../css/RoleDashboard.css';
 
 const labelOrEmpty = (value) => value || 'Не указано';
+const emptyDashboard = {
+  totalStudents: 0,
+  grantStudents: 0,
+  paidStudents: 0,
+  departments: [],
+  specialities: []
+};
 
 const percent = (part, total) => {
   if (!total) return 0;
   return Math.round((part / total) * 100);
+};
+
+const getDashboardPath = (user) => {
+  if (user?.role === 'institute_director') return `/Auth/director/${user.userId}/dashboard`;
+  if (user?.role === 'department_head') return `/Auth/department-head/${user.userId}/dashboard`;
+  return null;
 };
 
 const buildSpecialities = (students) => {
@@ -13,12 +27,21 @@ const buildSpecialities = (students) => {
 
   students.forEach((student) => {
     const name = labelOrEmpty(student.specialization || student.profession);
-    const item = map.get(name) || { name, students: [] };
+    const item = map.get(name) || {
+      name,
+      totalStudents: 0,
+      grantStudents: 0,
+      paidStudents: 0,
+      students: []
+    };
+    item.totalStudents += 1;
+    if (student.payment_type === 'Стипендия') item.grantStudents += 1;
+    else item.paidStudents += 1;
     item.students.push(student);
     map.set(name, item);
   });
 
-  return Array.from(map.values()).sort((a, b) => b.students.length - a.students.length);
+  return Array.from(map.values()).sort((a, b) => b.totalStudents - a.totalStudents);
 };
 
 const buildDepartments = (students) => {
@@ -26,95 +49,154 @@ const buildDepartments = (students) => {
 
   students.forEach((student) => {
     const name = labelOrEmpty(student.department);
-    const item = map.get(name) || { name, students: [] };
-    item.students.push(student);
+    const item = map.get(name) || {
+      name,
+      totalStudents: 0,
+      grantStudents: 0,
+      paidStudents: 0,
+      sourceStudents: []
+    };
+    item.totalStudents += 1;
+    if (student.payment_type === 'Стипендия') item.grantStudents += 1;
+    else item.paidStudents += 1;
+    item.sourceStudents.push(student);
     map.set(name, item);
   });
 
   return Array.from(map.values())
     .map((department) => ({
       ...department,
-      specialities: buildSpecialities(department.students)
+      specialities: buildSpecialities(department.sourceStudents),
+      sourceStudents: undefined
     }))
-    .sort((a, b) => b.students.length - a.students.length);
+    .sort((a, b) => b.totalStudents - a.totalStudents);
 };
 
-const PaymentSplit = ({ students }) => {
-  const scholarship = students.filter((student) => student.payment_type === 'Стипендия').length;
+const buildDashboardFromStudents = (students, mode) => {
+  const totalStudents = students.length;
+  const grantStudents = students.filter((student) => student.payment_type === 'Стипендия').length;
+  const base = {
+    totalStudents,
+    grantStudents,
+    paidStudents: Math.max(0, totalStudents - grantStudents),
+    departments: [],
+    specialities: []
+  };
+
+  if (mode === 'department') {
+    return { ...base, specialities: buildSpecialities(students) };
+  }
+
+  return { ...base, departments: buildDepartments(students) };
+};
+
+const PaymentSplit = ({ grantStudents, paidStudents, totalStudents }) => (
+  <div className="analytics-split">
+    <span>Грант {percent(grantStudents, totalStudents)}%</span>
+    <span>Платное {percent(paidStudents, totalStudents)}%</span>
+  </div>
+);
+
+const getStudentValue = (student, camelKey, snakeKey) => student?.[camelKey] ?? student?.[snakeKey];
+
+const DashboardStudentRows = ({ students }) => {
+  const safeStudents = students || [];
+
+  if (safeStudents.length === 0) {
+    return <div className="analytics-empty analytics-empty--compact">Нет студентов для отображения</div>;
+  }
 
   return (
-    <div className="analytics-split">
-      <span>Грант {percent(scholarship, students.length)}%</span>
+    <div className="analytics-students">
+      <table>
+        <thead>
+          <tr>
+            <th>№</th>
+            <th>ФИО</th>
+            <th>Курс</th>
+            <th>Институт</th>
+            <th>Кафедра</th>
+            <th>Специальность</th>
+            <th>Тип обучения</th>
+            <th>Тип оплаты</th>
+            <th>Тип гранта</th>
+            <th>GPA</th>
+          </tr>
+        </thead>
+        <tbody>
+          {safeStudents.map((student, index) => (
+            <tr key={getStudentValue(student, 'studentId', 'id') || `${getStudentValue(student, 'iinPlt', 'iin')}-${index}`}>
+              <td>{index + 1}</td>
+              <td>{getStudentValue(student, 'fullName', 'full_name') || '-'}</td>
+              <td>{getStudentValue(student, 'courseNumber', 'course') || '-'}</td>
+              <td>{getStudentValue(student, 'facultyName', 'faculty') || '-'}</td>
+              <td>{getStudentValue(student, 'departmentName', 'department') || '-'}</td>
+              <td>
+                {getStudentValue(student, 'specialization', 'specialization')
+                  || getStudentValue(student, 'professionName', 'profession')
+                  || '-'}
+              </td>
+              <td>{getStudentValue(student, 'studyForm', 'study_form') || '-'}</td>
+              <td>{getStudentValue(student, 'paymentType', 'payment_type') || '-'}</td>
+              <td>{getStudentValue(student, 'grantType', 'grant_type') || '-'}</td>
+              <td>{getStudentValue(student, 'gpa', 'gpa') ?? '-'}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 };
 
-const StudentsMiniTable = ({ students }) => (
-  <div className="analytics-students">
-    <table>
-      <thead>
-        <tr>
-          <th>ФИО</th>
-          <th>ИИН</th>
-          <th>Курс</th>
-          <th>Тип оплаты</th>
-        </tr>
-      </thead>
-      <tbody>
-        {students.map((student) => (
-          <tr key={student.id}>
-            <td>{student.full_name || '—'}</td>
-            <td className="analytics-mono">{student.iin || '—'}</td>
-            <td>{student.course || '—'}</td>
-            <td>{student.payment_type || '—'}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  </div>
-);
-
 const SpecialityBlock = ({ speciality, total }) => {
-  const share = percent(speciality.students.length, total);
+  const share = percent(speciality.totalStudents, total);
 
   return (
     <details className="analytics-speciality">
       <summary>
         <div>
           <strong>{speciality.name}</strong>
-          <span>{speciality.students.length} студентов · {share}%</span>
+          <span>{speciality.totalStudents} студентов · {share}%</span>
         </div>
         <div className="analytics-bar" aria-hidden="true">
           <span style={{ width: `${share}%` }} />
         </div>
       </summary>
-      <PaymentSplit students={speciality.students} />
-      <StudentsMiniTable students={speciality.students} />
+      <PaymentSplit
+        grantStudents={speciality.grantStudents}
+        paidStudents={speciality.paidStudents}
+        totalStudents={speciality.totalStudents}
+      />
+      <DashboardStudentRows students={speciality.students} />
     </details>
   );
 };
 
 const DepartmentBlock = ({ department, total }) => {
-  const share = percent(department.students.length, total);
+  const share = percent(department.totalStudents, total);
 
   return (
     <details className="analytics-department" open>
       <summary>
         <div>
           <strong>{department.name}</strong>
-          <span>{department.students.length} студентов · {share}% от института</span>
+          <span>{department.totalStudents} студентов · {share}% от института</span>
         </div>
         <div className="analytics-bar" aria-hidden="true">
           <span style={{ width: `${share}%` }} />
         </div>
       </summary>
-      <PaymentSplit students={department.students} />
+      <PaymentSplit
+        grantStudents={department.grantStudents}
+        paidStudents={department.paidStudents}
+        totalStudents={department.totalStudents}
+      />
       <div className="analytics-specialities">
         {department.specialities.map((speciality) => (
           <SpecialityBlock
             key={speciality.name}
             speciality={speciality}
-            total={department.students.length}
+            total={department.totalStudents}
           />
         ))}
       </div>
@@ -122,14 +204,47 @@ const DepartmentBlock = ({ department, total }) => {
   );
 };
 
-const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
-  const data = useMemo(() => {
-    if (mode === 'department') {
-      return { specialities: buildSpecialities(students) };
+const RoleAnalyticsDashboard = ({
+  currentUser,
+  students,
+  mode
+}) => {
+  const [dashboardData, setDashboardData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const fallbackDashboard = useMemo(
+    () => buildDashboardFromStudents(students || [], mode),
+    [students, mode]
+  );
+
+  useEffect(() => {
+    const path = getDashboardPath(currentUser);
+    if (!path) {
+      setDashboardData(null);
+      return;
     }
 
-    return { departments: buildDepartments(students) };
-  }, [mode, students]);
+    let cancelled = false;
+    setLoading(true);
+
+    authFetch.get(path)
+      .then((response) => {
+        if (cancelled) return;
+        setDashboardData(response.data || emptyDashboard);
+      })
+      .catch((error) => {
+        console.error('Ошибка загрузки dashboard:', error);
+        if (!cancelled) setDashboardData(null);
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [currentUser]);
+
+  const data = dashboardData || fallbackDashboard;
 
   const title = mode === 'department' ? 'Дашборд кафедры' : 'Дашборд института';
   const subtitle = currentUser?.scopeName || currentUser?.fullName;
@@ -146,15 +261,19 @@ const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
       <section className="analytics-summary">
         <div className="role-stat-card">
           <span>Всего студентов</span>
-          <strong>{students.length}</strong>
+          <strong>{loading ? '...' : data.totalStudents}</strong>
         </div>
         <div className="role-stat-card">
           <span>Грантники</span>
-          <strong>{students.filter((student) => student.payment_type === 'Стипендия').length}</strong>
+          <strong>{loading ? '...' : data.grantStudents}</strong>
+        </div>
+        <div className="role-stat-card">
+          <span>Платное</span>
+          <strong>{loading ? '...' : data.paidStudents}</strong>
         </div>
       </section>
 
-      {students.length === 0 && (
+      {data.totalStudents === 0 && !loading && (
         <div className="analytics-empty">Нет студентов для отображения</div>
       )}
 
@@ -164,7 +283,7 @@ const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
             <SpecialityBlock
               key={speciality.name}
               speciality={speciality}
-              total={students.length}
+              total={data.totalStudents}
             />
           ))}
         </section>
@@ -174,11 +293,12 @@ const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
             <DepartmentBlock
               key={department.name}
               department={department}
-              total={students.length}
+              total={data.totalStudents}
             />
           ))}
         </section>
       )}
+
     </div>
   );
 };

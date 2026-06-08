@@ -6,6 +6,8 @@ export const useAuth = (showNotification, onLoginSuccess) => {
   const [currentUser, setCurrentUser] = useState(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const saved = AuthService.getCurrentUser();
     if (saved) {
       setIsAuthenticated(true);
@@ -13,7 +15,24 @@ export const useAuth = (showNotification, onLoginSuccess) => {
       if (onLoginSuccess) {
         onLoginSuccess();
       }
+      return () => {
+        cancelled = true;
+      };
     }
+
+    AuthService.portalLogin().then((result) => {
+      if (cancelled || !result.success) return;
+
+      setIsAuthenticated(true);
+      setCurrentUser(AuthService.getCurrentUser());
+      if (onLoginSuccess) {
+        onLoginSuccess();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const handleLogin = (userData) => {

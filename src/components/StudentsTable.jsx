@@ -1,7 +1,5 @@
-import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { BsFillPencilFill } from 'react-icons/bs';
-import { MdSend } from 'react-icons/md';
-import EditBankAccountModal from './EditBankAccountModal';
+import React, { useState, useEffect, useMemo } from 'react';
+import { MdSend, MdSortByAlpha } from 'react-icons/md';
 import TableScrollSync from './TableScrollSync';
 import Pagination from './Pagination';
 import '../css/StudentsTable.css';
@@ -35,18 +33,20 @@ const compareStudentsByName = (a, b) => {
 const StudentsTable = ({
   students,
   loading,
-  onUpdateIban,
   onSendSelectedToEpvo,
   syncLoading,
   selectionKey,
+  serverPagination,
+  onPageChange,
   readOnly,
   showDepartment = true,
-  showBankColumns = true
+  showBankColumns = true,
+  showGpaColumn = false
 }) => {
-  const [editingStudent, setEditingStudent] = useState(null);
+  const usesServerPagination = Boolean(serverPagination?.enabled);
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [currentPage, setCurrentPage] = useState(1);
-  const selectAllRef = useRef(null);
+  const [nameSortDirection, setNameSortDirection] = useState('asc');
 
   // Сбрасываем чекбоксы и страницу при фильтрации
   useEffect(() => {
@@ -55,45 +55,31 @@ const StudentsTable = ({
   }, [selectionKey]);
 
   useEffect(() => {
-    setCurrentPage(1);
-  }, [students]);
+    if (!usesServerPagination) {
+      setCurrentPage(1);
+    }
+  }, [students, usesServerPagination]);
 
   const sortedStudents = useMemo(() => {
     if (!students || students.length === 0) return [];
-    return [...students].sort(compareStudentsByName);
-  }, [students]);
+    const sorted = [...students].sort(compareStudentsByName);
+    return nameSortDirection === 'desc' ? sorted.reverse() : sorted;
+  }, [students, nameSortDirection]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedStudents.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages);
-  const pageStart = (safePage - 1) * PAGE_SIZE;
-  const pageStudents = sortedStudents.slice(pageStart, pageStart + PAGE_SIZE);
-
-  const allIds = sortedStudents.map((s) => s.id);
-  const allSelected = allIds.length > 0 && allIds.every((id) => selectedIds.has(id));
-  const someSelected = allIds.some((id) => selectedIds.has(id)) && !allSelected;
-
-  useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = someSelected;
-    }
-  }, [someSelected]);
-
-  const handleSelectAll = (e) => {
-    if (e.target.checked) {
-      setSelectedIds(new Set(allIds));
-    } else {
-      setSelectedIds(new Set());
-    }
-  };
-
-  const handleSelectRow = (id) => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  };
+  const totalPages = usesServerPagination
+    ? Math.max(1, serverPagination.totalPages || 1)
+    : Math.max(1, Math.ceil(sortedStudents.length / PAGE_SIZE));
+  const safePage = usesServerPagination
+    ? Math.min(serverPagination.page || 1, totalPages)
+    : Math.min(currentPage, totalPages);
+  const pageSize = usesServerPagination ? (serverPagination.pageSize || PAGE_SIZE) : PAGE_SIZE;
+  const pageStart = (safePage - 1) * pageSize;
+  const pageStudents = usesServerPagination
+    ? sortedStudents
+    : sortedStudents.slice(pageStart, pageStart + pageSize);
+  const totalItems = usesServerPagination
+    ? (serverPagination.totalItems || 0)
+    : students.length;
 
   if (loading) {
     return (
@@ -115,6 +101,19 @@ const StudentsTable = ({
   // Таблица колонок под новый DTO (StudentSsoDetailDto)
   return (
     <div className="table-container">
+      <div className="table-toolbar">
+        <div className="table-toolbar__title">Список студентов</div>
+        <button
+          type="button"
+          className="table-sort-btn"
+          onClick={() => setNameSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'))}
+          title={nameSortDirection === 'asc' ? 'Сортировка по ФИО: А-Я' : 'Сортировка по ФИО: Я-А'}
+        >
+          <MdSortByAlpha size={17} />
+          <span>{nameSortDirection === 'asc' ? 'А-Я' : 'Я-А'}</span>
+        </button>
+      </div>
+
       <TableScrollSync bodyClassName="table-wrapper">
         <table className="students-table">
           <thead>
@@ -129,9 +128,10 @@ const StudentsTable = ({
               <th>Профессия</th>
               <th>Тип оплаты</th>
               <th>Тип гранта</th>
+              {showGpaColumn && <th>GPA</th>}
               {showBankColumns && <th>Расчетный счёт</th>}
               {showBankColumns && <th>Дата обновления</th>}
-              {!readOnly && (
+              {/* {!readOnly && (
                 <th className="th-select">
                   Все
                   <label className="checkbox-label">
@@ -145,7 +145,7 @@ const StudentsTable = ({
                     
                   </label>
                 </th>
-              )}
+              )} */}
             </tr>
           </thead>
           <tbody>
@@ -169,24 +169,21 @@ const StudentsTable = ({
                     {student.grant_type || '—'}
                   </span>
                 </td>
+                {showGpaColumn && (
+                  <td className="gpa-cell">
+                    {student.gpa ?? '—'}
+                  </td>
+                )}
                 {showBankColumns && (
                   <td className="bank-account">
                     <div className="bank-account-cell">
                       <span className="bank-account-text">{student.bank_account || '—'}</span>
-                      {!readOnly && (
-                        <button
-                          className="edit-iban-btn"
-                          title="Редактировать расчётный счёт"
-                          onClick={() => setEditingStudent(student)}
-                        >
-                          <BsFillPencilFill size={14} />
-                        </button>
-                      )}
+                      {/* Bank editing is hidden until bank/BIC/bankId selection is implemented. */}
                     </div>
                   </td>
                 )}
                 {showBankColumns && <td className="update-date">{student.update_date || '—'}</td>}
-                {!readOnly && (
+                {/* {!readOnly && (
                   <td className="td-select">
                     <input
                       type="checkbox"
@@ -195,7 +192,7 @@ const StudentsTable = ({
                       onChange={() => handleSelectRow(student.id)}
                     />
                   </td>
-                )}
+                )} */}
               </tr>
             ))}
           </tbody>
@@ -228,22 +225,12 @@ const StudentsTable = ({
           <Pagination
             currentPage={safePage}
             totalPages={totalPages}
-            onPageChange={setCurrentPage}
+            onPageChange={usesServerPagination ? onPageChange : setCurrentPage}
           />
         </div>
-        <p>Всего студентов: <strong>{students.length}</strong></p>
+        <p>Всего студентов: <strong>{totalItems}</strong></p>
       </div>
 
-      {!readOnly && editingStudent && (
-        <EditBankAccountModal
-          student={editingStudent}
-          onClose={() => setEditingStudent(null)}
-          onSave={async (iin, newIban) => {
-            await onUpdateIban(iin, newIban);
-            setEditingStudent(null);
-          }}
-        />
-      )}
     </div>
   );
 };

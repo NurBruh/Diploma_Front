@@ -163,6 +163,40 @@
   color: var(--text-primary, #1f2937);
 }
 
+@media (max-width: 760px) {
+  .sc-page {
+    padding: 1rem 0;
+  }
+
+  .sc-header {
+    padding: 1rem;
+  }
+
+  .sc-title-row,
+  .sc-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sc-filters {
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+  }
+
+  .sc-filter-tab {
+    white-space: nowrap;
+  }
+
+  .sc-search {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .sc-btn {
+    justify-content: center;
+  }
+}
+
 /* ── Loading / Empty ── */
 .sc-loading, .sc-empty {
   display: flex;

@@ -36,6 +36,8 @@ function App() {
     syncLoading,
     changeHistory,
     selectionKey,
+    studentPagination,
+    filterOptions,
     filters,
     setFilters,
     loadHistoryFromStorage,
@@ -43,6 +45,7 @@ function App() {
     handleSearch,
     handleSyncToEpvo,
     handleClearHistory,
+    handleStudentPageChange,
     getTotalChangesCount,
     handleSendSelectedToEpvo,
     handleUpdateIban,
@@ -68,7 +71,7 @@ function App() {
   };
 
   const handleRefresh = () => {
-    fetchStudents(currentUser);
+    fetchStudents(currentUser, { page: isRegistrar ? studentPagination.page : 1 });
   };
 
   const isRegistrar = currentUser?.role === 'registrar';
@@ -76,7 +79,7 @@ function App() {
   const canViewRoleDashboard = currentUser?.role === 'institute_director'
     || currentUser?.role === 'department_head';
 
-  const referenceData = useMemo(() => {
+  const fallbackReferenceData = useMemo(() => {
     const studyFormsSet = new Set();
     const institutesSet = new Set();
     const departmentsSet = new Set();
@@ -98,6 +101,8 @@ function App() {
     };
   }, [students]);
 
+  const referenceData = filterOptions || fallbackReferenceData;
+
   const rolePageProps = {
     currentUser,
     students,
@@ -107,7 +112,9 @@ function App() {
     setFilters,
     onSearch: handleSearch,
     referenceData,
-    selectionKey
+    selectionKey,
+    studentPagination,
+    onPageChange: handleStudentPageChange
   };
 
   const renderHome = () => {
@@ -144,6 +151,8 @@ function App() {
           onSendSelectedToEpvo={isReadOnly ? null : handleSendSelectedToEpvo}
           syncLoading={syncLoading}
           selectionKey={selectionKey}
+          serverPagination={studentPagination}
+          onPageChange={handleStudentPageChange}
           readOnly={isReadOnly}
           showDepartment={false}
           showBankColumns
@@ -193,7 +202,7 @@ function App() {
                 element={
                   <RoleAnalyticsDashboard
                     currentUser={currentUser}
-                    students={students}
+                    students={filteredStudents}
                     mode={currentUser?.role === 'department_head' ? 'department' : 'institute'}
                   />
                 }

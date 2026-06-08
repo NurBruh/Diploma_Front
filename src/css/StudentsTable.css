@@ -7,6 +7,47 @@
   margin-top: 1.5rem;
 }
 
+.table-toolbar {
+  min-height: 52px;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.table-toolbar__title {
+  color: var(--text-primary);
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.table-sort-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  min-width: 82px;
+  height: 34px;
+  padding: 0 0.75rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: #f8fafc;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.table-sort-btn:hover {
+  background: #e8f0fe;
+  border-color: #1a73e8;
+  color: #1a73e8;
+}
+
 .table-wrapper {
   overflow: auto;
 }
@@ -74,6 +115,14 @@
   font-size: 0.85rem;
 }
 
+.gpa-cell {
+  font-family: 'Consolas', 'Monaco', monospace;
+  color: var(--text-primary);
+  font-weight: 700;
+  text-align: center;
+  white-space: nowrap;
+}
+
 .deprivation-reasons {
   color: var(--danger-color);
   font-size: 0.85rem;
@@ -94,6 +143,10 @@
   text-transform: uppercase;
   min-width: 80px;
   letter-spacing: 0.3px;
+  max-width: 220px;
+  white-space: normal;
+  text-align: center;
+  line-height: 1.2;
 }
 
 .grant-badge.state {
@@ -142,12 +195,14 @@
   font-size: 0.85rem;
   color: var(--text-secondary);
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .selected-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .send-selected-btn {
@@ -187,6 +242,8 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .page-btn {
@@ -250,4 +307,39 @@
 
 @keyframes spin {
   to { transform: rotate(360deg); }
+}
+
+@media (max-width: 768px) {
+  .table-container {
+    margin-top: 1rem;
+    border-radius: 6px;
+  }
+
+  .table-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .table-sort-btn {
+    width: 100%;
+  }
+
+  .table-footer {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 0.85rem 1rem;
+  }
+
+  .selected-actions,
+  .send-selected-btn {
+    width: 100%;
+  }
+
+  .send-selected-btn {
+    justify-content: center;
+  }
+
+  .table-footer p {
+    text-align: center;
+  }
 }

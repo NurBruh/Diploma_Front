@@ -15,8 +15,11 @@ const RoleDashboardView = ({
   onSearch,
   referenceData,
   selectionKey,
+  studentPagination,
+  onPageChange,
   showDepartment = true,
-  showBankColumns
+  showBankColumns,
+  showGpaColumn = false
 }) => {
   return (
     <div className="role-dashboard">
@@ -44,9 +47,12 @@ const RoleDashboardView = ({
         onSendSelectedToEpvo={null}
         syncLoading={false}
         selectionKey={selectionKey}
+        serverPagination={studentPagination}
+        onPageChange={onPageChange}
         readOnly
         showDepartment={showDepartment}
         showBankColumns={showBankColumns}
+        showGpaColumn={showGpaColumn}
       />
     </div>
   );
