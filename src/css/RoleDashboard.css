@@ -160,9 +160,41 @@
   gap: 0.85rem;
 }
 
+.analytics-student-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.analytics-section-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.analytics-section-header h2 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.analytics-section-header p {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.analytics-section-header > span {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
 .analytics-department,
 .analytics-speciality,
-.analytics-empty {
+.analytics-empty,
+.analytics-students {
   background: var(--surface-white);
   border: 1px solid var(--border-color);
   border-radius: 8px;
@@ -246,7 +278,6 @@
 .analytics-students {
   max-height: 360px;
   overflow: auto;
-  border-top: 1px solid var(--border-color);
 }
 
 .analytics-students table {
@@ -275,11 +306,21 @@
   font-family: 'Consolas', 'Monaco', monospace;
 }
 
+.analytics-pagination {
+  display: flex;
+  justify-content: center;
+}
+
 @media (max-width: 760px) {
   .analytics-summary,
   .analytics-department > summary,
   .analytics-speciality > summary {
     grid-template-columns: 1fr;
+  }
+
+  .analytics-section-header {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .analytics-split {

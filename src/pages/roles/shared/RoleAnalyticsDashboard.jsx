@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { authFetch } from '../../../utils/authFetch';
+import Pagination from '../../../components/Pagination';
 import '../../../css/RoleDashboard.css';
 
 const labelOrEmpty = (value) => value || 'Не указано';
@@ -145,7 +146,82 @@ const DepartmentBlock = ({ department, total }) => {
   );
 };
 
-const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
+const DashboardStudentsTable = ({ students, loading, pagination, onPageChange }) => {
+  const safeStudents = students || [];
+  const page = pagination?.page || 1;
+  const pageSize = pagination?.pageSize || safeStudents.length || 1;
+  const pageStart = (page - 1) * pageSize;
+  const totalPages = pagination?.totalPages || 1;
+  const totalItems = pagination?.totalItems ?? safeStudents.length;
+
+  return (
+    <section className="analytics-student-section">
+      <div className="analytics-section-header">
+        <div>
+          <h2>Студенты</h2>
+          <p>ФИО, курс, институт, кафедра, специальность и GPA</p>
+        </div>
+        <span>{totalItems} студентов</span>
+      </div>
+
+      {loading ? (
+        <div className="analytics-empty">Загрузка студентов...</div>
+      ) : safeStudents.length === 0 ? (
+        <div className="analytics-empty">Нет студентов для отображения</div>
+      ) : (
+        <>
+          <div className="analytics-students">
+            <table>
+              <thead>
+                <tr>
+                  <th>№</th>
+                  <th>ФИО</th>
+                  <th>Курс</th>
+                  <th>Институт</th>
+                  <th>Кафедра</th>
+                  <th>Специальность</th>
+                  <th>GPA</th>
+                </tr>
+              </thead>
+              <tbody>
+                {safeStudents.map((student, index) => (
+                  <tr key={student.id || `${student.iin}-${index}`}>
+                    <td>{pageStart + index + 1}</td>
+                    <td>{student.full_name || '-'}</td>
+                    <td>{student.course || '-'}</td>
+                    <td>{student.faculty || '-'}</td>
+                    <td>{student.department || '-'}</td>
+                    <td>{student.specialization || student.profession || '-'}</td>
+                    <td>{student.gpa ?? '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="analytics-pagination">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                onPageChange={onPageChange}
+              />
+            </div>
+          )}
+        </>
+      )}
+    </section>
+  );
+};
+
+const RoleAnalyticsDashboard = ({
+  currentUser,
+  students,
+  studentsLoading,
+  studentPagination,
+  onStudentPageChange,
+  mode
+}) => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(false);
   const fallbackDashboard = useMemo(
@@ -179,7 +255,7 @@ const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
     return () => {
       cancelled = true;
     };
-  }, [currentUser, students]);
+  }, [currentUser]);
 
   const data = dashboardData || fallbackDashboard;
 
@@ -235,6 +311,13 @@ const RoleAnalyticsDashboard = ({ currentUser, students, mode }) => {
           ))}
         </section>
       )}
+
+      <DashboardStudentsTable
+        students={students}
+        loading={studentsLoading}
+        pagination={studentPagination}
+        onPageChange={onStudentPageChange}
+      />
     </div>
   );
 };

@@ -202,7 +202,10 @@ function App() {
                 element={
                   <RoleAnalyticsDashboard
                     currentUser={currentUser}
-                    students={students}
+                    students={filteredStudents}
+                    studentsLoading={loading}
+                    studentPagination={studentPagination}
+                    onStudentPageChange={handleStudentPageChange}
                     mode={currentUser?.role === 'department_head' ? 'department' : 'institute'}
                   />
                 }
