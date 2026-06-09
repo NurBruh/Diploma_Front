@@ -202,6 +202,11 @@ GET /api/Auth/portal-login
 
 Если пользователь пришел из портала Satbayev на домене `*.satbayev.university`, backend увидит portal-cookie и вернет JWT приложения. Через `localhost`, IP или Tailscale cookie портала обычно не передается.
 
+Для автоматического входа frontend должен открываться через домен из зоны
+`*.satbayev.university`. Backend `/api/Auth/portal-login` также должен быть доступен
+через этот домен или через reverse proxy под ним, потому что portal-cookie имеет
+домен `.satbayev.university` и не отправляется на `localhost`, IP или другой домен.
+
 Ручной вход использует:
 
 ```http
@@ -263,9 +268,11 @@ npm run lint
 Проверить:
 
 - проект открыт на домене `*.satbayev.university`;
+- backend `/api/Auth/portal-login` доступен через домен `*.satbayev.university` или proxy под этим доменом;
 - пользователь до этого вошел в портал;
 - backend endpoint `/api/Auth/debug-portal-auth` показывает `hasPortalCookie: true`;
-- portal roles сопоставлены в backend `PortalRoleMapping`.
+- portal roles сопоставлены в backend `PortalRoleMapping`;
+- в SSO подтверждается связка role + должность + подразделение пользователя.
 
 ### Dashboard пустой
 
