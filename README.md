@@ -93,15 +93,24 @@ http://localhost:5173
 
 ## Настройка адреса backend
 
-Frontend умеет строить адрес API автоматически по текущему host.
-
-Пример:
+Frontend использует `VITE_API_URL`, если он задан. Если переменная не задана,
+используется API на том же домене:
 
 ```text
-http://100.76.159.73:5173 -> http://100.76.159.73:5150/api
+https://project.satbayev.university -> https://project.satbayev.university/api
 ```
 
-Если нужно задать backend вручную, используется `VITE_API_URL`.
+Для production это основной вариант: frontend публикуется на домене
+`*.satbayev.university`, а backend прокидывается через reverse proxy на `/api`.
+
+Для локальной разработки адрес backend задается в `.env.development`:
+
+```text
+VITE_API_URL=http://localhost:5150/api
+```
+
+Если backend опубликован на отдельном публичном домене, можно задать
+`VITE_API_URL` перед сборкой.
 
 Пример для PowerShell:
 
@@ -113,7 +122,7 @@ npm run dev
 Пример `.env`:
 
 ```text
-VITE_API_URL=http://localhost:5150/api
+# production default uses same-origin /api
 ```
 
 ## Основные страницы
@@ -213,6 +222,15 @@ GET /api/Auth/portal-login
 POST /api/Auth/login
 ```
 
+Все рабочие запросы после входа отправляются через `authFetch`, который добавляет:
+
+```http
+Authorization: Bearer <token>
+```
+
+Если токена нет, backend вернет `401 Unauthorized`. Если роль пользователя не подходит
+для endpoint, backend вернет `403 Forbidden`.
+
 ## Скрипты
 
 ```powershell
@@ -259,9 +277,9 @@ npm run lint
 Проверить:
 
 - backend запущен;
-- frontend указывает на правильный host/port backend;
+- frontend указывает на правильный backend: локально через `VITE_API_URL`, на сервере через `/api` reverse proxy;
 - backend CORS разрешает текущий origin;
-- запрос идет на `http://IP:5150/api`, а не случайно на `localhost`, если frontend открыт по IP.
+- в production запрос идет на `https://project.satbayev.university/api`, а не на `localhost` или IP.
 
 ### Portal-login не сработал
 
