@@ -4,6 +4,7 @@ import AuthService from '../services/AuthService';
 import '../css/Auth.css';
 
 const Login = ({ onLogin }) => {
+  const manualLoginEnabled = import.meta.env.VITE_MANUAL_LOGIN_ENABLED === 'true';
   const [formData, setFormData] = useState({
     userId: '',
     password: ''
@@ -43,6 +44,16 @@ const Login = ({ onLogin }) => {
           <p>Система управления стипендиями</p>
         </div>
 
+        {!manualLoginEnabled && (
+          <div className="auth-form">
+            <div className="auth-error">
+              <MdError size={20} />
+              Вход выполняется через портал Satbayev. Откройте модуль из портала или обновите страницу после входа в портал.
+            </div>
+          </div>
+        )}
+
+        {manualLoginEnabled && (
         <form onSubmit={handleSubmit} className="auth-form">
           {error && (
             <div className="auth-error">
@@ -88,6 +99,7 @@ const Login = ({ onLogin }) => {
             {loading ? 'Вход...' : 'Войти'}
           </button>
         </form>
+        )}
       </div>
     </div>
   );

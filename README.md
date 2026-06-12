@@ -107,6 +107,7 @@ https://project.satbayev.university -> https://project.satbayev.university/api
 
 ```text
 VITE_API_URL=http://localhost:5150/api
+VITE_MANUAL_LOGIN_ENABLED=true
 ```
 
 Если backend опубликован на отдельном публичном домене, можно задать
@@ -124,6 +125,27 @@ npm run dev
 ```text
 # production default uses same-origin /api
 ```
+
+## Ручной вход
+
+На production ручной вход по ID/паролю скрыт. Пользователь должен входить через портал
+Satbayev: frontend автоматически вызывает `/api/Auth/portal-login`, если JWT еще нет.
+
+Форма ID/пароль показывается только если включена переменная:
+
+```text
+VITE_MANUAL_LOGIN_ENABLED=true
+```
+
+Для production оставлять:
+
+```text
+VITE_MANUAL_LOGIN_ENABLED=false
+```
+
+Чтобы временно вернуть форму на стенде, включить `VITE_MANUAL_LOGIN_ENABLED=true` и
+пересобрать frontend. Backend при этом тоже должен разрешать ручной вход через
+`Auth:ManualLoginEnabled=true`, иначе `/api/Auth/login` вернет `403 Forbidden`.
 
 ## Основные страницы
 
@@ -216,11 +238,14 @@ GET /api/Auth/portal-login
 через этот домен или через reverse proxy под ним, потому что portal-cookie имеет
 домен `.satbayev.university` и не отправляется на `localhost`, IP или другой домен.
 
-Ручной вход использует:
+Ручной вход для локальной разработки использует:
 
 ```http
 POST /api/Auth/login
 ```
+
+В production форма скрыта через `VITE_MANUAL_LOGIN_ENABLED=false`, а backend должен
+держать `Auth:ManualLoginEnabled=false`.
 
 Все рабочие запросы после входа отправляются через `authFetch`, который добавляет:
 
